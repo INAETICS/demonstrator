@@ -25,15 +25,15 @@
 typedef struct org_inaetics_demonstator_api__sample_queue org_inaetics_demonstator_api__sample_queue_type; //ADT
 
 struct org_inaetics_demonstator_api__sample_queue_service {
-	org_inaetics_demonstator_api__sample_queue_type sampleQueue;
+	org_inaetics_demonstator_api__sample_queue_type *sampleQueue;
 
-	int (*put)(org_inaetics_demonstator_api__sample_queue_type sampleQueue, struct org_inaetics_demonstator_api__sample sample, bool_t *sampleTaken);
+	int (*put)(org_inaetics_demonstator_api__sample_queue_type *sampleQueue, struct org_inaetics_demonstator_api__sample sample, bool_t *sampleTaken);
 
-	int (*putAll)(org_inaetics_demonstator_api__sample_queue_type sampleQueue, struct org_inaetics_demonstator_api__sample *samples, uint32_t size, uint32_t *samplesTaken);
+	int (*putAll)(org_inaetics_demonstator_api__sample_queue_type *sampleQueue, struct org_inaetics_demonstator_api__sample *samples, uint32_t size, uint32_t *samplesTaken);
 
-	int (*take)(org_inaetics_demonstator_api__sample_queue_type sampleQueue, struct org_inaetics_demonstator_api__sample *sample);
+	int (*take)(org_inaetics_demonstator_api__sample_queue_type *sampleQueue, struct org_inaetics_demonstator_api__sample *sample);
 
-	int (*takeAll)(org_inaetics_demonstator_api__sample_queue_type sampleQueue, uint32_t min, uint32_t max, struct org_inaetics_demonstator_api__sample **samples, uint32_t *samplesSize);
+	int (*takeAll)(org_inaetics_demonstator_api__sample_queue_type *sampleQueue, uint32_t min, uint32_t max, struct org_inaetics_demonstator_api__sample **samples, uint32_t *samplesSize);
 };
 
 #endif

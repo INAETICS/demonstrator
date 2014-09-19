@@ -25,11 +25,11 @@
 typedef struct org_inaetics_demonstator_api__sample_processor org_inaetics_demonstator_api__sample_processor_type; //ADT
 
 struct org_inaetics_demonstator_api__sample_processor_service {
-	org_inaetics_demonstator_api__sample_processor_type sampleProcessor;
+	org_inaetics_demonstator_api__sample_processor_type *sampleProcessor;
 
-	int (*take)(org_inaetics_demonstator_api__sample_processor_type sampleProcessor, struct org_inaetics_demonstator_api__result *result);
+	int (*take)(org_inaetics_demonstator_api__sample_processor_type *sampleProcessor, struct org_inaetics_demonstator_api__result *result);
 
-	int (*takeAll)(org_inaetics_demonstator_api__sample_processor_type sampleProcessor, uint32_t min, uint32_t max, struct org_inaetics_demonstator_api__result **results, uint32_t *resultSize);
+	int (*takeAll)(org_inaetics_demonstator_api__sample_processor_type *sampleProcessor, uint32_t min, uint32_t max, struct org_inaetics_demonstator_api__result **results, uint32_t *resultSize);
 };
 
 #endif

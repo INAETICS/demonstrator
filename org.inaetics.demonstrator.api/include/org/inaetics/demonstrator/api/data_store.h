@@ -25,9 +25,9 @@
 typedef struct org_inaetics_demonstator_api__data_store org_inaetics_demonstator_api__sample_processor_type; //ADT
 
 struct org_inaetics_demonstator_api__data_store_service {
-	org_inaetics_demonstator_api__data_store_type dataStore;
+	org_inaetics_demonstator_api__data_store_type *dataStore;
 
-	int (*findResultsBetween)(org_inaetics_demonstator_api__sample_processor_type dataStore, uint64_t begin, uint64_t end, struct org_inaetics_demonstator_api__result **results, uint32_t *resultSize);
+	int (*findResultsBetween)(org_inaetics_demonstator_api__sample_processor_type *dataStore, uint64_t begin, uint64_t end, struct org_inaetics_demonstator_api__result **results, uint32_t *resultSize);
 };
 
 #endif
