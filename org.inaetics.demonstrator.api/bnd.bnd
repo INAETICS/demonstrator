@@ -1,0 +1,6 @@
+-buildpath:  \
+	biz.aQute.bnd.annotation,\
+	${junit}
+Bundle-Version: 1.0.0.${tstamp}
+Export-Package:  \
+	org.inaetics.demonstrator.api
