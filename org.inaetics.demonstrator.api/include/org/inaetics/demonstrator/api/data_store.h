@@ -20,7 +20,7 @@
 #include <stdbool.h>
 #include "org/inaetics/demonstrator/api/result.h"
 
-#define org_inaetics_demonstator_api__data_store_SERVICE_NAME "org.inaetics.demonstator.api.DataStore"
+#define ORG_INAETICS_DEMONSTRATOR_API__DATA_STORE_SERVICE_NAME "org.inaetics.demonstator.api.DataStore"
 
 typedef struct org_inaetics_demonstator_api__data_store org_inaetics_demonstator_api__sample_processor_type; //ADT
 
