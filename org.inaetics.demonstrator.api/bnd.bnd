@@ -4,3 +4,5 @@
 Bundle-Version: 1.0.0.${tstamp}
 Export-Package:  \
 	org.inaetics.demonstrator.api
+-sub:  \
+	*.bnd
