@@ -1,0 +1,3 @@
+Bundle-Activator: org.inaetics.demonstrator.stub.Activator
+Private-Package:  \
+	org.inaetics.demonstrator.stub.datastore

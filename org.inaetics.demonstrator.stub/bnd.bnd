@@ -1,0 +1,9 @@
+-sub:  \
+	*.bnd
+-buildpath:  \
+	${junit},\
+	osgi.core;version='[5,6)',\
+	osgi.cmpn;version='[5,6)',\
+	org.inaetics.demonstrator.api.data;version=latest,\
+	org.inaetics.demonstrator.api.datastore;version=latest,\
+	org.inaetics.demonstrator.api.queue;version=latest
