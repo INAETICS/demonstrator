@@ -13,13 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.inaetics.demonstrator.stub.datastore;
+package org.inaetics.demonstrator.stub.producer;
 
 import java.util.Properties;
 
 import org.apache.felix.dm.DependencyActivatorBase;
 import org.apache.felix.dm.DependencyManager;
-import org.inaetics.demonstrator.api.datastore.DataStore;
+import org.inaetics.demonstrator.api.producer.Producer;
+import org.inaetics.demonstrator.api.queue.SampleQueue;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.service.cm.ManagedService;
@@ -27,20 +28,21 @@ import org.osgi.service.log.LogService;
 import org.osgi.service.remoteserviceadmin.RemoteConstants;
 
 public class Activator extends DependencyActivatorBase {
-	private static final String PID = "InMemoryDataStore";
+	private static final String PID = "RandomSampleProducer";
 
 	@Override
 	public void init(BundleContext context, DependencyManager manager) throws Exception {
-		String[] ifaces = { DataStore.class.getName(), ManagedService.class.getName() };
+		String[] ifaces = { Producer.class.getName(), ManagedService.class.getName() };
 		
 		Properties props = new Properties();
 		props.put(Constants.SERVICE_PID, PID);
 		props.put(RemoteConstants.SERVICE_EXPORTED_INTERFACES, ifaces[0]);
-		props.put("type", "memory");
+		props.put("type", "random");
 
 		manager.add(createComponent()
 			.setInterface(ifaces, props)
-			.setImplementation(InMemoryDataStore.class)
+			.setImplementation(RandomSampleProducer.class)
+			.add(createServiceDependency().setService(SampleQueue.class).setRequired(true))
 			.add(createServiceDependency().setService(LogService.class).setRequired(false))
 		);
 	}

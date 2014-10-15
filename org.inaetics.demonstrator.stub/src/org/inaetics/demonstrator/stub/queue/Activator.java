@@ -15,29 +15,33 @@
  */
 package org.inaetics.demonstrator.stub.queue;
 
-import java.util.Dictionary;
-import java.util.Hashtable;
+import java.util.Properties;
 
+import org.apache.felix.dm.DependencyActivatorBase;
+import org.apache.felix.dm.DependencyManager;
 import org.inaetics.demonstrator.api.queue.SampleQueue;
-import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
+import org.osgi.service.cm.ManagedService;
+import org.osgi.service.log.LogService;
 import org.osgi.service.remoteserviceadmin.RemoteConstants;
 
-public class Activator implements BundleActivator {
+public class Activator extends DependencyActivatorBase {
+	private static final String PID = "SimpleSampleQueue";
 
 	@Override
-	public void start(BundleContext context) throws Exception {
-		SampleQueue service = new SimpleSampleQueue();
+	public void init(BundleContext context, DependencyManager manager) throws Exception {
+		String[] ifaces = { SampleQueue.class.getName(), ManagedService.class.getName() };
+		
+		Properties props = new Properties();
+		props.put(Constants.SERVICE_PID, PID);
+		props.put(RemoteConstants.SERVICE_EXPORTED_INTERFACES, ifaces[0]);
+		props.put("type", "memory");
 
-		Dictionary<String, Object> props = new Hashtable<>();
-		props.put(RemoteConstants.SERVICE_EXPORTED_INTERFACES, new String[] { SampleQueue.class.getName() });
-		props.put("type", "simple");
-
-		context.registerService(SampleQueue.class, service, props);
-	}
-
-	@Override
-	public void stop(BundleContext context) throws Exception {
-		// Nop
+		manager.add(createComponent()
+			.setInterface(ifaces, props)
+			.setImplementation(SimpleSampleQueue.class)
+			.add(createServiceDependency().setService(LogService.class).setRequired(false))
+		);
 	}
 }

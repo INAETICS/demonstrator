@@ -1,0 +1,4 @@
+Private-Package:  \
+	org.inaetics.demonstrator.stub.processor
+Bundle-Activator: \
+	org.inaetics.demonstrator.stub.processor.Activator

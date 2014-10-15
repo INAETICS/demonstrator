@@ -17,15 +17,22 @@ package org.inaetics.demonstrator.stub.datastore;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Dictionary;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.inaetics.demonstrator.api.data.Result;
 import org.inaetics.demonstrator.api.data.Sample;
 import org.inaetics.demonstrator.api.datastore.DataStore;
+import org.osgi.service.cm.ConfigurationException;
+import org.osgi.service.cm.ManagedService;
+import org.osgi.service.log.LogService;
 
-public class InMemoryDataStore implements DataStore {
+public class InMemoryDataStore implements DataStore, ManagedService {
 	private final CopyOnWriteArrayList<Result> m_store = new CopyOnWriteArrayList<>();
+	
+	// Injected by Felix DM...
+	private volatile LogService m_log;
 
 	@Override
 	public Collection<Result> findResultsBetween(long begin, long end) {
@@ -42,11 +49,18 @@ public class InMemoryDataStore implements DataStore {
 
 	@Override
 	public void store(Result result) {
+		m_log.log(LogService.LOG_INFO, "Storing result: " + result);
 		m_store.add(result);
 	}
 
 	@Override
 	public void storeAll(Collection<Result> results) {
+		m_log.log(LogService.LOG_INFO, "Storing results: " + results);
 		m_store.addAll(results);
+	}
+
+	@Override
+	public void updated(Dictionary<String, ?> properties) throws ConfigurationException {
+		// Nothing yet... 
 	}
 }
