@@ -17,17 +17,38 @@ package org.inaetics.demonstrator.api.data;
 
 public class Sample {
 
-	private final long sampleTime; //Milliseconds since epoch time
+	private final long sampleTime; // Milliseconds since epoch time
 	private final double value1;
 	private final double value2;
-	
+
 	public Sample(long sampleTime, double value1, double value2) {
 		super();
 		this.sampleTime = sampleTime;
 		this.value1 = value1;
 		this.value2 = value2;
 	}
-	
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (obj == null || getClass() != obj.getClass())
+			return false;
+
+		Sample other = (Sample) obj;
+		if (sampleTime != other.sampleTime) {
+			return false;
+		}
+		if (Double.doubleToLongBits(value1) != Double.doubleToLongBits(other.value1)) {
+			return false;
+		}
+		if (Double.doubleToLongBits(value2) != Double.doubleToLongBits(other.value2)) {
+			return false;
+		}
+		return true;
+	}
+
 	public long getSampleTime() {
 		return sampleTime;
 	}
@@ -38,5 +59,23 @@ public class Sample {
 
 	public double getValue2() {
 		return value2;
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + (int) (sampleTime ^ (sampleTime >>> 32));
+		long temp;
+		temp = Double.doubleToLongBits(value1);
+		result = prime * result + (int) (temp ^ (temp >>> 32));
+		temp = Double.doubleToLongBits(value2);
+		result = prime * result + (int) (temp ^ (temp >>> 32));
+		return result;
+	}
+	
+	@Override
+	public String toString() {
+		return String.format("Sample[%d, <%.3f;%.3f>]", sampleTime, value1, value2);
 	}
 }
