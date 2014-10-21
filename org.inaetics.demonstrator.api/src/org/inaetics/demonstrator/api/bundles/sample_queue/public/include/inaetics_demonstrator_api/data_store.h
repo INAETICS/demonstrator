@@ -13,30 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.inaetics.demonstrator.api.data;
+#ifndef __INAETICS_DEMONSTATOR_API__DATA_STORE_H_
+#define __INAETICS_DEMONSTATOR_API__DATA_STORE_H_
 
-public class Sample {
+#include <stdint.h>
+#include <stdbool.h>
+#include "inaetics_demonstrator_api/result.h"
 
-	private final long sampleTime; //Milliseconds since epoch time
-	private final double value1;
-	private final double value2;
-	
-	public Sample(long sampleTime, double value1, double value2) {
-		super();
-		this.sampleTime = sampleTime;
-		this.value1 = value1;
-		this.value2 = value2;
-	}
-	
-	public long getSampleTime() {
-		return sampleTime;
-	}
+#define INAETICS_DEMONSTRATOR_API__DATA_STORE_SERVICE_NAME "org.inaetics.demonstator.api.DataStore"
 
-	public double getValue1() {
-		return value1;
-	}
+typedef struct sample_processor sample_processor_type; //ADT
 
-	public double getValue2() {
-		return value2;
-	}
-}
+struct data_store_service {
+	data_store_type *dataStore;
+
+	int (*findResultsBetween)(sample_processor_type *dataStore, uint64_t begin, uint64_t end, struct result **results, uint32_t *resultSize);
+};
+
+#endif

@@ -13,30 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.inaetics.demonstrator.api.data;
+#ifndef __INAETICS_DEMONSTATOR_API__RESULT_H_
+#define __INAETICS_DEMONSTATOR_API__RESULT_H_
 
-public class Result {
+#include <stdint.h>
+#include "inaetics_demonstrator_api/sample.h"
 
-	private final long processingTime; //milliseconds since epoch time
-	private final double result1;
-	private final Sample sample;
-	
-	public Result(long processingTime, double result1, Sample sample) {
-		super();
-		this.processingTime = processingTime;
-		this.result1 = result1;
-		this.sample = sample;
-	}
+struct result {
+	const uint64_t time; //milliseconds since unix epoch
+	const double value1;
+	const struct sample sample;
+};
 
-	public long getProcessingTime() {
-		return processingTime;
-	}
-
-	public double getResult1() {
-		return result1;
-	}
-
-	public Sample getSample() {
-		return sample;
-	}
-}
+#endif
