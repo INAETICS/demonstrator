@@ -32,6 +32,7 @@ struct activator {
 	service_tracker_pt tracker;
 	array_list_pt queueServices;
 	bool running;
+	bool available;
 	pthread_t worker;
 };
 

@@ -6,6 +6,8 @@ find_package(CELIX REQUIRED)
 include_directories(${CELIX_INCLUDE_DIRS})
 
 add_subdirectory(bundles/sample_queue)
+add_subdirectory(bundles/queue_proxy)
+add_subdirectory(bundles/queue_endpoint)
 add_subdirectory(bundles/producer)
 #add_subdirectory(bundles/consumer)
 

@@ -1,0 +1,22 @@
+
+find_package(Jansson REQUIRED)
+
+include_directories("${JANSSON_INCLUDE_DIRS}")
+include_directories("${CELIX_INCLUDE_DIR}")
+include_directories("${CELIX_INCLUDE_DIR}/remote_service_admin")
+include_directories("${PROJECT_SOURCE_DIR}/bundles/sample_queue/public/include")
+include_directories("private/include")
+
+
+set(BUNDLE_SYMBOLICNAME "org.inaetics.demonstrator.queue_endpoint")
+set(BUNDLE_VERSION "1.0.0")
+set(BUNDLE_NAME "org.inaetics.demonstator.api.SampleQueue_proxy")
+
+bundle(org.inaetics.demonstator.api.SampleQueue_proxy SOURCES 
+	private/src/queue_proxy_activator
+	private/src/queue_proxy_impl.c
+    
+    private/include/queue_proxy_impl.h
+)
+
+target_link_libraries(org.inaetics.demonstator.api.SampleQueue_proxy ${JANSSON_LIBRARIES} ${CELIX_LIBRARIES})

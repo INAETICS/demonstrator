@@ -22,10 +22,8 @@
 #include "inaetics_demonstrator_api/sample_queue.h"
 #include "producer_impl.h"
 
-
 celix_status_t queueServiceAdded(void *handle, service_reference_pt reference, void *service);
 celix_status_t queueServiceRemoved(void *handle, service_reference_pt reference, void *service);
-
 
 celix_status_t bundleActivator_create(bundle_context_pt context, void **userData) {
 	celix_status_t status = CELIX_SUCCESS;
@@ -34,16 +32,18 @@ celix_status_t bundleActivator_create(bundle_context_pt context, void **userData
 		((struct activator *) *userData)->tracker = NULL;
 		((struct activator *) *userData)->queueServices = NULL;
 		((struct activator *) *userData)->running = false;
+		((struct activator *) *userData)->available = false;
 	} else {
 		status = CELIX_ENOMEM;
 	}
 	return status;
 }
 
-
 celix_status_t bundleActivator_start(void * userData, bundle_context_pt context) {
 	celix_status_t status = CELIX_SUCCESS;
 	struct activator *activator = userData;
+
+	printf("PRODUCER: Starting bundle...\n");
 
 	// create list for services
 	arrayList_create(&activator->queueServices);
@@ -56,7 +56,8 @@ celix_status_t bundleActivator_start(void * userData, bundle_context_pt context)
 		service_tracker_customizer_pt customizer = NULL;
 		serviceTrackerCustomizer_create(userData, NULL, queueServiceAdded, NULL, queueServiceRemoved, &customizer);
 
-		serviceTracker_create(context, INAETICS_DEMONSTATOR_API__SAMPLE_QUEUE_SERVICE_NAME, customizer, &activator->tracker);
+		serviceTracker_create(context, INAETICS_DEMONSTATOR_API__SAMPLE_QUEUE_SERVICE_NAME, customizer,
+				&activator->tracker);
 		serviceTracker_open(activator->tracker);
 	}
 
@@ -67,6 +68,7 @@ celix_status_t bundleActivator_stop(void * userData, bundle_context_pt context) 
 	celix_status_t status = CELIX_SUCCESS;
 	struct activator *activator = userData;
 
+	printf("PRODUCER: Stopping bundle...\n");
 	// stop the thread
 	activator->running = false;
 	void *exitStatus = NULL;
@@ -94,17 +96,17 @@ celix_status_t queueServiceAdded(void *handle, service_reference_pt reference, v
 {
 	struct activator *activator = handle;
 	arrayList_add(activator->queueServices, service);
+	activator->available = true;
 	printf("PRODUCER: Queue Service Added.\n");
 
 	return CELIX_SUCCESS;
 }
 
-
-
 celix_status_t queueServiceRemoved(void *handle, service_reference_pt reference, void *service)
 {
 	struct activator *activator = handle;
 	arrayList_removeElement(activator->queueServices, service);
+	activator->available = false;
 	printf("PRODUCER: Queue Service Removed.\n");
 
 	return CELIX_SUCCESS;
