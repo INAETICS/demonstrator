@@ -6,8 +6,11 @@
 #include "inaetics_demonstrator_api/sample_queue.h"
 #include <pthread.h>
 
+#define WAIT_TIME_SECONDS       15
+
 struct sample_queue{
 	pthread_mutex_t lock;
+	pthread_cond_t listEmpty;
 	array_list_pt queue;
 	bool service_active;
 };

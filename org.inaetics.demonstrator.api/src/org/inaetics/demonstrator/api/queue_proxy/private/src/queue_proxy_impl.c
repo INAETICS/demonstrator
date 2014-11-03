@@ -10,11 +10,6 @@
 #include "inaetics_demonstrator_api/sample_queue.h"
 
 
-/* Allows the use of Jansson < 2.3 */
-#ifndef JSON_DECODE_ANY
-#define JSON_DECODE_ANY 0
-#endif
-
 celix_status_t queueProxy_setEndpointDescription(void *proxy, endpoint_description_pt endpoint);
 celix_status_t queueProxy_setHandler(void *proxy, void *handler);
 celix_status_t queueProxy_setCallback(void *proxy, sendToHandle callback);
@@ -35,14 +30,16 @@ celix_status_t queueProxy_create(bundle_context_pt context, sample_queue_type **
 	return status;
 }
 
+
 // { "m": "" "a":["arg1", "arg2"] }
 celix_status_t queueProxy_put(sample_queue_type* queue, struct sample workSample, bool *sampleTaken) {
 	celix_status_t status = CELIX_SUCCESS;
+	int result = 0;
 
 	if (queue->endpoint != NULL) {
 		json_t *root;
 
-		root = json_pack("{s:s, s:[Iff]}", "m", "put(DD)D", "d", workSample.time, workSample.value1, workSample.value2);
+		root = json_pack("{s:s, s:[Iff]}", "m", "put(LZ)D", "d", workSample.time, workSample.value1, workSample.value2);
 
 		char *data = json_dumps(root, 0);
 		char *reply = malloc(256);
@@ -50,12 +47,15 @@ celix_status_t queueProxy_put(sample_queue_type* queue, struct sample workSample
 
 		status = queue->sendToCallback(queue->sendToHandler, queue->endpoint, data, &reply, &replyStatus);
 
-		if (status == CELIX_SUCCESS) {
+		if (status == CELIX_SUCCESS && replyStatus == 0) {
 		    printf("Handle reply: %s\n", reply);
 			json_error_t error;
 			json_t *js_reply = json_loads(reply, 0, &error);
 			if (js_reply) {
-				json_unpack(js_reply, "{s:b}", "r", sampleTaken);
+				json_unpack(js_reply, "{s:i, s:b}", "r", &result, "d", sampleTaken);
+
+				if (result != 0)
+					status = result;
 			} else {
 				printf("PROXY: got error '%s' for '%s'\n", error.text, reply);
 				status = CELIX_BUNDLE_EXCEPTION;
@@ -68,18 +68,20 @@ celix_status_t queueProxy_put(sample_queue_type* queue, struct sample workSample
 		printf("QUEUE_PROXY: No endpoint information available\n");
 		status = CELIX_BUNDLE_EXCEPTION;
 	}
+
+	return (status == CELIX_SUCCESS) ? result : (int) status;
 }
 
 
 celix_status_t queueProxy_putAll(sample_queue_type *queue, struct sample *samples, uint32_t size, uint32_t *samplesTaken)
 {
 	celix_status_t status = CELIX_SUCCESS;
+	int result = 0;
 
 	if (queue->endpoint != NULL) {
 		uint32_t arrayCnt = 0;
 		json_t *arrayRoot;
 		json_t *root;
-
 
 		json_t *array = json_array();
 
@@ -88,23 +90,23 @@ celix_status_t queueProxy_putAll(sample_queue_type *queue, struct sample *sample
 			json_array_append(array, element);
 		}
 
-		root = json_pack("{s:s, s:o}", "m", "putAll(DD)D", "d", array);
+		root = json_pack("{s:s, s:o}", "m", "putAll(LDD)D", "d", array);
 
 		char *data = json_dumps(root, 0);
-
-		printf("data is %s\n", data);
-
 		char *reply = malloc(256);
 		int replyStatus = 0;
 
 		status = queue->sendToCallback(queue->sendToHandler, queue->endpoint, data, &reply, &replyStatus);
 
-		if (status == CELIX_SUCCESS) {
+		if (status == CELIX_SUCCESS && replyStatus == 0) {
 		    printf("Handle reply: %s\n", reply);
 			json_error_t error;
 			json_t *js_reply = json_loads(reply, 0, &error);
 			if (js_reply) {
-				json_unpack(js_reply, "{s:i}", "r", samplesTaken);
+				json_unpack(js_reply, "{s:i, s:i}", "r", &result, "d", samplesTaken);
+
+				if (result != 0)
+					status = result;
 			} else {
 				printf("PROXY: got error '%s' for '%s'\n", error.text, reply);
 				status = CELIX_BUNDLE_EXCEPTION;
@@ -117,9 +119,108 @@ celix_status_t queueProxy_putAll(sample_queue_type *queue, struct sample *sample
 		printf("QUEUE_PROXY: No endpoint information available\n");
 		status = CELIX_BUNDLE_EXCEPTION;
 	}
+
+	return (status == CELIX_SUCCESS) ? result : (int) status;}
+
+
+int queueProxy_take(sample_queue_type* queue, struct sample *sample) {
+	celix_status_t status = CELIX_SUCCESS;
+	int result = 0;
+
+	if (queue->endpoint != NULL) {
+		json_t *root;
+
+		root = json_pack("{s:s}", "m", "take(L)D");
+
+		char *data = json_dumps(root, 0);
+		char *reply = malloc(256);
+		int replyStatus = 0;
+
+		status = queue->sendToCallback(queue->sendToHandler, queue->endpoint, data, &reply, &replyStatus);
+
+		if (status == CELIX_SUCCESS && replyStatus == 0) {
+		    printf("Handle reply: %s\n", reply);
+			json_error_t error;
+			json_t *js_reply = json_loads(reply, 0, &error);
+			if (js_reply) {
+				json_unpack(js_reply, "{s:i, s:[iff]}", "r", &result, "d", &sample->time, &sample->value1, &sample->value2);
+
+				if (result != 0)
+					status = result;
+			} else {
+				printf("PROXY: got error '%s' for '%s'\n", error.text, reply);
+				status = CELIX_BUNDLE_EXCEPTION;
+			}
+		}
+
+		free(data);
+		free(reply);
+	} else {
+		printf("QUEUE_PROXY: No endpoint information available\n");
+		status = CELIX_BUNDLE_EXCEPTION;
+	}
+
+	int rv = (status == CELIX_SUCCESS) ? result : (int) status;
+
+	return rv;
+
 }
 
 
+
+
+int queueProxy_takeAll(sample_queue_type* queue, uint32_t min, uint32_t max, struct sample **samples, uint32_t *samplesSize) {
+	celix_status_t status = CELIX_SUCCESS;
+	int result = 0;
+
+	if (queue->endpoint != NULL) {
+		uint32_t arrayCnt = 0;
+		json_t *arrayRoot;
+		json_t *root;
+
+		root = json_pack("{s:s, s:[ii]}", "m", "takeAll(DDLD)D", "d", min, max);
+
+		char *data = json_dumps(root, 0);
+		char *reply = malloc(256);
+		int replyStatus = 0;
+
+		status = queue->sendToCallback(queue->sendToHandler, queue->endpoint, data, &reply, &replyStatus);
+
+		if (status == CELIX_SUCCESS && replyStatus == 0) {
+		    printf("Handle reply: %s\n", reply);
+			json_error_t error;
+			json_t *js_reply = json_loads(reply, 0, &error);
+			if (js_reply) {
+				json_t* array;
+
+				json_unpack(js_reply, "{s:i, s:o}", "r", &result, "d", &array);
+
+				if (result != 0) {
+					status = result;
+				}
+				else
+				{
+					*samplesSize = json_array_size(array);
+					for (arrayCnt = 0; arrayCnt < *samplesSize; arrayCnt++) {
+						json_t* sample = json_array_get(array, arrayCnt);
+						json_unpack(sample, "{s:[Iff]}", "d", &samples[arrayCnt]->time, &samples[arrayCnt]->value1, &samples[arrayCnt]->value2);
+					}
+				}
+			} else {
+				printf("PROXY: got error '%s' for '%s'\n", error.text, reply);
+				status = CELIX_BUNDLE_EXCEPTION;
+			}
+		}
+
+		free(data);
+		free(reply);
+	} else {
+		printf("QUEUE_PROXY: No endpoint information available\n");
+		status = CELIX_BUNDLE_EXCEPTION;
+	}
+
+	return (status == CELIX_SUCCESS) ? result : (int) status;
+}
 
 
 
@@ -135,8 +236,8 @@ celix_status_t queueProxy_registerProxyService(void* proxyFactoryService, endpoi
 	queueService->sampleQueue = queue;
 	queueService->put = queueProxy_put;
 	queueService->putAll = queueProxy_putAll;
-	queueService->take = NULL;
-	queueService->takeAll = NULL;
+	queueService->take = queueProxy_take;
+	queueService->takeAll = queueProxy_takeAll;
 
 	properties_pt srvcProps = properties_create();
 	properties_set(srvcProps, (char *) "proxy.interface", (char *) INAETICS_DEMONSTATOR_API__SAMPLE_QUEUE_SERVICE_NAME);
