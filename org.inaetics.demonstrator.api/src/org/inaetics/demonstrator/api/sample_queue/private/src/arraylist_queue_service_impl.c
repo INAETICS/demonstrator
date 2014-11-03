@@ -6,7 +6,7 @@
 #include "array_list.h"
 #include "celix_errno.h"
 
-#include "queue_service_impl.h"
+#include "arraylist_queue_service_impl.h"
 
 
 int queueService_put(sample_queue_type *sampleQueue, struct sample sample, bool *sampleTaken){

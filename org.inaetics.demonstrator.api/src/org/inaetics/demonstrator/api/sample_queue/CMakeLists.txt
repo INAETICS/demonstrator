@@ -4,8 +4,8 @@ set(BUNDLE_NAME "sample_queue")
 
 include_directories("${CELIX_INCLUDE_DIR}")
 include_directories("${CELIX_INCLUDE_DIR}/remote_service_admin")
-include_directories("${PROJECT_SOURCE_DIR}/bundles/sample_queue/private/include")
-include_directories("${PROJECT_SOURCE_DIR}/bundles/sample_queue/public/include")
+include_directories("private/include")
+include_directories("public/include")
 
 bundle(sample_queue 
 	SOURCES private/src/activator 
