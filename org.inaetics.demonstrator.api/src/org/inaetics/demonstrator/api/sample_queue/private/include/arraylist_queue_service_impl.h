@@ -6,13 +6,22 @@
 #include "inaetics_demonstrator_api/sample_queue.h"
 #include <pthread.h>
 
-#define WAIT_TIME_SECONDS       15
 
-struct sample_queue{
+#define MAX_QUEUE_SIZE       	10000
+
+#define WAIT_TIME_SECONDS       2
+#define VERBOSE					1
+
+
+struct sample_queue {
+	bool statisticsRunning;
+	pthread_t statistics;
 	pthread_mutex_t lock;
 	pthread_cond_t listEmpty;
 	array_list_pt queue;
 	bool service_active;
+	long takeCnt;
+	long putCnt;
 };
 
 celix_status_t queueService_create(struct sample_queue_service** qService, sample_queue_type** qHandler);

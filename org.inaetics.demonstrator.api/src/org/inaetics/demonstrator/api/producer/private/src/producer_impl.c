@@ -1,8 +1,25 @@
+#include <stdarg.h>
+
 #include "producer_impl.h"
+
+
+static void msg(int lvl, char *fmsg, ...) {
+    if (lvl <= VERBOSE) {
+		char msg[512];
+		va_list listPointer;
+		va_start(listPointer, fmsg);
+		vsprintf(msg, fmsg, listPointer);
+
+    	printf("[%d] : %s\n", lvl, msg);
+    }
+}
+
 
 static unsigned int rand_range(unsigned int min, unsigned int max)
 {
-	srand(time(NULL ));
+	struct timespec ts_rand;
+	clock_gettime(CLOCK_REALTIME, &ts_rand);
+	srand(ts_rand.tv_nsec);
 	double scaled = (double) (((double) rand()) / ((double) RAND_MAX));
 
 	return (max - min + 1) * scaled + min;
@@ -24,9 +41,11 @@ static void fillSample(struct sample* s) {
 }
 
 static void shutdownProducerThread(void) {
-	printf("PRODUCER: Producing Thread is shutting down...\n");
+	msg(0, "PRODUCER: Producing Thread is shutting down...");
 	pthread_exit(NULL );
 }
+
+
 
 void *produceSamples(void *handle) {
 	struct activator *activator = handle;
@@ -34,72 +53,91 @@ void *produceSamples(void *handle) {
 	struct sample smpl;
 
 	while (activator->running) {
+		struct timespec ts;
 		int i;
-		for (i = 0; i < arrayList_size(activator->queueServices); i++) {
-			struct sample_queue_service* qService = arrayList_get(activator->queueServices, i);
+		int rc = 0;
 
-			int putNum = 0;
-			for (; putNum < SINGLE_PUT_NUMBER; putNum++) {
-				memset(&smpl, 0, sizeof(struct sample));
+		clock_gettime(CLOCK_REALTIME, &ts);
+		ts.tv_sec += WAIT_TIME_SECONDS;
 
-				fillSample(&smpl);
+		pthread_mutex_lock(&activator->queueLock);
 
-				bool ret = false;
+		/* block, till a queue is available */
+		while ((arrayList_size(activator->queueServices) == 0) && (rc != ETIMEDOUT) && (activator->running)) {
+			rc = pthread_cond_timedwait(&activator->queueAvailable, &activator->queueLock, &ts);
+		}
 
-				if (activator->available) {
+		if (rc == 0) {
+			for (i = 0; i < arrayList_size(activator->queueServices) && (activator->running); i++) {
+				struct sample_queue_service* qService = arrayList_get(activator->queueServices, i);
+				struct timespec ts_start;
+				struct timespec ts_end;
+
+				int burst_len = 0;
+				int singleSampleCnt = 0;
+				int burstSampleCnt = 0;
+
+
+				clock_gettime(CLOCK_REALTIME, &ts_start);
+
+				// send single samples per second
+				for (ts_end = ts_start; (singleSampleCnt < SINGLE_SAMPLES_PER_SEC) && (ts_start.tv_sec == ts_end.tv_sec) && (activator->running); ) {
+					bool ret = false;
+
+					memset(&smpl, 0, sizeof(struct sample));
+					fillSample(&smpl);
 
 					qService->put(qService->sampleQueue, smpl, &ret);
 
-					if (ret == true)
-					{
-						printf("PRODUCER: Sample {Time:%llu | V1=%f | V2=%f} stored.\n", smpl.time, smpl.value1,
-								smpl.value2);
+					if (ret == true) {
+						msg(3, "PRODUCER: Sample {Time:%llu | V1=%f | V2=%f} stored.", smpl.time, smpl.value1,
+														smpl.value2);
+						singleSampleCnt++;
 					}
-					else
-					{
-						printf("PRODUCER: Could not store sample.\n");
+					else {
+						msg(2, "PRODUCER: Could not store sample.");
 					}
+
+					clock_gettime(CLOCK_REALTIME, &ts_end);
 				}
-				else {
-					printf("PRODUCER: Queue Service not available. Cannot put data.\n");
-					if (!activator->running) {
-						shutdownProducerThread();
+
+				while(ts_start.tv_sec >= ts_end.tv_sec) {
+					clock_gettime(CLOCK_REALTIME, &ts_end);
+				}
+
+				clock_gettime(CLOCK_REALTIME, &ts_start);
+
+				for (ts_end = ts_start; (burstSampleCnt < BURST_SAMPLES_PER_SEC) && (ts_start.tv_sec == ts_end.tv_sec) && (activator->running);) {
+					burst_len = rand_range(MIN_BURST_LEN, MAX_BURST_LEN);
+					uint32_t burst_samples_stored = 0;
+
+					struct sample burst[burst_len];
+					memset(burst, 0, burst_len * sizeof(struct sample));
+					int j = 0;
+
+					msg(3, "PRODUCER: Preparing burst of %u samples", burst_len);
+
+					for (; j < burst_len; j++) {
+						fillSample(&burst[j]);
+						msg(3, "\tPRODUCER: Prepared sample {Time:%llu | V1=%f | V2=%f}", burst[j].time, burst[j].value1,
+								burst[j].value2);
 					}
-					break;
+
+					qService->putAll(qService->sampleQueue, burst, burst_len, &burst_samples_stored);
+					burstSampleCnt+= burst_samples_stored;
+
+					clock_gettime(CLOCK_REALTIME, &ts_end);
 				}
-				sleep(SAMPLE_GEN_PERIOD);
 
-			}
+				msg(1, "PRODUCER: %d single samples // %d burst samples sent.", singleSampleCnt, burstSampleCnt);
 
-			sleep(2 * SAMPLE_GEN_PERIOD);
-
-			int burst_len = rand_range(MIN_BURST_LEN, MAX_BURST_LEN);
-
-			struct sample burst[burst_len];
-			memset(burst, 0, burst_len * sizeof(struct sample));
-			int j = 0;
-			printf("PRODUCER: Preparing burst of %u samples\n", burst_len);
-			for (; j < burst_len; j++) {
-				fillSample(&burst[j]);
-				printf("\tPRODUCER: Prepared sample {Time:%llu | V1=%f | V2=%f} \n", burst[j].time, burst[j].value1,
-						burst[j].value2);
-				usleep(50000);
-			}
-
-			if (activator->available) {
-				uint32_t burst_samples_stored = 0;
-				qService->putAll(qService->sampleQueue, burst, burst_len, &burst_samples_stored);
-			}
-			else {
-				printf("PRODUCER: Queue Service not available. Cannot putAll data\n");
-				if (!activator->running) {
-					shutdownProducerThread();
+				while(ts_start.tv_sec >= ts_end.tv_sec) {
+					clock_gettime(CLOCK_REALTIME, &ts_end);
 				}
-				break;
 			}
-			sleep(5 * SAMPLE_GEN_PERIOD);
-
 		}
+
+		pthread_mutex_unlock(&activator->queueLock);
 	}
 
 	shutdownProducerThread();

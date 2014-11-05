@@ -2,18 +2,33 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdarg.h>
+#include <unistd.h>
 
 #include "array_list.h"
 #include "celix_errno.h"
 
 #include "arraylist_queue_service_impl.h"
 
-celix_status_t queueService_create(struct sample_queue_service** qService, sample_queue_type** qHandler){
+
+void *printStatistics(void *handle);
+
+static void msg(int lvl, char *fmsg, ...) {
+    if (lvl <= VERBOSE) {
+		char msg[512];
+		va_list listPointer;
+		va_start(listPointer, fmsg);
+		vsprintf(msg, fmsg, listPointer);
+
+    	printf("[%d] : %s\n", lvl, msg);
+    }
+}
+
+celix_status_t queueService_create(struct sample_queue_service** qService, sample_queue_type** qHandler) {
 
 	celix_status_t status= CELIX_ENOMEM;
 
 	*qService = calloc(1, sizeof(struct sample_queue_service));
-
 	*qHandler = calloc(1, sizeof(struct sample_queue));
 
 	if( (*qService !=NULL) && (*qHandler!=NULL) ){
@@ -23,7 +38,10 @@ celix_status_t queueService_create(struct sample_queue_service** qService, sampl
 
 		arrayList_create(&((*qHandler)->queue));
 
-		(*qHandler)->service_active=true;
+		(*qHandler)->service_active = true;
+		(*qHandler)->putCnt = 0;
+		(*qHandler)->takeCnt = 0;
+		(*qHandler)->statisticsRunning = false;
 
 		(*qService)->sampleQueue = *qHandler;
 		(*qService)->put = queueService_put;
@@ -31,40 +49,39 @@ celix_status_t queueService_create(struct sample_queue_service** qService, sampl
 		(*qService)->take = queueService_take;
 		(*qService)->takeAll = queueService_takeAll;
 
-		status=CELIX_SUCCESS;
+		pthread_create(&(*qHandler)->statistics, NULL, printStatistics, *qHandler);
 
+		status = CELIX_SUCCESS;
 	}
 
 	return status;
-
-
 }
 
 celix_status_t queueService_destroy(struct sample_queue_service* qService, sample_queue_type* qHandler){
 
-	celix_status_t status=CELIX_SUCCESS;
+	celix_status_t status = CELIX_SUCCESS;
+	int i =0;
+
+	qHandler->statisticsRunning = false;
 
 	pthread_mutex_lock(&(qHandler->lock));
 
 	/* Empty the queue */
-	array_list_iterator_pt iter = arrayListIterator_create(qHandler->queue);
-
-	while (arrayListIterator_hasNext(iter)) {
-		free(arrayListIterator_next(iter));
+	for(;i < arrayList_size(qHandler->queue); i++) {
+		free(arrayList_get(qHandler->queue, i));
 	}
 
-	arrayListIterator_destroy(iter);
-
 	/* Destroy the queue */
-
 	arrayList_destroy(qHandler->queue);
-	qHandler->queue=NULL;
+	qHandler->queue = NULL;
 
 	qHandler->service_active=false;
 
 	pthread_mutex_unlock(&(qHandler->lock));
-
 	pthread_mutex_destroy(&(qHandler->lock));
+
+	void *exitStatus = NULL;
+	pthread_join(qHandler->statistics, &exitStatus);
 
 	free(qService);
 	free(qHandler);
@@ -77,31 +94,35 @@ int queueService_put(sample_queue_type *sampleQueue, struct sample sample, bool 
 
 	celix_status_t status = CELIX_SUCCESS;
 
-
 	if(sampleQueue->service_active==true && sampleQueue->queue!=NULL){
 		pthread_mutex_lock(&sampleQueue->lock);
 
-		struct sample* s=calloc(1,sizeof(struct sample));
+		if ((MAX_QUEUE_SIZE == 0) || arrayList_size(sampleQueue->queue) < MAX_QUEUE_SIZE)
+		{
+			struct sample* localSample = calloc(1,sizeof(struct sample));
 
-		if(s!=NULL){
+			if (localSample != NULL) {
+				memcpy(localSample, &sample, sizeof(struct sample));
+				bool ret = arrayList_add(sampleQueue->queue, localSample);
+				if (ret) {
+					sampleQueue->putCnt++;
+					msg(3, "SAMPLE_QUEUE: Added sample {%llu | %f | %f }to queue\n",localSample->time,localSample->value1,localSample->value2);
+					pthread_cond_signal(&sampleQueue->listEmpty);
+				}
+				else {
+					free(localSample);
+				}
 
-			memcpy(s,&sample,sizeof(struct sample));
-			bool ret=arrayList_add(sampleQueue->queue, s);
-			if(ret){
-				printf("SAMPLE_QUEUE: Added sample {%llu | %f | %f }to queue\n",s->time,s->value1,s->value2);
-				pthread_cond_signal(&sampleQueue->listEmpty);
+				*sampleTaken=ret;
 			}
-
-			*sampleTaken=ret;
-
-		}
-		else{
-			status=CELIX_ENOMEM;
+			else {
+				status=CELIX_ENOMEM;
+			}
 		}
 		pthread_mutex_unlock(&sampleQueue->lock);
 	}
-	else{
-		printf("SAMPLE_QUEUE: put denied because service is removed");
+	else {
+		msg(0, "SAMPLE_QUEUE: put denied because service is removed");
 		status=CELIX_ILLEGAL_STATE;
 	}
 
@@ -114,45 +135,48 @@ int queueService_putAll(sample_queue_type *sampleQueue, struct sample *samples, 
 	uint32_t i=0;
 	uint32_t samples_added=0;
 
-	if(sampleQueue->service_active==true && sampleQueue->queue!=NULL){
+	if ((sampleQueue->service_active == true) && (sampleQueue->queue != NULL)) {
 		pthread_mutex_lock(&sampleQueue->lock);
 
-		printf("SAMPLE_QUEUE: Adding a burst of %u samples\n",size);
+		msg(3, "SAMPLE_QUEUE: Adding a burst of %u samples\n",size);
 
-		for(;i<size;i++){
+		for(; (i < size) && ((MAX_QUEUE_SIZE == 0) || (arrayList_size(sampleQueue->queue) < MAX_QUEUE_SIZE)); i++){
+			struct sample* s = calloc(1,sizeof(struct sample));
 
-			struct sample* s=calloc(1,sizeof(struct sample));
-
-			if(s!=NULL){
+			if (s!=NULL) {
 
 				memcpy(s,&samples[i],sizeof(struct sample));
 
 				if(arrayList_add(sampleQueue->queue, s)){
-					printf("\tSAMPLE_QUEUE: Added sample {%llu | %f | %f } to queue\n",s->time,s->value1,s->value2);
+					msg(3, "\tSAMPLE_QUEUE: Added sample {%llu | %f | %f } to queue\n",s->time,s->value1,s->value2);
 					samples_added++;
 					pthread_cond_signal(&sampleQueue->listEmpty);
 				}
+				else {
+					free(s);
+				}
 			}
-			else{
-				status=CELIX_ENOMEM;
+			else {
+				status = CELIX_ENOMEM;
 				break;
 			}
 
 		}
 
-		printf("SAMPLE_QUEUE: End burst\n");
+		msg(3, "SAMPLE_QUEUE: End burst\n");
 		pthread_mutex_unlock(&sampleQueue->lock);
 
 		*samplesTaken=samples_added;
+		sampleQueue->putCnt += samples_added;
 
 		if(*samplesTaken!=size){
-			printf("SAMPLE_QUEUE: Could not add all the requested samples (requested:%u, added%u)\n",size,*samplesTaken);
+			msg(2, "SAMPLE_QUEUE: Could not add all the requested samples (requested:%u, added%u)\n",size,*samplesTaken);
 			if(status==CELIX_SUCCESS) //Don't mask the ENOMEM
 				status=CELIX_BUNDLE_EXCEPTION;
 		}
 	}
 	else{
-		printf("SAMPLE_QUEUE: putAll denied because service is removed");
+		msg(0, "SAMPLE_QUEUE: putAll denied because service is removed");
 		status=CELIX_ILLEGAL_STATE;
 	}
 
@@ -180,6 +204,7 @@ int queueService_take(sample_queue_type *sampleQueue, struct sample *sample){
 		struct sample *tmpSample = arrayList_remove(sampleQueue->queue, 0);
 		memcpy(sample, tmpSample, sizeof(struct sample));
 		free(tmpSample);
+		sampleQueue->takeCnt++;
 		status = CELIX_SUCCESS;
 	}
 
@@ -215,7 +240,24 @@ int queueService_takeAll(sample_queue_type *sampleQueue, uint32_t min, uint32_t 
 	}
 
 	*samplesSize = i;
+	sampleQueue->takeCnt += i;
 	pthread_mutex_unlock(&sampleQueue->lock);
 
 	return (int) status;
+}
+
+
+void *printStatistics(void *handle) {
+	sample_queue_type* qHandler = handle;
+	qHandler->statisticsRunning = true;
+	while (qHandler->statisticsRunning) {
+		// TODO: add lock
+		msg(1, "QUEUE: \tsamples put: %d \tsamples taken: %d \tqueue size: %d", qHandler->putCnt, qHandler->takeCnt, arrayList_size(qHandler->queue));
+		qHandler->putCnt = 0;
+		qHandler->takeCnt = 0;
+		sleep(2);
+	}
+
+	pthread_exit(NULL);
+	return NULL;
 }

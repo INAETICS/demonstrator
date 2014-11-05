@@ -42,6 +42,7 @@ celix_status_t bundleActivator_create(bundle_context_pt context, void **userData
 	} else {
 		status = CELIX_ENOMEM;
 	}
+
 	return status;
 }
 
@@ -68,7 +69,6 @@ celix_status_t bundleActivator_start(void * userData, bundle_context_pt context)
 
 		printf("SAMPLE_QUEUE: Service %s %s\n", INAETICS_DEMONSTATOR_API__SAMPLE_QUEUE_SERVICE_NAME,
 				status == CELIX_SUCCESS ? "registered" : "registration failed");
-
 	}
 
 	return status;

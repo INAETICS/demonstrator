@@ -15,14 +15,22 @@
 #include "inaetics_demonstrator_api/sample_queue.h"
 
 
-#define MIN_BURST_LEN 0
-#define MAX_BURST_LEN 10
+#define SINGLE_SAMPLES_PER_SEC 	250
+#define BURST_SAMPLES_PER_SEC 	250
+
+#define MIN_BURST_LEN 			2
+#define MAX_BURST_LEN 			10
+
+#define VERBOSE					1
+#define WAIT_TIME_SECONDS       2
 
 struct activator {
 	service_tracker_pt tracker;
 	array_list_pt queueServices;
 	bool running;
 	pthread_t worker;
+	pthread_mutex_t queueLock;
+	pthread_cond_t queueAvailable;
 };
 
 void *processSamples(void *handle);

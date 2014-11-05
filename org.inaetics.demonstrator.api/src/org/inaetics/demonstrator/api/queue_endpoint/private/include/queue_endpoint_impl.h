@@ -13,5 +13,7 @@ celix_status_t queueEndpoint_handleRequest(remote_endpoint_pt endpoint, char *da
 
 celix_status_t queueEndpoint_put(remote_endpoint_pt endpoint, char *data, char **reply);
 celix_status_t queueEndpoint_putAll(remote_endpoint_pt endpoint, char *data, char **reply);
+celix_status_t queueEndpoint_take(remote_endpoint_pt endpoint, char *data, char **reply);
+celix_status_t queueEndpoint_takeAll(remote_endpoint_pt endpoint, char *data, char **reply);
 
 #endif

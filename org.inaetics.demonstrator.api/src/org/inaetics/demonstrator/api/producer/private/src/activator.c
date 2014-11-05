@@ -1,9 +1,3 @@
-/*
- * activator.c
- *
- *  Created on: 18 Sep 2014
- *      Author: abroekhuis
- */
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -27,12 +21,16 @@ celix_status_t queueServiceRemoved(void *handle, service_reference_pt reference,
 
 celix_status_t bundleActivator_create(bundle_context_pt context, void **userData) {
 	celix_status_t status = CELIX_SUCCESS;
-	*userData = malloc(sizeof(struct activator));
-	if (*userData) {
-		((struct activator *) *userData)->tracker = NULL;
-		((struct activator *) *userData)->queueServices = NULL;
-		((struct activator *) *userData)->running = false;
-		((struct activator *) *userData)->available = false;
+	struct activator *activator  = calloc(1, sizeof(*activator));
+
+	if (activator) {
+		activator->tracker = NULL;
+		activator->queueServices = NULL;
+		activator->running = false;
+		pthread_mutex_init(&activator->queueLock, NULL);
+		pthread_cond_init(&activator->queueAvailable, NULL);
+
+		*userData = activator;
 	} else {
 		status = CELIX_ENOMEM;
 	}
@@ -50,6 +48,7 @@ celix_status_t bundleActivator_start(void * userData, bundle_context_pt context)
 	// start the thread
 	activator->running = true;
 	int rc = pthread_create(&activator->worker, NULL, produceSamples, activator);
+
 	if (rc) {
 		status = CELIX_BUNDLE_EXCEPTION;
 	} else {
@@ -69,6 +68,7 @@ celix_status_t bundleActivator_stop(void * userData, bundle_context_pt context) 
 	struct activator *activator = userData;
 
 	printf("PRODUCER: Stopping bundle...\n");
+
 	// stop the thread
 	activator->running = false;
 	void *exitStatus = NULL;
@@ -78,7 +78,9 @@ celix_status_t bundleActivator_stop(void * userData, bundle_context_pt context) 
 	serviceTracker_destroy(activator->tracker);
 
 	// destroy the list of services
+	pthread_mutex_lock(&activator->queueLock);
 	arrayList_destroy(activator->queueServices);
+	pthread_mutex_unlock(&activator->queueLock);
 
 	return status;
 }
@@ -87,6 +89,7 @@ celix_status_t bundleActivator_destroy(void * userData, bundle_context_pt contex
 	celix_status_t status = CELIX_SUCCESS;
 	struct activator *activator = userData;
 
+	pthread_mutex_destroy(&activator->queueLock);
 	free(activator);
 
 	return status;
@@ -95,8 +98,12 @@ celix_status_t bundleActivator_destroy(void * userData, bundle_context_pt contex
 celix_status_t queueServiceAdded(void *handle, service_reference_pt reference, void *service)
 {
 	struct activator *activator = handle;
+
+	pthread_mutex_lock(&activator->queueLock);
 	arrayList_add(activator->queueServices, service);
-	activator->available = true;
+	pthread_cond_signal(&activator->queueAvailable);
+	pthread_mutex_unlock(&activator->queueLock);
+
 	printf("PRODUCER: Queue Service Added.\n");
 
 	return CELIX_SUCCESS;
@@ -105,8 +112,11 @@ celix_status_t queueServiceAdded(void *handle, service_reference_pt reference, v
 celix_status_t queueServiceRemoved(void *handle, service_reference_pt reference, void *service)
 {
 	struct activator *activator = handle;
+
+	pthread_mutex_lock(&activator->queueLock);
 	arrayList_removeElement(activator->queueServices, service);
-	activator->available = false;
+	pthread_mutex_unlock(&activator->queueLock);
+
 	printf("PRODUCER: Queue Service Removed.\n");
 
 	return CELIX_SUCCESS;

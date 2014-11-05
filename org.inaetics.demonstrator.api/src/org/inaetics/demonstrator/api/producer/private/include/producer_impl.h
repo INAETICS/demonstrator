@@ -15,14 +15,18 @@
 #include "inaetics_demonstrator_api/sample_queue.h"
 
 
+#define SINGLE_SAMPLES_PER_SEC 	1000
+#define BURST_SAMPLES_PER_SEC 	1000
 
-#define SAMPLE_STRING_MAX_LENGTH 2048
-#define SINGLE_PUT_NUMBER 5
-#define SAMPLE_GEN_PERIOD 1
-#define MIN_BURST_LEN 2
-#define MAX_BURST_LEN 10
+#define MIN_BURST_LEN 			2
+#define MAX_BURST_LEN 			10
 
-struct localSample{
+#define VERBOSE					1
+#define WAIT_TIME_SECONDS       5
+
+
+
+struct localSample {
 	uint64_t time; //milliseconds since unix epoch
 	double value1;
 	double value2;
@@ -32,8 +36,9 @@ struct activator {
 	service_tracker_pt tracker;
 	array_list_pt queueServices;
 	bool running;
-	bool available;
 	pthread_t worker;
+	pthread_mutex_t queueLock;
+	pthread_cond_t queueAvailable;
 };
 
 

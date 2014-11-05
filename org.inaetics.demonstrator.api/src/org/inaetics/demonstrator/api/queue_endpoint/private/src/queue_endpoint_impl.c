@@ -37,7 +37,7 @@ celix_status_t queueEndpoint_handleRequest(remote_endpoint_pt endpoint, char *da
 	root = json_loads(data, 0, &jsonError);
 	json_unpack(root, "{s:s}", "m", &sig);
 
-	printf("QUEUE_ENDPOINT: Handle request \"%s\" with data \"%s\"\n", sig, data);
+	//printf("QUEUE_ENDPOINT: Handle request \"%s\" with data \"%s\"\n", sig, data);
 
 	if (strcmp(sig, "put(LZ)D") == 0) {
 		queueEndpoint_put(endpoint, data, reply);
@@ -50,6 +50,8 @@ celix_status_t queueEndpoint_handleRequest(remote_endpoint_pt endpoint, char *da
 	} else {
 		status = CELIX_ILLEGAL_ARGUMENT;
 	}
+
+	json_decref(root);
 
 	return status;
 }
@@ -78,10 +80,10 @@ celix_status_t queueEndpoint_put(remote_endpoint_pt endpoint, char *data, char *
 	json_t *root;
 
 	root = json_loads(data, 0, &jsonError);
+
 	if (!root) {
 		status = CELIX_ILLEGAL_ARGUMENT;
 	} else {
-
 		struct sample_queue_service* service = endpoint->service;
 
 		uint64_t time;
@@ -107,13 +109,17 @@ celix_status_t queueEndpoint_put(remote_endpoint_pt endpoint, char *data, char *
 			}
 
 			char *c = json_dumps(resultRoot, 0);
-
 			*reply = c;
+
+			json_decref(resultRoot);
 		} else {
 			printf("QUEUE_ENDPOINT: No service available");
 			status = CELIX_BUNDLE_EXCEPTION;
 		}
+
 	}
+
+	json_decref(root);
 
 	return status;
 }
@@ -124,6 +130,7 @@ celix_status_t queueEndpoint_putAll(remote_endpoint_pt endpoint, char *data, cha
 	json_t *root;
 
 	root = json_loads(data, 0, &jsonError);
+
 	if (!root) {
 		status = CELIX_ILLEGAL_ARGUMENT;
 	} else if (endpoint->service != NULL ) {
@@ -133,7 +140,6 @@ celix_status_t queueEndpoint_putAll(remote_endpoint_pt endpoint, char *data, cha
 		json_t *resultRoot;
 		uint32_t samples_stored = 0;
 		uint32_t arrayCnt;
-		uint32_t size;
 
 		struct sample_queue_service* service = endpoint->service;
 
@@ -164,10 +170,13 @@ celix_status_t queueEndpoint_putAll(remote_endpoint_pt endpoint, char *data, cha
 
 		char *c = json_dumps(resultRoot, 0);
 		*reply = c;
+		json_decref(resultRoot);
 	} else {
 		printf("QUEUE_ENDPOINT: No service available");
 		status = CELIX_BUNDLE_EXCEPTION;
 	}
+
+	json_decref(root);
 
 	return status;
 }
@@ -197,13 +206,15 @@ celix_status_t queueEndpoint_take(remote_endpoint_pt endpoint, char *data, char 
 
 			char *c = json_dumps(resultRoot, 0);
 			*reply = c;
+			json_decref(resultRoot);
 
 			free(workSample);
-
 	} else {
 		printf("QUEUE_ENDPOINT: No service available");
 		status = CELIX_BUNDLE_EXCEPTION;
 	}
+
+	json_decref(root);
 
 	return status;
 }
@@ -220,12 +231,12 @@ celix_status_t queueEndpoint_takeAll(remote_endpoint_pt endpoint, char *data, ch
 		status = CELIX_ILLEGAL_ARGUMENT;
 	} else  if (endpoint->service != NULL ) {
 			struct sample_queue_service* service = endpoint->service;
-			struct sample* workSample = calloc(1,sizeof(struct sample));
 			uint32_t min = 0;
 			uint32_t max = 0;
 			uint32_t numOfRecvSamples;
-			int j, arrayCnt;
+			int j, result, arrayCnt;
 			json_t *resultRoot;
+			json_t *array = json_array();
 
 			json_unpack(root, "{s:[ii]}", "d", &min, &max);
 
@@ -234,18 +245,16 @@ celix_status_t queueEndpoint_takeAll(remote_endpoint_pt endpoint, char *data, ch
 			for (j=0; j < max; j++)
 				recvSamples[j] = calloc(1,sizeof(struct sample));
 
-			int result = service->takeAll(service->sampleQueue, min, max, &recvSamples[0], &numOfRecvSamples);
-
+			result = service->takeAll(service->sampleQueue, min, max, &recvSamples[0], &numOfRecvSamples);
 
 			if (result == 0) {
-				json_t *array = json_array();
 
 				for (arrayCnt = 0; arrayCnt < numOfRecvSamples; arrayCnt++) {
 					json_t *element = json_pack("{s:[Iff]}", "d", recvSamples[arrayCnt]->time, recvSamples[arrayCnt]->value1, recvSamples[arrayCnt]->value2);
-					json_array_append(array, element);
+					json_array_append_new(array, element);
 				}
 
-				resultRoot = json_pack("{s:i, s:o}", "r", result, "d", array);
+				resultRoot = json_pack("{s:i, s:O}", "r", result, "d", array);
 			}
 			else {
 				resultRoot = json_pack("{s:i, s:[]}", "r", result, "d");
@@ -254,6 +263,9 @@ celix_status_t queueEndpoint_takeAll(remote_endpoint_pt endpoint, char *data, ch
 			char *c = json_dumps(resultRoot, 0);
 			*reply = c;
 
+			json_decref(array);
+			json_decref(resultRoot);
+
 			for (j=0; j < max; j++)
 				free(recvSamples[j]);
 	} else {
@@ -261,6 +273,7 @@ celix_status_t queueEndpoint_takeAll(remote_endpoint_pt endpoint, char *data, ch
 		status = CELIX_BUNDLE_EXCEPTION;
 	}
 
+	json_decref(root);
 
 	return status;
 }
