@@ -23,8 +23,8 @@ celix_status_t queueProxy_create(bundle_context_pt context, sample_queue_type **
 	} else {
 		(*queue)->context = context;
 		(*queue)->endpoint = NULL;
-		(*queue)->sendToCallback=NULL;
-		(*queue)->sendToHandler=NULL;
+		(*queue)->sendToCallback = NULL;
+		(*queue)->sendToHandler = NULL;
 	}
 
 	return status;
@@ -61,6 +61,9 @@ celix_status_t queueProxy_put(sample_queue_type* queue, struct sample workSample
 				status = CELIX_BUNDLE_EXCEPTION;
 			}
 			json_decref(js_reply);
+		}
+		else {
+			status = replyStatus;
 		}
 
 		json_decref(root);
@@ -113,6 +116,9 @@ celix_status_t queueProxy_putAll(sample_queue_type *queue, struct sample *sample
 			}
 			json_decref(js_reply);
 		}
+		else {
+			status = replyStatus;
+		}
 
 		json_decref(array);
 		json_decref(root);
@@ -155,6 +161,9 @@ int queueProxy_take(sample_queue_type* queue, struct sample *sample) {
 				status = CELIX_BUNDLE_EXCEPTION;
 			}
 			json_decref(js_reply);
+		}
+		else {
+			status = replyStatus;
 		}
 		json_decref(root);
 
@@ -212,6 +221,9 @@ int queueProxy_takeAll(sample_queue_type* queue, uint32_t min, uint32_t max, str
 			}
 
 			json_decref(js_reply);
+		}
+		else {
+			status = replyStatus;
 		}
 
 		json_decref(root);
