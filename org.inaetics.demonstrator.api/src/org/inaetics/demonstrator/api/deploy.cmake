@@ -1,9 +1,9 @@
 deploy("inaetics-demonstrator" BUNDLES
 		${CELIX_BUNDLES_DIR}/shell.zip
 		${CELIX_BUNDLES_DIR}/shell_tui.zip
-		sample_queue
+                sample_queue
         producer
-	processor
+            processor
       )
 
   deploy("inaetics-demonstrator-queue" BUNDLES
@@ -15,7 +15,6 @@ deploy("inaetics-demonstrator" BUNDLES
 		sample_queue
         ENDPOINTS org.inaetics.demonstator.api.SampleQueue_endpoint
       )
-
 
   deploy("inaetics-demonstrator-producer" BUNDLES
 		${CELIX_BUNDLES_DIR}/shell.zip
@@ -31,8 +30,20 @@ deploy("inaetics-demonstrator" BUNDLES
 		${CELIX_BUNDLES_DIR}/shell.zip
 		${CELIX_BUNDLES_DIR}/shell_tui.zip
 		${CELIX_BUNDLES_DIR}/topology_manager.zip
-		${CELIX_BUNDLES_DIR}/discovery_configured.zip
-		${CELIX_BUNDLES_DIR}/remote_service_admin_http.zip
+                ${CELIX_BUNDLES_DIR}/discovery_configured.zip
+                ${CELIX_BUNDLES_DIR}/remote_service_admin_http.zip
         processor
-        ENDPOINTS org.inaetics.demonstator.api.SampleQueue_proxy
+        ENDPOINTS 
+        org.inaetics.demonstator.api.SampleQueue_proxy
+        org.inaetics.demonstator.api.DataStore_proxy
+      )
+  
+  deploy("inaetics-demonstrator-dataStore" BUNDLES
+                ${CELIX_BUNDLES_DIR}/shell.zip
+                ${CELIX_BUNDLES_DIR}/shell_tui.zip
+                ${CELIX_BUNDLES_DIR}/discovery_configured.zip
+                ${CELIX_BUNDLES_DIR}/topology_manager.zip
+                ${CELIX_BUNDLES_DIR}/remote_service_admin_http.zip
+                data_store
+        ENDPOINTS org.inaetics.demonstator.api.DataStore_endpoint
       )

@@ -53,25 +53,16 @@ celix_status_t queueEndpoint_handleRequest(remote_endpoint_pt endpoint, char *da
 
 	json_decref(root);
 
-	return status;
+        return status;
 }
 
-static celix_status_t queueEndpoint_decodeToSample(uint64_t time, double value1, double value2,
-		struct sample* workSample) {
+static celix_status_t queueEndpoint_decodeToSample(uint64_t time, double value1, double value2,struct sample* workSample) {
 
-	struct localSample {
-		uint64_t time;
-		double value1;
-		double value2;
-	} local;
+        workSample->time = time;
+        workSample->value1 = value1;
+        workSample->value2 = value2;
 
-	local.time = time;
-	local.value1 = value1;
-	local.value2 = value2;
-
-	memcpy(workSample, &local, sizeof(struct localSample));
-
-	return CELIX_SUCCESS;
+        return CELIX_SUCCESS;
 }
 
 celix_status_t queueEndpoint_put(remote_endpoint_pt endpoint, char *data, char **reply) {

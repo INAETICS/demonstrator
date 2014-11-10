@@ -19,9 +19,9 @@
 #include <stdint.h>
 
 struct sample {
-	const uint64_t time; //milliseconds since unix epoch
-	const double value1;
-	const double value2;
+        uint64_t time; //milliseconds since unix epoch
+        double value1;
+        double value2;
 };
 
 #endif

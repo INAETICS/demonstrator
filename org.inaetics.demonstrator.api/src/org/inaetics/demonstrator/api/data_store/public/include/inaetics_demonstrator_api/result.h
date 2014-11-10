@@ -13,21 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __INAETICS_DEMONSTATOR_API__DATA_STORE_H_
-#define __INAETICS_DEMONSTATOR_API__DATA_STORE_H_
+#ifndef __INAETICS_DEMONSTATOR_API__RESULT_H_
+#define __INAETICS_DEMONSTATOR_API__RESULT_H_
 
 #include <stdint.h>
-#include <stdbool.h>
-#include "inaetics_demonstrator_api/result.h"
+#include "inaetics_demonstrator_api/sample.h"
 
-#define INAETICS_DEMONSTRATOR_API__DATA_STORE_SERVICE_NAME "org.inaetics.demonstator.api.DataStore"
-
-typedef struct sample_processor sample_processor_type; //ADT
-
-struct data_store_service {
-	data_store_type *dataStore;
-
-	int (*findResultsBetween)(sample_processor_type *dataStore, uint64_t begin, uint64_t end, struct result **results, uint32_t *resultSize);
+struct result {
+	uint64_t time; //milliseconds since unix epoch
+	double value1;
+	struct sample sample;
 };
 
 #endif

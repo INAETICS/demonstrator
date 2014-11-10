@@ -27,16 +27,12 @@ static unsigned int rand_range(unsigned int min, unsigned int max)
 
 static void fillSample(struct sample* s) {
 
-	struct localSample ls;
-
-	struct timeval tv;
-	gettimeofday(&tv, NULL );
-	ls.time = (tv.tv_sec * 1000) + (tv.tv_usec / 1000);
-	srand(ls.time);
-	ls.value1 = (double) rand();
-	ls.value2 = (double) rand();
-
-	memcpy(s, &ls, sizeof(struct sample));
+        struct timeval tv;
+        gettimeofday(&tv, NULL );
+        s->time = (tv.tv_sec * 1000) + (tv.tv_usec / 1000);
+        srand(s->time);
+        s->value1 = (double) rand();
+        s->value2 = (double) rand();
 
 }
 
@@ -52,20 +48,20 @@ void *produceSamples(void *handle) {
 
 	struct sample smpl;
 
-	while (activator->running) {
-		struct timespec ts;
-		int i;
-		int rc = 0;
+        while (activator->running) {
+                struct timespec ts;
+                int i;
+                int rc = ETIMEDOUT;
 
-		clock_gettime(CLOCK_REALTIME, &ts);
-		ts.tv_sec += WAIT_TIME_SECONDS;
+                clock_gettime(CLOCK_REALTIME, &ts);
+                ts.tv_sec += WAIT_TIME_SECONDS;
 
-		pthread_mutex_lock(&activator->queueLock);
+                pthread_mutex_lock(&activator->queueLock);
 
-		/* block, till a queue is available */
-		while ((arrayList_size(activator->queueServices) == 0) && (rc != ETIMEDOUT) && (activator->running)) {
-			rc = pthread_cond_timedwait(&activator->queueAvailable, &activator->queueLock, &ts);
-		}
+                /* block, till a queue is available */
+                while ((arrayList_size(activator->queueServices) == 0) && (rc == ETIMEDOUT) && (activator->running)) {
+                        rc = pthread_cond_timedwait(&activator->queueAvailable, &activator->queueLock, &ts);
+                }
 
 		if (rc == 0) {
 			for (i = 0; i < arrayList_size(activator->queueServices) && (activator->running); i++) {

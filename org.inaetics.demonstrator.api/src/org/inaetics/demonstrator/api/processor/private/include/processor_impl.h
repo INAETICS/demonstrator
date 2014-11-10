@@ -13,9 +13,10 @@
 #include <service_tracker.h>
 
 #include "inaetics_demonstrator_api/sample_queue.h"
+#include "inaetics_demonstrator_api/data_store.h"
 
 
-#define SINGLE_SAMPLES_PER_SEC 	250
+#define SINGLE_SAMPLES_PER_SEC  250
 #define BURST_SAMPLES_PER_SEC 	250
 
 #define MIN_BURST_LEN 			2
@@ -25,12 +26,19 @@
 #define WAIT_TIME_SECONDS       2
 
 struct activator {
-	service_tracker_pt tracker;
-	array_list_pt queueServices;
-	bool running;
-	pthread_t worker;
-	pthread_mutex_t queueLock;
-	pthread_cond_t queueAvailable;
+        /*QueueService stuffs*/
+        service_tracker_pt queueTracker;
+        array_list_pt queueServices;
+        pthread_mutex_t queueLock;
+        pthread_cond_t queueAvailable;
+        /*DataStore stuffs*/
+        service_tracker_pt dataStoreTracker;
+        array_list_pt dataStoreServices;
+        pthread_mutex_t dataStoreLock;
+        pthread_cond_t dataStoreAvailable;
+        /*Processing thread stuffs*/
+        bool running;
+        pthread_t worker;
 };
 
 void *processSamples(void *handle);

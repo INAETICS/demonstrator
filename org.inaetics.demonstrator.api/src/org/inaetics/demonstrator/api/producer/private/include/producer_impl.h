@@ -25,16 +25,9 @@
 #define WAIT_TIME_SECONDS       5
 
 
-
-struct localSample {
-	uint64_t time; //milliseconds since unix epoch
-	double value1;
-	double value2;
-};
-
 struct activator {
-	service_tracker_pt tracker;
-	array_list_pt queueServices;
+        service_tracker_pt tracker;
+        array_list_pt queueServices;
 	bool running;
 	pthread_t worker;
 	pthread_mutex_t queueLock;
