@@ -1,10 +1,11 @@
 -runfw: org.apache.felix.framework;version='[4,5)'
 -runee: JavaSE-1.7
 -runsystemcapabilities: ${native_capability}
--resolve.effective: active
+-runstorage: generated/processor1
 
 -runbundles: \
 	osgi.cmpn;version=4.2,\
+	org.osgi.service.remoteserviceadmin,\
 	org.apache.felix.dependencymanager,\
 	org.apache.felix.dependencymanager.shell,\
 	org.apache.felix.gogo.runtime,\
@@ -17,12 +18,14 @@
 	org.apache.felix.metatype,\
 	org.apache.felix.log,\
 	org.apache.felix.webconsole,\
+    org.amdatu.remote.discovery.configured;version=latest,\
+    org.amdatu.remote.admin.http;version=latest,\
+    org.amdatu.remote.topology.promiscuous;version=latest,\
 	org.inaetics.demonstrator.api.data;version=latest,\
-	org.inaetics.demonstrator.api.datastore;version=latest,\
-	org.inaetics.demonstrator.api.processor;version=latest,\
 	org.inaetics.demonstrator.api.producer;version=latest,\
 	org.inaetics.demonstrator.api.queue;version=latest,\
-	org.inaetics.demonstrator.stub.datastore;version=latest,\
-	org.inaetics.demonstrator.stub.processor;version=latest,\
-	org.inaetics.demonstrator.stub.producer;version=latest,\
-	org.inaetics.demonstrator.stub.queue;version=latest
+	org.inaetics.demonstrator.stub.producer;version=latest
+
+-runproperties: \
+	org.osgi.service.http.port=9003,\
+	org.amdatu.remote.discovery.configured.endpoints='http://localhost:9000/org.amdatu.remote.discovery.configured,http://localhost:9001/org.amdatu.remote.discovery.configured,http://localhost:9002/org.amdatu.remote.discovery.configured'
