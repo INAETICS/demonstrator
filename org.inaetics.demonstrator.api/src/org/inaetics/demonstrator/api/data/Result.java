@@ -16,9 +16,16 @@
 package org.inaetics.demonstrator.api.data;
 
 public class Result {
-	private final long processingTime; // milliseconds since epoch time
-	private final double result1;
-	private final Sample sample;
+	private long processingTime; // milliseconds since epoch time
+	private double result1;
+	private Sample sample;
+	
+	/**
+	 * Constructor needed for JSON (de)serialization. 
+	 */
+	public Result() {
+		// Nop
+	}
 
 	public Result(long processingTime, double result1, Sample sample) {
 		this.processingTime = processingTime;
@@ -76,6 +83,18 @@ public class Result {
 		return result;
 	}
 	
+	public void setProcessingTime(long processingTime) {
+		this.processingTime = processingTime;
+	}
+	
+	public void setResult1(double result1) {
+		this.result1 = result1;
+	}
+	
+	public void setSample(Sample sample) {
+		this.sample = sample;
+	}
+
 	@Override
 	public String toString() {
 		return String.format("Result[%d, %s => %.3f]", processingTime, sample, result1);

@@ -17,12 +17,18 @@ package org.inaetics.demonstrator.api.data;
 
 public class Sample {
 
-	private final long sampleTime; // Milliseconds since epoch time
-	private final double value1;
-	private final double value2;
+	private long sampleTime; // Milliseconds since epoch time
+	private double value1;
+	private double value2;
+
+	/**
+	 * Constructor needed for JSON (de)serialization.
+	 */
+	public Sample() {
+		// Nop
+	}
 
 	public Sample(long sampleTime, double value1, double value2) {
-		super();
 		this.sampleTime = sampleTime;
 		this.value1 = value1;
 		this.value2 = value2;
@@ -73,7 +79,19 @@ public class Sample {
 		result = prime * result + (int) (temp ^ (temp >>> 32));
 		return result;
 	}
-	
+
+	public void setSampleTime(long sampleTime) {
+		this.sampleTime = sampleTime;
+	}
+
+	public void setValue1(double value1) {
+		this.value1 = value1;
+	}
+
+	public void setValue2(double value2) {
+		this.value2 = value2;
+	}
+
 	@Override
 	public String toString() {
 		return String.format("Sample[%d, <%.3f;%.3f>]", sampleTime, value1, value2);
