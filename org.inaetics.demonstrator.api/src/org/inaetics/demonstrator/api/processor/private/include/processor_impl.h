@@ -25,22 +25,16 @@
 #define VERBOSE					1
 #define WAIT_TIME_SECONDS       2
 
-struct activator {
-        /*QueueService stuffs*/
-        service_tracker_pt queueTracker;
-        array_list_pt queueServices;
-        pthread_mutex_t queueLock;
-        pthread_cond_t queueAvailable;
-        /*DataStore stuffs*/
-        service_tracker_pt dataStoreTracker;
-        array_list_pt dataStoreServices;
-        pthread_mutex_t dataStoreLock;
-        pthread_cond_t dataStoreAvailable;
-        /*Processing thread stuffs*/
-        bool running;
-        pthread_t worker;
-};
+typedef struct processor* processor_pt;
 
-void *processSamples(void *handle);
+celix_status_t processor_create(processor_pt* processor);
+celix_status_t processor_stop(processor_pt processor);
+celix_status_t processor_destroy(processor_pt processor);
+
+celix_status_t processor_queueServiceAdded(void *handle, service_reference_pt reference, void *service);
+celix_status_t processor_queueServiceRemoved(void *handle, service_reference_pt reference, void *service);
+
+celix_status_t processor_dataStoreServiceAdded(void *handle, service_reference_pt reference, void *service);
+celix_status_t processor_dataStoreServiceRemoved(void *handle, service_reference_pt reference, void *service);
 
 #endif /* PROCESSOR_IMPL_H */
