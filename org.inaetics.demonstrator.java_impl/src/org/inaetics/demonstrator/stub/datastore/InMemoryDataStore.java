@@ -62,14 +62,12 @@ public class InMemoryDataStore extends StatsProvider implements DataStore, Manag
 
 	@Override
 	public void store(Result result) {
-		m_log.log(LogService.LOG_INFO, "Storing result: " + result);
 		m_store.add(result);
 		m_statsCollector.put(m_store.size());
 	}
 
 	@Override
 	public void storeAll(Collection<Result> results) {
-		m_log.log(LogService.LOG_INFO, "Storing results: " + results);
 		m_store.addAll(results);
 		m_statsCollector.put(m_store.size());
 	}
@@ -77,6 +75,7 @@ public class InMemoryDataStore extends StatsProvider implements DataStore, Manag
 	@Override
 	public void updated(Dictionary<String, ?> properties) throws ConfigurationException {
 		// Nothing yet...
+	    m_log.log(LogService.LOG_INFO, "InMemoryDataStore updated...");
 	}
 
 	@Override
@@ -91,7 +90,7 @@ public class InMemoryDataStore extends StatsProvider implements DataStore, Manag
 		double slope = stats.getSlope();
         renderSlope(writer, m_lastSlope, slope);
         m_lastSlope = slope;
-        
+
 		writer.append("<dl class=\"dl-horizontal\">");
 		for (Map.Entry<Long, Integer> entry : stats.getEntries()) {
 			writer.printf("<dt>%1$tF %1$tT.%1$tL</dt><dd>size: %2$d entries</dd>", entry.getKey(), entry.getValue());

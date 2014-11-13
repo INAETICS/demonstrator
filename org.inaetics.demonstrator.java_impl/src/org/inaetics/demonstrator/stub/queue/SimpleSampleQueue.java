@@ -21,8 +21,8 @@ import java.util.Collection;
 import java.util.Dictionary;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import org.inaetics.demonstrator.api.data.Sample;
 import org.inaetics.demonstrator.api.queue.SampleQueue;
@@ -34,8 +34,6 @@ import org.osgi.service.log.LogService;
 public class SimpleSampleQueue extends StatsProvider implements SampleQueue, ManagedService {
     private static final String TITLE = "Queue Stats";
 
-    private static final int QUEUE_SIZE = 1024 * 1024;
-
     private final BlockingQueue<Sample> m_queue;
     private final SizeStatsCollector m_statsCollector;
     private volatile double m_lastSlope;
@@ -44,7 +42,7 @@ public class SimpleSampleQueue extends StatsProvider implements SampleQueue, Man
     private volatile LogService m_log;
 
     public SimpleSampleQueue() {
-        m_queue = new ArrayBlockingQueue<>(QUEUE_SIZE);
+        m_queue = new LinkedBlockingQueue<>();
         m_statsCollector = new SizeStatsCollector();
         m_lastSlope = 0.0;
     }
@@ -54,7 +52,6 @@ public class SimpleSampleQueue extends StatsProvider implements SampleQueue, Man
         try {
             m_queue.put(sample);
 
-            m_log.log(LogService.LOG_INFO, "Put " + sample + " into queue: " + m_queue.size());
             m_statsCollector.put(m_queue.size());
             return true;
         } catch (InterruptedException e) {
@@ -69,7 +66,6 @@ public class SimpleSampleQueue extends StatsProvider implements SampleQueue, Man
             put(sample);
         }
 
-        m_log.log(LogService.LOG_INFO, "Put " + samples + " into queue: " + m_queue.size());
         m_statsCollector.put(m_queue.size());
         return m_queue.size() - size;
     }
@@ -79,7 +75,6 @@ public class SimpleSampleQueue extends StatsProvider implements SampleQueue, Man
         try {
             Sample result = m_queue.take();
 
-            m_log.log(LogService.LOG_INFO, "Took " + result + " from queue: " + m_queue.size());
             m_statsCollector.put(m_queue.size());
 
             return result;
@@ -101,6 +96,7 @@ public class SimpleSampleQueue extends StatsProvider implements SampleQueue, Man
     @Override
     public void updated(Dictionary<String, ?> properties) throws ConfigurationException {
         // Nothing yet...
+        m_log.log(LogService.LOG_INFO, "SimpleSampleQueue updated...");
     }
 
     @Override
