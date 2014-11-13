@@ -48,7 +48,7 @@ celix_status_t bundleActivator_start(void * userData, bundle_context_pt context)
 	service_tracker_customizer_pt customizer = NULL;
 	serviceTrackerCustomizer_create(activator->producer, NULL, producer_queueServiceAdded, NULL, producer_queueServiceRemoved, &customizer);
 
-	serviceTracker_create(context, INAETICS_DEMONSTATOR_API__SAMPLE_QUEUE_SERVICE_NAME, customizer, &activator->tracker);
+	serviceTracker_create(context, INAETICS_DEMONSTRATOR_API__SAMPLE_QUEUE_SERVICE_NAME, customizer, &activator->tracker);
 	serviceTracker_open(activator->tracker);
 
 	return status;

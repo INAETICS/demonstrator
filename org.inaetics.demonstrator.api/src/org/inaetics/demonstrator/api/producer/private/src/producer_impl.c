@@ -82,7 +82,7 @@ celix_status_t producer_sendSamples(producer_pt producer, int samplesPerSec)
 		clock_gettime(CLOCK_REALTIME, &ts_end);
 	}
 
-	msg(1, "PRODUCER: %d single samples receives.", singleSampleCnt);
+	msg(1, "PRODUCER: %d single samples sent.", singleSampleCnt);
 
 	while (ts_start.tv_sec >= ts_end.tv_sec) {
 		clock_gettime(CLOCK_REALTIME, &ts_end);
@@ -145,6 +145,7 @@ void *producer_generate(void *handle) {
 	producer->running = true;
 
 	while (producer->running) {
+
 
 		if (BURST_SAMPLES_PER_SEC > 0) {
 			producer_sendBursts(producer, BURST_SAMPLES_PER_SEC);
