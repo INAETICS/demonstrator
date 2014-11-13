@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __INAETICS_DEMONSTATOR_API__RESULT_H_
-#define __INAETICS_DEMONSTATOR_API__RESULT_H_
+#ifndef __INAETICS_DEMONSTRATOR_API__RESULT_H_
+#define __INAETICS_DEMONSTRATOR_API__RESULT_H_
 
 #include <stdint.h>
 #include "inaetics_demonstrator_api/sample.h"

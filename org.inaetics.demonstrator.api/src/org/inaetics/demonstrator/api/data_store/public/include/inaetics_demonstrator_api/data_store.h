@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __INAETICS_DEMONSTATOR_API__DATA_STORE_H_
-#define __INAETICS_DEMONSTATOR_API__DATA_STORE_H_
+#ifndef __INAETICS_DEMONSTRATOR_API__DATA_STORE_H_
+#define __INAETICS_DEMONSTRATOR_API__DATA_STORE_H_
 
 #include <stdint.h>
 #include <stdbool.h>
 #include "inaetics_demonstrator_api/result.h"
 
-#define INAETICS_DEMONSTRATOR_API__DATA_STORE_SERVICE_NAME "org.inaetics.demonstator.api.DataStore"
+#define INAETICS_DEMONSTRATOR_API__DATA_STORE_SERVICE_NAME "org.inaetics.demonstrator.api.DataStore"
 
 typedef struct data_store data_store_type; //ADT
 
