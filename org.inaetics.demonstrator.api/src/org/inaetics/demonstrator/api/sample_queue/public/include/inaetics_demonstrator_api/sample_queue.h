@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __INAETICS_DEMONSTATOR_API__SAMPLE_QUEUE_H_
-#define __INAETICS_DEMONSTATOR_API__SAMPLE_QUEUE_H_
+#ifndef __INAETICS_DEMONSTRATOR_API__SAMPLE_QUEUE_H_
+#define __INAETICS_DEMONSTRATOR_API__SAMPLE_QUEUE_H_
 
 #include <stdint.h>
 #include <stdbool.h>
 #include "inaetics_demonstrator_api/sample.h"
 
-#define INAETICS_DEMONSTATOR_API__SAMPLE_QUEUE_SERVICE_NAME "org.inaetics.demonstator.api.SampleQueue"
+#define INAETICS_DEMONSTRATOR_API__SAMPLE_QUEUE_SERVICE_NAME "org.inaetics.demonstrator.api.queue.SampleQueue"
 
 typedef struct sample_queue sample_queue_type; //ADT
 

@@ -62,12 +62,12 @@ celix_status_t bundleActivator_start(void * userData, bundle_context_pt context)
 		activator->queueService = qService;
 
 		properties = properties_create();
-		properties_set(properties, (char *) OSGI_RSA_SERVICE_EXPORTED_INTERFACES, (char *) INAETICS_DEMONSTATOR_API__SAMPLE_QUEUE_SERVICE_NAME);
+		properties_set(properties, (char *) OSGI_RSA_SERVICE_EXPORTED_INTERFACES, (char *) INAETICS_DEMONSTRATOR_API__SAMPLE_QUEUE_SERVICE_NAME);
 
-		status = bundleContext_registerService(context, INAETICS_DEMONSTATOR_API__SAMPLE_QUEUE_SERVICE_NAME,
+		status = bundleContext_registerService(context, INAETICS_DEMONSTRATOR_API__SAMPLE_QUEUE_SERVICE_NAME,
 				activator->queueService, properties, &activator->queueRegistration);
 
-		printf("SAMPLE_QUEUE: Service %s %s\n", INAETICS_DEMONSTATOR_API__SAMPLE_QUEUE_SERVICE_NAME,
+		printf("SAMPLE_QUEUE: Service %s %s\n", INAETICS_DEMONSTRATOR_API__SAMPLE_QUEUE_SERVICE_NAME,
 				status == CELIX_SUCCESS ? "registered" : "registration failed");
 	}
 
