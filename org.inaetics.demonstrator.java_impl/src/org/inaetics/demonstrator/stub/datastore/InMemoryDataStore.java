@@ -15,24 +15,37 @@
  */
 package org.inaetics.demonstrator.stub.datastore;
 
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Dictionary;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.inaetics.demonstrator.api.data.Result;
 import org.inaetics.demonstrator.api.data.Sample;
 import org.inaetics.demonstrator.api.datastore.DataStore;
+import org.inaetics.demonstrator.stub.stats.StatsProvider;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedService;
 import org.osgi.service.log.LogService;
 
-public class InMemoryDataStore implements DataStore, ManagedService {
-	private final CopyOnWriteArrayList<Result> m_store = new CopyOnWriteArrayList<>();
-	
+public class InMemoryDataStore extends StatsProvider implements DataStore, ManagedService {
+	private static final String TITLE = "Data Store Stats";
+
+	private final CopyOnWriteArrayList<Result> m_store;
+	private final SizeStatsCollector m_statsCollector;
+	private volatile double m_lastSlope;
+
 	// Injected by Felix DM...
 	private volatile LogService m_log;
+
+	public InMemoryDataStore() {
+		m_store = new CopyOnWriteArrayList<>();
+		m_statsCollector = new SizeStatsCollector();
+		m_lastSlope = 0.0;
+	}
 
 	@Override
 	public Collection<Result> findResultsBetween(long begin, long end) {
@@ -51,16 +64,38 @@ public class InMemoryDataStore implements DataStore, ManagedService {
 	public void store(Result result) {
 		m_log.log(LogService.LOG_INFO, "Storing result: " + result);
 		m_store.add(result);
+		m_statsCollector.put(m_store.size());
 	}
 
 	@Override
 	public void storeAll(Collection<Result> results) {
 		m_log.log(LogService.LOG_INFO, "Storing results: " + results);
 		m_store.addAll(results);
+		m_statsCollector.put(m_store.size());
 	}
 
 	@Override
 	public void updated(Dictionary<String, ?> properties) throws ConfigurationException {
-		// Nothing yet... 
+		// Nothing yet...
+	}
+
+	@Override
+	protected String getTitle() {
+		return TITLE;
+	}
+
+	@Override
+	protected void renderStats(PrintWriter writer) {
+		SizeStats stats = m_statsCollector.getStats();
+
+		double slope = stats.getSlope();
+        renderSlope(writer, m_lastSlope, slope);
+        m_lastSlope = slope;
+        
+		writer.append("<dl class=\"dl-horizontal\">");
+		for (Map.Entry<Long, Integer> entry : stats.getEntries()) {
+			writer.printf("<dt>%1$tF %1$tT.%1$tL</dt><dd>size: %2$d entries</dd>", entry.getKey(), entry.getValue());
+		}
+		writer.append("</dl>");
 	}
 }

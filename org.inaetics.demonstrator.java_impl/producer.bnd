@@ -1,4 +1,5 @@
-Private-Package:  \
-	org.inaetics.demonstrator.stub.producer
 Bundle-Activator: \
 	org.inaetics.demonstrator.stub.producer.Activator
+Private-Package:  \
+	org.inaetics.demonstrator.stub.stats,\
+	org.inaetics.demonstrator.stub.producer

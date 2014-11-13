@@ -1,3 +1,5 @@
-Bundle-Activator: org.inaetics.demonstrator.stub.queue.Activator
+Bundle-Activator: \
+	org.inaetics.demonstrator.stub.queue.Activator
 Private-Package:  \
+	org.inaetics.demonstrator.stub.stats,\
 	org.inaetics.demonstrator.stub.queue

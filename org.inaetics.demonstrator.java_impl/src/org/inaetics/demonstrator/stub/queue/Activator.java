@@ -17,6 +17,8 @@ package org.inaetics.demonstrator.stub.queue;
 
 import java.util.Properties;
 
+import javax.servlet.Servlet;
+
 import org.apache.felix.dm.DependencyActivatorBase;
 import org.apache.felix.dm.DependencyManager;
 import org.inaetics.demonstrator.api.queue.SampleQueue;
@@ -31,9 +33,10 @@ public class Activator extends DependencyActivatorBase {
 
 	@Override
 	public void init(BundleContext context, DependencyManager manager) throws Exception {
-		String[] ifaces = { SampleQueue.class.getName(), ManagedService.class.getName() };
+		String[] ifaces = { SampleQueue.class.getName(), Servlet.class.getName(), ManagedService.class.getName() };
 		
 		Properties props = new Properties();
+		props.put("alias", "/queue");
 		props.put(Constants.SERVICE_PID, PID);
 		props.put(RemoteConstants.SERVICE_EXPORTED_INTERFACES, ifaces[0]);
 		props.put("type", "memory");

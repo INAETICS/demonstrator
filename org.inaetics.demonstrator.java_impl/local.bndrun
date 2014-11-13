@@ -13,6 +13,7 @@
 	org.apache.felix.http.api,\
 	org.apache.felix.http.jetty,\
 	org.apache.felix.http.servlet-api,\
+	org.apache.felix.http.whiteboard,\
 	org.apache.felix.configadmin,\
 	org.apache.felix.metatype,\
 	org.apache.felix.log,\
@@ -22,7 +23,7 @@
 	org.inaetics.demonstrator.api.processor;version=latest,\
 	org.inaetics.demonstrator.api.producer;version=latest,\
 	org.inaetics.demonstrator.api.queue;version=latest,\
-	org.inaetics.demonstrator.stub.datastore;version=latest,\
-	org.inaetics.demonstrator.stub.processor;version=latest,\
-	org.inaetics.demonstrator.stub.producer;version=latest,\
-	org.inaetics.demonstrator.stub.queue;version=latest
+	org.inaetics.demonstrator.java_impl.datastore;version=latest,\
+	org.inaetics.demonstrator.java_impl.processor;version=latest,\
+	org.inaetics.demonstrator.java_impl.producer;version=latest,\
+	org.inaetics.demonstrator.java_impl.queue;version=latest

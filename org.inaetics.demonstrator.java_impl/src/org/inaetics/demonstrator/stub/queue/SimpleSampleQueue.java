@@ -15,74 +15,111 @@
  */
 package org.inaetics.demonstrator.stub.queue;
 
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Dictionary;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
 import org.inaetics.demonstrator.api.data.Sample;
 import org.inaetics.demonstrator.api.queue.SampleQueue;
+import org.inaetics.demonstrator.stub.stats.StatsProvider;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedService;
 import org.osgi.service.log.LogService;
 
-public class SimpleSampleQueue implements SampleQueue, ManagedService {
-	private static final int QUEUE_SIZE = 1024;
+public class SimpleSampleQueue extends StatsProvider implements SampleQueue, ManagedService {
+    private static final String TITLE = "Queue Stats";
 
-	private final BlockingQueue<Sample> m_queue = new ArrayBlockingQueue<>(QUEUE_SIZE);
-	
-	// Injected by Felix DM...
-	private volatile LogService m_log;
+    private static final int QUEUE_SIZE = 1024 * 1024;
 
-	@Override
-	public boolean put(Sample sample) {
-		try {
-			m_queue.put(sample);
-			
-			m_log.log(LogService.LOG_INFO, "Put " + sample + " into queue: " + m_queue.size());
-			return true;
-		} catch (InterruptedException e) {
-			return false;
-		}
-	}
+    private final BlockingQueue<Sample> m_queue;
+    private final SizeStatsCollector m_statsCollector;
+    private volatile double m_lastSlope;
 
-	@Override
-	public int putAll(Collection<Sample> samples) {
-		int size = m_queue.size();
-		for (Sample sample : samples) {
-			put(sample);
-		}
+    // Injected by Felix DM...
+    private volatile LogService m_log;
 
-		m_log.log(LogService.LOG_INFO, "Put " + samples + " into queue: " + m_queue.size());
-		return m_queue.size() - size;
-	}
+    public SimpleSampleQueue() {
+        m_queue = new ArrayBlockingQueue<>(QUEUE_SIZE);
+        m_statsCollector = new SizeStatsCollector();
+        m_lastSlope = 0.0;
+    }
 
-	@Override
-	public Sample take() {
-		try {
-			Sample result = m_queue.take();
+    @Override
+    public boolean put(Sample sample) {
+        try {
+            m_queue.put(sample);
 
-			m_log.log(LogService.LOG_INFO, "Took " + result + " from queue: " + m_queue.size());
-			
-			return result;
-		} catch (InterruptedException e) {
-			return null;
-		}
-	}
+            m_log.log(LogService.LOG_INFO, "Put " + sample + " into queue: " + m_queue.size());
+            m_statsCollector.put(m_queue.size());
+            return true;
+        } catch (InterruptedException e) {
+            return false;
+        }
+    }
 
-	@Override
-	public Collection<Sample> takeMinMax(int min, int max) {
-		List<Sample> result = new ArrayList<>(max);
-		// NOTE: this is not strictly conform our contract...
-		m_queue.drainTo(result, max);
+    @Override
+    public int putAll(Collection<Sample> samples) {
+        int size = m_queue.size();
+        for (Sample sample : samples) {
+            put(sample);
+        }
 
-		return result;
-	}
+        m_log.log(LogService.LOG_INFO, "Put " + samples + " into queue: " + m_queue.size());
+        m_statsCollector.put(m_queue.size());
+        return m_queue.size() - size;
+    }
 
-	@Override
-	public void updated(Dictionary<String, ?> properties) throws ConfigurationException {
-		// Nothing yet... 
-	}
+    @Override
+    public Sample take() {
+        try {
+            Sample result = m_queue.take();
+
+            m_log.log(LogService.LOG_INFO, "Took " + result + " from queue: " + m_queue.size());
+            m_statsCollector.put(m_queue.size());
+
+            return result;
+        } catch (InterruptedException e) {
+            return null;
+        }
+    }
+
+    @Override
+    public Collection<Sample> takeMinMax(int min, int max) {
+        List<Sample> result = new ArrayList<>(max);
+        // NOTE: this is not strictly conform our contract...
+        m_queue.drainTo(result, max);
+        m_statsCollector.put(m_queue.size());
+
+        return result;
+    }
+
+    @Override
+    public void updated(Dictionary<String, ?> properties) throws ConfigurationException {
+        // Nothing yet...
+    }
+
+    @Override
+    protected String getTitle() {
+        return TITLE;
+    }
+
+    @Override
+    protected void renderStats(PrintWriter writer) {
+        SizeStats stats = m_statsCollector.getStats();
+
+        double slope = stats.getSlope();
+        renderSlope(writer, m_lastSlope, slope);
+        m_lastSlope = slope;
+
+        writer.append("<dl class=\"dl-horizontal\">");
+        for (Map.Entry<Long, Integer> entry : stats.getEntries()) {
+            writer.printf("<dt>%1$tF %1$tT.%1$tL</dt><dd>size: %2$d entries</dd>", entry.getKey(), entry.getValue());
+        }
+        writer.append("</dl>");
+    }
 }

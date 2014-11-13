@@ -4,6 +4,7 @@
 	${junit},\
 	osgi.core;version='[5,6)',\
 	osgi.cmpn;version='[5,6)',\
+	org.apache.felix.http.servlet-api;version='[1.0,1.1)',\
 	org.apache.felix.dependencymanager;version='[3.2,4)',\
 	org.osgi.service.remoteserviceadmin;version='[6.0,6.1)',\
 	org.inaetics.demonstrator.api.data;version=latest,\

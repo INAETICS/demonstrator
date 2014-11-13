@@ -14,6 +14,7 @@
 	org.apache.felix.http.api,\
 	org.apache.felix.http.jetty,\
 	org.apache.felix.http.servlet-api,\
+	org.apache.felix.http.whiteboard,\
 	org.apache.felix.configadmin,\
 	org.apache.felix.metatype,\
 	org.apache.felix.log,\
@@ -23,9 +24,9 @@
     org.amdatu.remote.topology.promiscuous;version=latest,\
     org.inaetics.demonstrator.api.data;version=latest,\
 	org.inaetics.demonstrator.api.datastore;version=latest,\
-	org.inaetics.demonstrator.stub.datastore;version=latest
+	org.inaetics.demonstrator.java_impl.datastore;version=latest
 
 -runproperties: \
 	org.osgi.service.http.port=9000,\
-	org.amdatu.remote.discovery.configured.endpoints='http://localhost:9001/org.amdatu.remote.discovery.configured,http://localhost:9002/org.amdatu.remote.discovery.configured,http://localhost:9003/org.amdatu.remote.discovery.configured'
+	org.amdatu.remote.discovery.configured.endpoints='http://localhost:9001/org.amdatu.remote.discovery.configured,http://localhost:9002/org.amdatu.remote.discovery.configured,http://localhost:9003/org.amdatu.remote.discovery.configured,http://localhost:9004/org.amdatu.remote.discovery.configured,http://localhost:9005/org.amdatu.remote.discovery.configured,http://localhost:9006/org.amdatu.remote.discovery.configured'
 	

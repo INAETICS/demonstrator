@@ -67,7 +67,7 @@ public class IdentityProcessor implements Processor, Runnable, ManagedService {
 	 */
 	protected void start() throws Exception {
 		m_executor = Executors.newSingleThreadScheduledExecutor();
-		m_future = m_executor.scheduleAtFixedRate(this, 50, 50, TimeUnit.MILLISECONDS);
+		m_future = m_executor.scheduleAtFixedRate(this, 500, 20, TimeUnit.MILLISECONDS);
 	}
 
 	/**

@@ -48,9 +48,9 @@ public class RandomSampleProducer implements Producer, Runnable, ManagedService 
 			double val1 = randomSampleValue();
 			double val2 = randomSampleValue();
 			Sample sample = new Sample(System.currentTimeMillis(), val1, val2);
-			
+
 			m_queue.put(sample);
-			
+
 			m_log.log(LogService.LOG_INFO, "Produced: " + sample);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -67,7 +67,7 @@ public class RandomSampleProducer implements Producer, Runnable, ManagedService 
 	 */
 	protected void start() throws Exception {
 		m_executor = Executors.newSingleThreadScheduledExecutor();
-		m_future = m_executor.scheduleAtFixedRate(this, 10, 10, TimeUnit.MILLISECONDS);
+		m_future = m_executor.scheduleAtFixedRate(this, 500, 10, TimeUnit.MILLISECONDS);
 	}
 
 	/**
