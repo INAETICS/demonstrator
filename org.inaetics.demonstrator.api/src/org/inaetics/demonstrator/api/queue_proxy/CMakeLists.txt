@@ -8,15 +8,15 @@ include_directories("${PROJECT_SOURCE_DIR}/org.inaetics.demonstrator.api/src/org
 include_directories("private/include")
 
 
-set(BUNDLE_SYMBOLICNAME "org.inaetics.demonstrator.queue_endpoint")
+set(BUNDLE_SYMBOLICNAME "org.inaetics.demonstrator.queue_proxy")
 set(BUNDLE_VERSION "1.0.0")
-set(BUNDLE_NAME "org.inaetics.demonstator.api.SampleQueue_proxy")
+set(BUNDLE_NAME "org.inaetics.demonstrator.api.queue.SampleQueue_proxy")
 
-bundle(org.inaetics.demonstator.api.SampleQueue_proxy SOURCES 
+bundle(org.inaetics.demonstrator.api.queue.SampleQueue_proxy SOURCES 
 	private/src/queue_proxy_activator
 	private/src/queue_proxy_impl.c
     
     private/include/queue_proxy_impl.h
 )
 
-target_link_libraries(org.inaetics.demonstator.api.SampleQueue_proxy ${JANSSON_LIBRARIES} ${CELIX_LIBRARIES})
+target_link_libraries(org.inaetics.demonstrator.api.queue.SampleQueue_proxy ${JANSSON_LIBRARIES} ${CELIX_LIBRARIES})

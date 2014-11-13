@@ -40,7 +40,7 @@ celix_status_t bundleActivator_start(void * userData, bundle_context_pt context)
 	queueProxyFactoryService->unregisterProxyService = queueProxy_unregisterProxyService;
 
 	properties_pt props = properties_create();
-	properties_set(props, (char *) "proxy.interface", (char *) INAETICS_DEMONSTATOR_API__SAMPLE_QUEUE_SERVICE_NAME);
+	properties_set(props, (char *) "proxy.interface", (char *) INAETICS_DEMONSTRATOR_API__SAMPLE_QUEUE_SERVICE_NAME);
 
 	if (bundleContext_registerService(context, OSGI_RSA_REMOTE_PROXY_FACTORY, queueProxyFactoryService, props, &activator->proxyFactoryService) == CELIX_SUCCESS)
 	{

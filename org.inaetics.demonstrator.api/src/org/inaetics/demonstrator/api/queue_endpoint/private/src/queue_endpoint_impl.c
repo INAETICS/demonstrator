@@ -37,32 +37,31 @@ celix_status_t queueEndpoint_handleRequest(remote_endpoint_pt endpoint, char *da
 	root = json_loads(data, 0, &jsonError);
 	json_unpack(root, "{s:s}", "m", &sig);
 
-	//printf("QUEUE_ENDPOINT: Handle request \"%s\" with data \"%s\"\n", sig, data);
-
-	if (strcmp(sig, "put(LZ)D") == 0) {
+	if (strcmp(sig, "put(Lorg/inaetics/demonstrator/api/data/Sample;)Z") == 0) {
 		queueEndpoint_put(endpoint, data, reply);
-	} else if (strcmp(sig, "putAll(LDD)D") == 0) {
+	} else if (strcmp(sig, "putAll(Ljava/util/Collection;)I") == 0) {
 		queueEndpoint_putAll(endpoint, data, reply);
-	} else if (strcmp(sig, "take(L)D") == 0) {
+	} else if (strcmp(sig, "take()Lorg/inaetics/demonstrator/api/data/Sample;") == 0) {
 		queueEndpoint_take(endpoint, data, reply);
-	} else if (strcmp(sig, "takeAll(DDLD)D") == 0) {
+	} else if (strcmp(sig, "takeMinMax(II)Ljava/util/Collection;") == 0) {
 		queueEndpoint_takeAll(endpoint, data, reply);
 	} else {
+		printf("unknown incoming sig %s w/ data %s\n", sig, data);
 		status = CELIX_ILLEGAL_ARGUMENT;
 	}
 
 	json_decref(root);
 
-        return status;
+	return status;
 }
 
-static celix_status_t queueEndpoint_decodeToSample(uint64_t time, double value1, double value2,struct sample* workSample) {
+static celix_status_t queueEndpoint_decodeToSample(uint64_t time, double value1, double value2, struct sample* workSample) {
 
-        workSample->time = time;
-        workSample->value1 = value1;
-        workSample->value2 = value2;
+	workSample->time = time;
+	workSample->value1 = value1;
+	workSample->value2 = value2;
 
-        return CELIX_SUCCESS;
+	return CELIX_SUCCESS;
 }
 
 celix_status_t queueEndpoint_put(remote_endpoint_pt endpoint, char *data, char **reply) {
@@ -81,9 +80,9 @@ celix_status_t queueEndpoint_put(remote_endpoint_pt endpoint, char *data, char *
 		double value1;
 		double value2;
 
-		json_unpack(root, "{s:[Iff]}", "d", &time, &value1, &value2);
+		json_unpack(root, "{s:[{s:I,s:f,s:f}]}", "a", "sampleTime", &time, "value1", &value1, "value2", &value2);
 
-		if (endpoint->service != NULL ) {
+		if (endpoint->service != NULL) {
 			json_t *resultRoot;
 			struct sample workSample;
 			bool result = false;
@@ -93,13 +92,14 @@ celix_status_t queueEndpoint_put(remote_endpoint_pt endpoint, char *data, char *
 			putResult = service->put(service->sampleQueue, workSample, &result);
 
 			if (putResult == 0) {
-				resultRoot = json_pack("{s:i, s:b}", "r", putResult , "d", result);
+				resultRoot = json_pack("b", result);
 			}
 			else {
-				resultRoot = json_pack("{s:i, s:b}", "r", putResult , "d", false);
+				resultRoot = json_pack("b", false);
 			}
 
-			char *c = json_dumps(resultRoot, 0);
+			char *c = json_dumps(resultRoot, JSON_ENCODE_ANY);
+
 			*reply = c;
 
 			json_decref(resultRoot);
@@ -124,7 +124,7 @@ celix_status_t queueEndpoint_putAll(remote_endpoint_pt endpoint, char *data, cha
 
 	if (!root) {
 		status = CELIX_ILLEGAL_ARGUMENT;
-	} else if (endpoint->service != NULL ) {
+	} else if (endpoint->service != NULL) {
 		int putAllRetVal;
 		int arrSize;
 		json_t* array;
@@ -134,7 +134,7 @@ celix_status_t queueEndpoint_putAll(remote_endpoint_pt endpoint, char *data, cha
 
 		struct sample_queue_service* service = endpoint->service;
 
-		json_unpack(root, "{s:o}", "d", &array);
+		json_unpack(root, "{s:[o]}", "a", &array);
 		arrSize = json_array_size(array);
 
 		struct sample workSample[arrSize];
@@ -145,21 +145,20 @@ celix_status_t queueEndpoint_putAll(remote_endpoint_pt endpoint, char *data, cha
 			double value2;
 
 			json_t* sample = json_array_get(array, arrayCnt);
-			json_unpack(sample, "{s:[Iff]}", "d", &time, &value1, &value2);
-
+			json_unpack(sample, "{s:I,s:f,s:f}", "sampleTime", &time, "value1", &value1, "value2", &value2);
 			queueEndpoint_decodeToSample(time, value1, value2, &workSample[arrayCnt]);
 		}
 
 		putAllRetVal = service->putAll(service->sampleQueue, workSample, json_array_size(array), &samples_stored);
 
 		if (putAllRetVal == 0) {
-			resultRoot = json_pack("{s:i, s:i}", "r", putAllRetVal, "d", samples_stored);
+			resultRoot = json_pack("i", samples_stored);
 		}
 		else {
-			resultRoot = json_pack("{s:i, s:i}", "r", putAllRetVal, "d", 0);
+			resultRoot = json_pack("i", 0);
 		}
 
-		char *c = json_dumps(resultRoot, 0);
+		char *c = json_dumps(resultRoot, JSON_ENCODE_ANY);
 		*reply = c;
 		json_decref(resultRoot);
 	} else {
@@ -181,25 +180,26 @@ celix_status_t queueEndpoint_take(remote_endpoint_pt endpoint, char *data, char 
 
 	if (!root) {
 		status = CELIX_ILLEGAL_ARGUMENT;
-	} else  if (endpoint->service != NULL ) {
-			json_t *resultRoot;
-			struct sample* workSample = calloc(1,sizeof(struct sample));
-			struct sample_queue_service* service = endpoint->service;
+	} else if (endpoint->service != NULL) {
+		json_t *resultRoot;
+		struct sample* workSample = calloc(1, sizeof(struct sample));
+		struct sample_queue_service* service = endpoint->service;
 
-			int result = service->take(service->sampleQueue, workSample);
+		int result = service->take(service->sampleQueue, workSample);
 
-			if (result == 0) {
-				resultRoot = json_pack("{s:i, s:[Iff]}", "r", result, "d", workSample->time, workSample->value1, workSample->value2);
-			}
-			else {
-				resultRoot = json_pack("{s:i, s:[Iff]}", "r", result, "d", 0, 0.0, 0.0);
-			}
+		if (result == 0) {
+			resultRoot = json_pack("{s:i, s:f, s:f}", "sampleTime", workSample->time, "value1", workSample->value1, "value2", workSample->value2);
+		}
+		else
+		{
+			resultRoot = json_pack("n");
+		}
 
-			char *c = json_dumps(resultRoot, 0);
-			*reply = c;
-			json_decref(resultRoot);
+		char *c = json_dumps(resultRoot, JSON_ENCODE_ANY);
+		*reply = c;
+		json_decref(resultRoot);
 
-			free(workSample);
+		free(workSample);
 	} else {
 		printf("QUEUE_ENDPOINT: No service available");
 		status = CELIX_BUNDLE_EXCEPTION;
@@ -210,7 +210,6 @@ celix_status_t queueEndpoint_take(remote_endpoint_pt endpoint, char *data, char 
 	return status;
 }
 
-
 celix_status_t queueEndpoint_takeAll(remote_endpoint_pt endpoint, char *data, char **reply) {
 	celix_status_t status = CELIX_SUCCESS;
 	json_error_t jsonError;
@@ -220,45 +219,46 @@ celix_status_t queueEndpoint_takeAll(remote_endpoint_pt endpoint, char *data, ch
 
 	if (!root) {
 		status = CELIX_ILLEGAL_ARGUMENT;
-	} else  if (endpoint->service != NULL ) {
-			struct sample_queue_service* service = endpoint->service;
-			uint32_t min = 0;
-			uint32_t max = 0;
-			uint32_t numOfRecvSamples;
-			int j, result, arrayCnt;
-			json_t *resultRoot;
-			json_t *array = json_array();
+	} else if (endpoint->service != NULL) {
+		struct sample_queue_service* service = endpoint->service;
+		uint32_t min = 0;
+		uint32_t max = 0;
+		uint32_t numOfRecvSamples;
+		int j, result, arrayCnt;
+		json_t *resultRoot;
+		json_t *array = json_array();
 
-			json_unpack(root, "{s:[ii]}", "d", &min, &max);
 
-			struct sample *recvSamples[max];
+		json_unpack(root, "{s:[ii]}", "a", &min, &max);
 
-			for (j=0; j < max; j++)
-				recvSamples[j] = calloc(1,sizeof(struct sample));
+		struct sample *recvSamples[max];
 
-			result = service->takeAll(service->sampleQueue, min, max, &recvSamples[0], &numOfRecvSamples);
+		for (j = 0; j < max; j++)
+			recvSamples[j] = calloc(1, sizeof(struct sample));
 
-			if (result == 0) {
+		result = service->takeAll(service->sampleQueue, min, max, &recvSamples[0], &numOfRecvSamples);
 
-				for (arrayCnt = 0; arrayCnt < numOfRecvSamples; arrayCnt++) {
-					json_t *element = json_pack("{s:[Iff]}", "d", recvSamples[arrayCnt]->time, recvSamples[arrayCnt]->value1, recvSamples[arrayCnt]->value2);
-					json_array_append_new(array, element);
-				}
+		if (result == 0) {
 
-				resultRoot = json_pack("{s:i, s:O}", "r", result, "d", array);
-			}
-			else {
-				resultRoot = json_pack("{s:i, s:[]}", "r", result, "d");
+			for (arrayCnt = 0; arrayCnt < numOfRecvSamples; arrayCnt++) {
+				json_t *element = json_pack("{s:I,s:fs:f}", "sampleTime", recvSamples[arrayCnt]->time, "value1",recvSamples[arrayCnt]->value1, "value2", recvSamples[arrayCnt]->value2);
+				json_array_append_new(array, element);
 			}
 
-			char *c = json_dumps(resultRoot, 0);
-			*reply = c;
+			resultRoot = json_pack("O", array);
+		}
+		else {
+			resultRoot = json_pack("n");
+		}
 
-			json_decref(array);
-			json_decref(resultRoot);
+		char *c = json_dumps(resultRoot, 0);
+		*reply = c;
 
-			for (j=0; j < max; j++)
-				free(recvSamples[j]);
+		json_decref(array);
+		json_decref(resultRoot);
+
+		for (j = 0; j < max; j++)
+			free(recvSamples[j]);
 	} else {
 		printf("QUEUE_ENDPOINT: No service available");
 		status = CELIX_BUNDLE_EXCEPTION;
