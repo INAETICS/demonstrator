@@ -25,14 +25,18 @@
 #define WAIT_TIME_SECONDS       5
 
 
-struct activator {
-        service_tracker_pt tracker;
-        array_list_pt queueServices;
-	bool running;
-	pthread_t worker;
-	pthread_mutex_t queueLock;
-	pthread_cond_t queueAvailable;
-};
+typedef struct producer* producer_pt;
+
+celix_status_t producer_create(producer_pt* producer);
+celix_status_t producer_stop(producer_pt producer);
+celix_status_t producer_destroy(producer_pt producer);
+
+celix_status_t producer_queueServiceAdded(void *handle, service_reference_pt reference, void *service);
+celix_status_t producer_queueServiceRemoved(void *handle, service_reference_pt reference, void *service);
+
+
+
+
 
 
 void *produceSamples(void *handle);
