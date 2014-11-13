@@ -1,7 +1,7 @@
 -runfw: org.apache.felix.framework;version='[4,5)'
 -runee: JavaSE-1.7
 -runsystemcapabilities: ${native_capability}
--runstorage: generated/producer1
+-runstorage: generated/producer2
 
 -runbundles: \
 	osgi.cmpn;version=4.2,\
@@ -19,7 +19,7 @@
 	org.apache.felix.metatype,\
 	org.apache.felix.log,\
 	org.apache.felix.webconsole,\
-    org.amdatu.remote.discovery.configured;version=latest,\
+    org.amdatu.remote.discovery.bonjour;version=latest,\
     org.amdatu.remote.admin.http;version=latest,\
     org.amdatu.remote.topology.promiscuous;version=latest,\
 	org.inaetics.demonstrator.api.data;version=latest,\
@@ -28,5 +28,5 @@
 	org.inaetics.demonstrator.java_impl.producer;version=latest
 
 -runproperties: \
-	org.osgi.service.http.port=9002,\
-	org.amdatu.remote.discovery.configured.endpoints='http://localhost:9000/org.amdatu.remote.discovery.configured,http://localhost:9001/org.amdatu.remote.discovery.configured,http://localhost:9003/org.amdatu.remote.discovery.configured,http://localhost:9006/org.amdatu.remote.discovery.configured'
+	org.osgi.service.http.port=9011,\
+	org.amdatu.remote.discovery.bonjour.schedule=2

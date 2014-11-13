@@ -1,7 +1,7 @@
 -runfw: org.apache.felix.framework;version='[4,5)'
 -runee: JavaSE-1.7
 -runsystemcapabilities: ${native_capability}
--runstorage: generated/producer1
+-runstorage: generated/producer3
 
 -runbundles: \
 	osgi.cmpn;version=4.2,\
@@ -28,5 +28,5 @@
 	org.inaetics.demonstrator.java_impl.producer;version=latest
 
 -runproperties: \
-	org.osgi.service.http.port=9010,\
+	org.osgi.service.http.port=9012,\
 	org.amdatu.remote.discovery.bonjour.schedule=2

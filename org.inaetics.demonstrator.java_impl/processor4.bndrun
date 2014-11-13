@@ -1,7 +1,7 @@
 -runfw: org.apache.felix.framework;version='[4,5)'
 -runee: JavaSE-1.7
 -runsystemcapabilities: ${native_capability}
--runstorage: generated/producer1
+-runstorage: generated/processor4
 
 -runbundles: \
 	osgi.cmpn;version=4.2,\
@@ -23,10 +23,11 @@
     org.amdatu.remote.admin.http;version=latest,\
     org.amdatu.remote.topology.promiscuous;version=latest,\
 	org.inaetics.demonstrator.api.data;version=latest,\
-	org.inaetics.demonstrator.api.producer;version=latest,\
+	org.inaetics.demonstrator.api.datastore;version=latest,\
+	org.inaetics.demonstrator.api.processor;version=latest,\
 	org.inaetics.demonstrator.api.queue;version=latest,\
-	org.inaetics.demonstrator.java_impl.producer;version=latest
+	org.inaetics.demonstrator.java_impl.processor;version=latest
 
 -runproperties: \
-	org.osgi.service.http.port=9010,\
+	org.osgi.service.http.port=9023,\
 	org.amdatu.remote.discovery.bonjour.schedule=2
