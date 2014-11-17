@@ -20,7 +20,7 @@
 #include <stdbool.h>
 #include "inaetics_demonstrator_api/result.h"
 
-#define INAETICS_DEMONSTRATOR_API__DATA_STORE_SERVICE_NAME "org.inaetics.demonstrator.api.DataStore"
+#define INAETICS_DEMONSTRATOR_API__DATA_STORE_SERVICE_NAME "org.inaetics.demonstrator.api.datastore.DataStore"
 
 typedef struct data_store data_store_type; //ADT
 

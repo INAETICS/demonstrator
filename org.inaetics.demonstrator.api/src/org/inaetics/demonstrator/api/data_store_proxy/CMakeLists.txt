@@ -11,13 +11,13 @@ include_directories("private/include")
 
 set(BUNDLE_SYMBOLICNAME "org.inaetics.demonstrator.data_store_endpoint")
 set(BUNDLE_VERSION "1.0.0")
-set(BUNDLE_NAME "org.inaetics.demonstrator.api.DataStore_proxy")
+set(BUNDLE_NAME "org.inaetics.demonstrator.api.datastore.DataStore_proxy")
 
-bundle(org.inaetics.demonstrator.api.DataStore_proxy SOURCES 
+bundle(org.inaetics.demonstrator.api.datastore.DataStore_proxy SOURCES 
 	private/src/data_store_proxy_activator.c
 	private/src/data_store_proxy_impl.c
     
     private/include/data_store_proxy_impl.h
 )
 
-target_link_libraries(org.inaetics.demonstrator.api.DataStore_proxy ${JANSSON_LIBRARIES} ${CELIX_LIBRARIES})
+target_link_libraries(org.inaetics.demonstrator.api.datastore.DataStore_proxy ${JANSSON_LIBRARIES} ${CELIX_LIBRARIES})

@@ -4,6 +4,8 @@
 
 #include "data_store_endpoint_impl.h"
 #include "service_registration.h"
+#include "remote_endpoint.h"
+
 
 struct activator {
 	service_registration_pt endpoint;

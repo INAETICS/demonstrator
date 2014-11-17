@@ -35,7 +35,7 @@ deploy("inaetics-demonstrator" BUNDLES
         processor
         ENDPOINTS 
         org.inaetics.demonstrator.api.queue.SampleQueue_proxy
-        org.inaetics.demonstrator.api.DataStore_proxy
+        org.inaetics.demonstrator.api.datastore.DataStore_proxy
       )
   
   deploy("inaetics-demonstrator-dataStore" BUNDLES
@@ -45,5 +45,5 @@ deploy("inaetics-demonstrator" BUNDLES
                 ${CELIX_BUNDLES_DIR}/topology_manager.zip
                 ${CELIX_BUNDLES_DIR}/remote_service_admin_http.zip
                 data_store
-        ENDPOINTS org.inaetics.demonstrator.api.DataStore_endpoint
+        ENDPOINTS org.inaetics.demonstrator.api.datastore.DataStore_endpoint
       )
