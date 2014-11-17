@@ -77,6 +77,9 @@ celix_status_t producer_sendSamples(producer_pt producer, int samplesPerSec)
 				msg(2, "PRODUCER: Could not store sample.");
 			}
 		}
+		else {
+			status = CELIX_BUNDLE_EXCEPTION;
+		}
 		pthread_rwlock_unlock(&producer->queueLock);
 
 		clock_gettime(CLOCK_REALTIME, &ts_end);
@@ -124,6 +127,10 @@ celix_status_t producer_sendBursts(producer_pt producer, int samplesPerSec) {
 		if (queueService != NULL) {
 			queueService->putAll(queueService->sampleQueue, burst, burst_len, &burst_samples_stored);
 		}
+		else {
+			status = CELIX_BUNDLE_EXCEPTION;
+		}
+
 		pthread_rwlock_unlock(&producer->queueLock);
 		burstSampleCnt += burst_samples_stored;
 
@@ -141,18 +148,18 @@ celix_status_t producer_sendBursts(producer_pt producer, int samplesPerSec) {
 
 void *producer_generate(void *handle) {
 	producer_pt producer = (producer_pt) handle;
+	celix_status_t status = CELIX_SUCCESS;
 
 	producer->running = true;
 
-	while (producer->running) {
-
+	while (producer->running && status == CELIX_SUCCESS) {
 
 		if (BURST_SAMPLES_PER_SEC > 0) {
-			producer_sendBursts(producer, BURST_SAMPLES_PER_SEC);
+			status = producer_sendBursts(producer, BURST_SAMPLES_PER_SEC);
 		}
 
 		if (SINGLE_SAMPLES_PER_SEC > 0) {
-			producer_sendSamples(producer, SINGLE_SAMPLES_PER_SEC);
+			status = producer_sendSamples(producer, SINGLE_SAMPLES_PER_SEC);
 		}
 	}
 
@@ -182,6 +189,7 @@ celix_status_t producer_stop(producer_pt producer)
 {
 	celix_status_t status = CELIX_SUCCESS;
 
+	printf("PRODUCER: Stopping Producer.\n");
 	producer->running = false;
 
 	return status;

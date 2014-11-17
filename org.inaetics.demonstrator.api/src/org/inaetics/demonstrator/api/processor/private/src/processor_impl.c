@@ -1,3 +1,4 @@
+#include <pthread.h>
 #include <stdarg.h>
 #include <time.h>
 
@@ -37,7 +38,7 @@ static void processor_sendResult(processor_pt processor, struct result result) {
 		bool resultStored = false;
 		struct data_store_service* dsService = arrayList_get(processor->dataStoreServices, i);
 
-		if ( (dsService->store(dsService->dataStore, result, &resultStored) != 0)  || resultStored == false) {
+		if ((dsService->store(dsService->dataStore, result, &resultStored) != 0) || resultStored == false) {
 			msg(2, "PROCESSOR: Could not store single sample.");
 		}
 	}
@@ -68,18 +69,24 @@ celix_status_t processor_receiveSamples(processor_pt processor, int samplesPerSe
 		pthread_rwlock_rdlock(&processor->queueLock);
 		queueService = (struct sample_queue_service*) hashMap_get(processor->queueServices, &self);
 
-		if (queueService != NULL && queueService->take(queueService->sampleQueue, recvSample) == 0) {
-			struct result* result_pt = calloc(1, sizeof(*result_pt));
+		if (queueService != NULL) {
+			if (queueService->take(queueService->sampleQueue, recvSample) == 0) {
+				struct result* result_pt = calloc(1, sizeof(*result_pt));
 
-			msg(3, "\tPROCESSOR: Received and Processing Sample {Time:%llu | V1=%f | V2=%f}", recvSample->time, recvSample->value1, recvSample->value2);
-			processor_processSample(recvSample, result_pt);
-			processor_sendResult(processor, *result_pt);
+				msg(3, "\tPROCESSOR: Received and Processing Sample {Time:%llu | V1=%f | V2=%f}", recvSample->time, recvSample->value1, recvSample->value2);
+				processor_processSample(recvSample, result_pt);
+				processor_sendResult(processor, *result_pt);
 
-			singleSampleCnt++;
+				singleSampleCnt++;
+			}
+			else {
+				msg(2, "PROCESSOR: Could not take a single sample.");
+			}
 		}
 		else {
-			msg(2, "PROCESSOR: Could not take a single sample.");
+			status = CELIX_BUNDLE_EXCEPTION;
 		}
+
 		pthread_rwlock_unlock(&processor->queueLock);
 
 		free(recvSample);
@@ -120,21 +127,26 @@ celix_status_t processor_receiveBursts(processor_pt processor, int samplesPerSec
 
 		queueService = hashMap_get(processor->queueServices, &self);
 
-		if (queueService != NULL && queueService->takeAll(queueService->sampleQueue, MIN_BURST_LEN, MAX_BURST_LEN, &recvSamples[0], &numOfRecvSamples) == 0) {
-			msg(3, "PROCESSOR:  %u samples received", numOfRecvSamples);
+		if (queueService != NULL) {
+			if (queueService->takeAll(queueService->sampleQueue, MIN_BURST_LEN, MAX_BURST_LEN, &recvSamples[0], &numOfRecvSamples) == 0) {
+				msg(3, "PROCESSOR:  %u samples received", numOfRecvSamples);
 
-			for (j = 0; j < numOfRecvSamples; j++) {
-				msg(3, "\tPROCESSOR: Processing Sample (%d/%d)  {Time:%llu | V1=%f | V2=%f}", j, numOfRecvSamples, recvSamples[j]->time, recvSamples[j]->value1, recvSamples[j]->value2);
-				struct result* result_pt = calloc(1, sizeof(*result_pt));
+				for (j = 0; j < numOfRecvSamples; j++) {
+					msg(3, "\tPROCESSOR: Processing Sample (%d/%d)  {Time:%llu | V1=%f | V2=%f}", j, numOfRecvSamples, recvSamples[j]->time, recvSamples[j]->value1, recvSamples[j]->value2);
+					struct result* result_pt = calloc(1, sizeof(*result_pt));
 
-				processor_processSample(recvSamples[j], result_pt);
-				processor_sendResult(processor, *result_pt);
+					processor_processSample(recvSamples[j], result_pt);
+					processor_sendResult(processor, *result_pt);
+				}
+
+				burstSampleCnt += j;
 			}
-
-			burstSampleCnt += j;
+			else {
+				msg(2, "PROCESSOR: Could not take all samples.");
+			}
 		}
 		else {
-			msg(2, "PROCESSOR: Could not take all samples.");
+			status = CELIX_BUNDLE_EXCEPTION;
 		}
 
 		pthread_rwlock_unlock(&processor->queueLock);
@@ -157,18 +169,20 @@ celix_status_t processor_receiveBursts(processor_pt processor, int samplesPerSec
 
 void* processor_receive(void *handle) {
 	processor_pt processor = (processor_pt) handle;
+	celix_status_t status = CELIX_SUCCESS;
 
 	processor->running = true;
 
-	while (processor->running) {
+	while (processor->running && status == CELIX_SUCCESS) {
 
 		if (BURST_SAMPLES_PER_SEC > 0) {
-			processor_receiveBursts(processor, BURST_SAMPLES_PER_SEC);
+			status = processor_receiveBursts(processor, BURST_SAMPLES_PER_SEC);
 		}
 
 		if (SINGLE_SAMPLES_PER_SEC > 0) {
-			processor_receiveSamples(processor, SINGLE_SAMPLES_PER_SEC);
+			status = processor_receiveSamples(processor, SINGLE_SAMPLES_PER_SEC);
 		}
+
 	}
 
 	return NULL;
@@ -201,6 +215,8 @@ celix_status_t processor_create(processor_pt* processor)
 celix_status_t processor_stop(processor_pt processor)
 {
 	celix_status_t status = CELIX_SUCCESS;
+
+	printf("PROCESSOR: Stopping Processor.\n");
 
 	processor->running = false;
 
@@ -245,7 +261,6 @@ celix_status_t processor_queueServiceRemoved(void *handle, service_reference_pt 
 	pthread_t* thread_pt = NULL;
 
 	pthread_rwlock_wrlock(&processor->queueLock);
-
 	hash_map_iterator_pt iter = hashMapIterator_create(processor->queueServices);
 
 	while (hashMapIterator_hasNext(iter) && thread_pt == NULL) {
