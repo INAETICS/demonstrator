@@ -29,7 +29,7 @@ struct sample_queue_service {
 
 	int (*put)(sample_queue_type *sampleQueue, struct sample sample, bool_t *sampleTaken);
 
-	int (*putAll)(ample_queue_type *sampleQueue, struct sample *samples, uint32_t size, uint32_t *samplesTaken);
+	int (*putAll)(sample_queue_type *sampleQueue, struct sample *samples, uint32_t size, uint32_t *samplesTaken);
 
 	int (*take)(sample_queue_type *sampleQueue, struct sample *sample);
 

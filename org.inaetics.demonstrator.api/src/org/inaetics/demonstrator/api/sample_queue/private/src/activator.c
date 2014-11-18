@@ -22,10 +22,7 @@
 #include "arraylist_queue_service_impl.h"
 
 struct activator {
-	sample_queue_type* queueHandler;
-
 	service_registration_pt queueRegistration;
-
 	struct sample_queue_service* queueService;
 
 };
@@ -37,7 +34,6 @@ celix_status_t bundleActivator_create(bundle_context_pt context, void **userData
 
 	if (*userData) {
 		((struct activator *) *userData)->queueService = NULL;
-		((struct activator *) *userData)->queueHandler = NULL;
 
 	} else {
 		status = CELIX_ENOMEM;
@@ -51,14 +47,12 @@ celix_status_t bundleActivator_start(void * userData, bundle_context_pt context)
 	struct activator *activator = userData;
 
 	struct sample_queue_service* qService = NULL;
-	sample_queue_type* qHandler = NULL;
 
-	status = queueService_create(&qService, &qHandler);
+	status = queueService_create(&qService);
 
 	if (status == CELIX_SUCCESS){
 		properties_pt properties = NULL;
 
-		activator->queueHandler = qHandler;
 		activator->queueService = qService;
 
 		properties = properties_create();
@@ -80,7 +74,7 @@ celix_status_t bundleActivator_stop(void * userData, bundle_context_pt context) 
 
 	serviceRegistration_unregister(activator->queueRegistration);
 
-	status = queueService_destroy(activator->queueService, activator->queueHandler);
+	status = queueService_destroy(activator->queueService);
 
 	return status;
 }

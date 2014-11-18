@@ -18,8 +18,8 @@ struct data_store {
 	array_list_pt store;
 };
 
-celix_status_t dataStoreService_create(struct data_store_service** dsService, data_store_type** qHandler);
-celix_status_t dataStoreService_destroy(struct data_store_service* dsService, data_store_type* qHandler);
+celix_status_t dataStoreService_create(struct data_store_service** dsService);
+celix_status_t dataStoreService_destroy(struct data_store_service* dsService);
 
 int dataStoreService_store(data_store_type *dataStore, struct result result, bool *resultStored);
 int dataStoreService_storeAll(data_store_type *dataStore, struct result *results, uint32_t size, uint32_t *storedResult);

@@ -19,22 +19,22 @@ static void msg(int lvl, char *fmsg, ...) {
 	}
 }
 
-celix_status_t dataStoreService_create(struct data_store_service** dsService, data_store_type** dsHandler) {
+celix_status_t dataStoreService_create(struct data_store_service** dsService) {
 
 	celix_status_t status = CELIX_ENOMEM;
+	data_store_type* dsHandler;
 
 	*dsService = calloc(1, sizeof(struct data_store_service));
+	dsHandler = calloc(1, sizeof(struct data_store));
 
-	*dsHandler = calloc(1, sizeof(struct data_store));
+	if ((*dsService != NULL) && (dsHandler != NULL)) {
 
-	if ((*dsService != NULL) && (*dsHandler != NULL)) {
+		pthread_mutex_init(&((dsHandler)->lock), NULL);
+		pthread_cond_init(&(dsHandler)->listEmpty, NULL);
 
-		pthread_mutex_init(&((*dsHandler)->lock), NULL);
-		pthread_cond_init(&(*dsHandler)->listEmpty, NULL);
+		arrayList_create(&((dsHandler)->store));
 
-		arrayList_create(&((*dsHandler)->store));
-
-		(*dsService)->dataStore = *dsHandler;
+		(*dsService)->dataStore = dsHandler;
 		(*dsService)->store = dataStoreService_store;
 		(*dsService)->storeAll = dataStoreService_storeAll;
 		(*dsService)->findResultsBetween = NULL;
@@ -47,9 +47,10 @@ celix_status_t dataStoreService_create(struct data_store_service** dsService, da
 
 }
 
-celix_status_t dataStoreService_destroy(struct data_store_service* dsService, data_store_type* dsHandler) {
+celix_status_t dataStoreService_destroy(struct data_store_service* dsService) {
 
 	celix_status_t status = CELIX_SUCCESS;
+	data_store_type* dsHandler = dsService->dataStore;
 
 	pthread_mutex_lock(&(dsHandler->lock));
 
@@ -80,7 +81,7 @@ celix_status_t dataStoreService_destroy(struct data_store_service* dsService, da
 
 static bool dataStoreService_isStoreFull(array_list_pt store)
 {
-	return ! ((MAX_STORE_SIZE == 0) || (arrayList_size(store) < MAX_STORE_SIZE));
+	return !((MAX_STORE_SIZE == 0) || (arrayList_size(store) < MAX_STORE_SIZE));
 }
 
 int dataStoreService_store(data_store_type *dataStore, struct result result, bool *resultStored) {
@@ -91,7 +92,7 @@ int dataStoreService_store(data_store_type *dataStore, struct result result, boo
 		pthread_mutex_lock(&dataStore->lock);
 
 		if (!dataStoreService_isStoreFull(dataStore->store))
-		{
+				{
 			struct result* s = calloc(1, sizeof(struct result));
 
 			if (s != NULL) {
@@ -122,8 +123,6 @@ int dataStoreService_store(data_store_type *dataStore, struct result result, boo
 
 	return (int) status;
 }
-
-
 
 int dataStoreService_storeAll(data_store_type *dataStore, struct result *results, uint32_t size, uint32_t *storedResult) {
 

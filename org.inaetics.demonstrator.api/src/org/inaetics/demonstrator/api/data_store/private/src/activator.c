@@ -22,12 +22,8 @@
 #include "arraylist_data_store_impl.h"
 
 struct activator {
-	data_store_type* dataStoreHandler;
-
 	service_registration_pt dataStoreRegistration;
-
 	struct data_store_service* dataStoreService;
-
 };
 
 celix_status_t bundleActivator_create(bundle_context_pt context, void **userData) {
@@ -37,8 +33,6 @@ celix_status_t bundleActivator_create(bundle_context_pt context, void **userData
 
 	if (*userData) {
 		((struct activator *) *userData)->dataStoreService = NULL;
-		((struct activator *) *userData)->dataStoreHandler = NULL;
-
 	} else {
 		status = CELIX_ENOMEM;
 	}
@@ -50,14 +44,12 @@ celix_status_t bundleActivator_start(void * userData, bundle_context_pt context)
 	struct activator *activator = userData;
 
 	struct data_store_service* dsService = NULL;
-	data_store_type* dsHandler = NULL;
 
-	status = dataStoreService_create(&dsService, &dsHandler);
+	status = dataStoreService_create(&dsService);
 
 	if (status == CELIX_SUCCESS){
 		properties_pt properties = NULL;
 
-		activator->dataStoreHandler = dsHandler;
 		activator->dataStoreService = dsService;
 
 		properties = properties_create();
@@ -79,8 +71,7 @@ celix_status_t bundleActivator_stop(void * userData, bundle_context_pt context) 
 	struct activator *activator = userData;
 
 	serviceRegistration_unregister(activator->dataStoreRegistration);
-
-	status = dataStoreService_destroy(activator->dataStoreService, activator->dataStoreHandler);
+	status = dataStoreService_destroy(activator->dataStoreService);
 
 	return status;
 }
