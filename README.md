@@ -12,7 +12,7 @@ This branch contains an implementation of the demonstrator based on Celix bundle
 2.   Checkout the demonstrator source code: git clone https://github.com/INAETICS/demonstrator.git
 3.   Switch to the celix branch: gut checkout celix_bundles_impl 
 4.   Create a build folder mkdir build && cd build 
-5.   Start cmake with either: cmake -DCELIX_DIR=<celix installation folder>  ..  or: ccmake ..  to configure the project via the interactive menu
+5.   Start cmake with either: cmake -DCELIX_DIR=<celix installation folder>  ..  or: ccmake ..  -DCELIX_DIR=<celix installatin folder> to configure the project via the interactive menu
 6.   make all
 7.   make deploy
 8.  cd deploy/inaetics-demonstrator
