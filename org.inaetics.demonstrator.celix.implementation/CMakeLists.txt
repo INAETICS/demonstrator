@@ -1,0 +1,8 @@
+add_subdirectory(producer)
+add_subdirectory(sample_queue)
+add_subdirectory(queue_endpoint)
+add_subdirectory(queue_proxy)
+add_subdirectory(processor)
+add_subdirectory(data_store)
+add_subdirectory(data_store_endpoint)
+add_subdirectory(data_store_proxy)
