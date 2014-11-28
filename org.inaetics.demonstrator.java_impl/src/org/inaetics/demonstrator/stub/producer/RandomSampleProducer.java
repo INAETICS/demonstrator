@@ -15,6 +15,7 @@
  */
 package org.inaetics.demonstrator.stub.producer;
 
+import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.Random;
 import java.util.concurrent.Executors;
@@ -49,7 +50,7 @@ public class RandomSampleProducer implements Producer, Runnable, ManagedService 
 			double val2 = randomSampleValue();
 			Sample sample = new Sample(System.currentTimeMillis(), val1, val2);
 
-			m_queue.put(sample);
+			m_queue.putAll(Arrays.asList(sample));
 
 			m_log.log(LogService.LOG_INFO, "Produced: " + sample);
 		} catch (Exception e) {

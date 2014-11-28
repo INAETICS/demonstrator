@@ -15,44 +15,55 @@
  */
 package org.inaetics.demonstrator.stub.queue;
 
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Dictionary;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import org.inaetics.demonstrator.api.data.Sample;
 import org.inaetics.demonstrator.api.queue.SampleQueue;
-import org.inaetics.demonstrator.stub.stats.StatsProvider;
+import org.inaetics.demonstrator.api.stats.StatsProvider;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedService;
 import org.osgi.service.log.LogService;
 
-public class SimpleSampleQueue extends StatsProvider implements SampleQueue, ManagedService {
-    private static final String TITLE = "Queue Stats";
+public class SimpleSampleQueue implements SampleQueue, StatsProvider, ManagedService {
 
     private final BlockingQueue<Sample> m_queue;
-    private final SizeStatsCollector m_statsCollector;
-    private volatile double m_lastSlope;
 
     // Injected by Felix DM...
     private volatile LogService m_log;
 
     public SimpleSampleQueue() {
         m_queue = new LinkedBlockingQueue<>();
-        m_statsCollector = new SizeStatsCollector();
-        m_lastSlope = 0.0;
+    }
+
+    @Override
+    public String getName() {
+        return "Queue";
+    }
+
+    @Override
+    public String getMeasurementUnit() {
+        return "";
+    }
+
+    @Override
+    public String getType() {
+        return "utilization";
+    }
+
+    @Override
+    public double getValue() {
+        return m_queue.size(); // XXX
     }
 
     @Override
     public boolean put(Sample sample) {
         try {
             m_queue.put(sample);
-
-            m_statsCollector.put(m_queue.size());
             return true;
         } catch (InterruptedException e) {
             return false;
@@ -66,7 +77,6 @@ public class SimpleSampleQueue extends StatsProvider implements SampleQueue, Man
             put(sample);
         }
 
-        m_statsCollector.put(m_queue.size());
         return m_queue.size() - size;
     }
 
@@ -74,8 +84,6 @@ public class SimpleSampleQueue extends StatsProvider implements SampleQueue, Man
     public Sample take() {
         try {
             Sample result = m_queue.take();
-
-            m_statsCollector.put(m_queue.size());
 
             return result;
         } catch (InterruptedException e) {
@@ -88,7 +96,6 @@ public class SimpleSampleQueue extends StatsProvider implements SampleQueue, Man
         List<Sample> result = new ArrayList<>(max);
         // NOTE: this is not strictly conform our contract...
         m_queue.drainTo(result, max);
-        m_statsCollector.put(m_queue.size());
 
         return result;
     }
@@ -97,25 +104,5 @@ public class SimpleSampleQueue extends StatsProvider implements SampleQueue, Man
     public void updated(Dictionary<String, ?> properties) throws ConfigurationException {
         // Nothing yet...
         m_log.log(LogService.LOG_INFO, "SimpleSampleQueue updated...");
-    }
-
-    @Override
-    protected String getTitle() {
-        return TITLE;
-    }
-
-    @Override
-    protected void renderStats(PrintWriter writer) {
-        SizeStats stats = m_statsCollector.getStats();
-
-        double slope = stats.getSlope();
-        renderSlope(writer, m_lastSlope, slope);
-        m_lastSlope = slope;
-
-        writer.append("<dl class=\"dl-horizontal\">");
-        for (Map.Entry<Long, Integer> entry : stats.getEntries()) {
-            writer.printf("<dt>%1$tF %1$tT.%1$tL</dt><dd>size: %2$d entries</dd>", entry.getKey(), entry.getValue());
-        }
-        writer.append("</dl>");
     }
 }

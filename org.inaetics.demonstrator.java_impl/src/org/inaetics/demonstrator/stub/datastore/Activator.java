@@ -17,11 +17,10 @@ package org.inaetics.demonstrator.stub.datastore;
 
 import java.util.Properties;
 
-import javax.servlet.Servlet;
-
 import org.apache.felix.dm.DependencyActivatorBase;
 import org.apache.felix.dm.DependencyManager;
 import org.inaetics.demonstrator.api.datastore.DataStore;
+import org.inaetics.demonstrator.api.stats.StatsProvider;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.service.cm.ManagedService;
@@ -33,18 +32,31 @@ public class Activator extends DependencyActivatorBase {
 
 	@Override
 	public void init(BundleContext context, DependencyManager manager) throws Exception {
-		String[] ifaces = { DataStore.class.getName(), Servlet.class.getName(), ManagedService.class.getName() };
+		String[] ifaces = { DataStore.class.getName(), ManagedService.class.getName() };
+		// See comment below...
+		InMemoryDataStore service = new InMemoryDataStore();
 
 		Properties props = new Properties();
-		props.put("alias", "/datastore");
 		props.put(Constants.SERVICE_PID, PID);
 		props.put(RemoteConstants.SERVICE_EXPORTED_INTERFACES, ifaces[0]);
 		props.put("type", "memory");
 
 		manager.add(createComponent()
 			.setInterface(ifaces, props)
-			.setImplementation(InMemoryDataStore.class)
+			.setImplementation(service)
 			.add(createServiceDependency().setService(LogService.class).setRequired(false))
 		);
+
+        /*
+         * IMPORTANT: We do not want a direct coupling between the DataStore and StatsProvider,
+         * hence we create a singleton service that is registered as two *different* services.
+         */
+		props = new Properties();
+        props.put(RemoteConstants.SERVICE_EXPORTED_INTERFACES, StatsProvider.class.getName());
+
+        manager.add(createComponent()
+            .setInterface(StatsProvider.class.getName(), props)
+            .setImplementation(service)
+        );
 	}
 }

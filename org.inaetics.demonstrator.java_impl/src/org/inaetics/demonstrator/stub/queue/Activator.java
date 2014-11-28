@@ -17,11 +17,10 @@ package org.inaetics.demonstrator.stub.queue;
 
 import java.util.Properties;
 
-import javax.servlet.Servlet;
-
 import org.apache.felix.dm.DependencyActivatorBase;
 import org.apache.felix.dm.DependencyManager;
 import org.inaetics.demonstrator.api.queue.SampleQueue;
+import org.inaetics.demonstrator.api.stats.StatsProvider;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.service.cm.ManagedService;
@@ -29,22 +28,35 @@ import org.osgi.service.log.LogService;
 import org.osgi.service.remoteserviceadmin.RemoteConstants;
 
 public class Activator extends DependencyActivatorBase {
-	private static final String PID = "SimpleSampleQueue";
+    private static final String PID = "SimpleSampleQueue";
 
-	@Override
-	public void init(BundleContext context, DependencyManager manager) throws Exception {
-		String[] ifaces = { SampleQueue.class.getName(), Servlet.class.getName(), ManagedService.class.getName() };
-		
-		Properties props = new Properties();
-		props.put("alias", "/queue");
-		props.put(Constants.SERVICE_PID, PID);
-		props.put(RemoteConstants.SERVICE_EXPORTED_INTERFACES, ifaces[0]);
-		props.put("type", "memory");
+    @Override
+    public void init(BundleContext context, DependencyManager manager) throws Exception {
+        String[] ifaces = { SampleQueue.class.getName(), ManagedService.class.getName() };
+        // See comment below...
+        SimpleSampleQueue service = new SimpleSampleQueue();
 
-		manager.add(createComponent()
-			.setInterface(ifaces, props)
-			.setImplementation(SimpleSampleQueue.class)
-			.add(createServiceDependency().setService(LogService.class).setRequired(false))
-		);
-	}
+        Properties props = new Properties();
+        props.put(Constants.SERVICE_PID, PID);
+        props.put(RemoteConstants.SERVICE_EXPORTED_INTERFACES, ifaces[0]);
+        props.put("type", "memory");
+
+        manager.add(createComponent()
+            .setInterface(ifaces, props)
+            .setImplementation(service)
+            .add(createServiceDependency().setService(LogService.class).setRequired(false))
+        );
+
+        /*
+         * IMPORTANT: We do not want a direct coupling between the DataStore and StatsProvider,
+         * hence we create a singleton service that is registered as two *different* services.
+         */
+        props = new Properties();
+        props.put(RemoteConstants.SERVICE_EXPORTED_INTERFACES, StatsProvider.class.getName());
+
+        manager.add(createComponent()
+            .setInterface(StatsProvider.class.getName(), props)
+            .setImplementation(service)
+        );
+    }
 }
