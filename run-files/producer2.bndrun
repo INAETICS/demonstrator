@@ -1,0 +1,32 @@
+-runfw: org.apache.felix.framework;version='[4,5)'
+-runee: JavaSE-1.7
+-runsystemcapabilities: ${native_capability}
+-runstorage: generated/producer2
+
+-runbundles: \
+	osgi.cmpn;version=4.2,\
+	org.osgi.service.remoteserviceadmin,\
+	org.apache.felix.dependencymanager,\
+	org.apache.felix.dependencymanager.shell,\
+	org.apache.felix.gogo.runtime,\
+	org.apache.felix.gogo.shell,\
+	org.apache.felix.gogo.command,\
+	org.apache.felix.http.api,\
+	org.apache.felix.http.jetty,\
+	org.apache.felix.http.servlet-api,\
+	org.apache.felix.configadmin,\
+	org.apache.felix.metatype,\
+	org.apache.felix.log,\
+	org.apache.felix.webconsole,\
+    org.amdatu.remote.discovery.bonjour;version=latest,\
+    org.amdatu.remote.admin.http;version=latest,\
+    org.amdatu.remote.topology.promiscuous;version=latest,\
+	org.inaetics.demonstrator.api.data;version=latest,\
+	org.inaetics.demonstrator.api.producer;version=latest,\
+	org.inaetics.demonstrator.api.queue;version=latest,\
+	org.inaetics.demonstrator.api.stats;version=latest,\
+	org.inaetics.demonstrator.java_impl.producer;version=latest
+
+-runproperties: \
+	org.osgi.service.http.port=9011,\
+	org.amdatu.remote.discovery.bonjour.schedule=2
