@@ -34,6 +34,7 @@ struct sample_queue_service {
 	int (*take)(sample_queue_type *sampleQueue, struct sample *sample);
 
 	int (*takeAll)(sample_queue_type *sampleQueue, uint32_t min, uint32_t max, struct sample **samples, uint32_t *samplesSize);
+
 };
 
 #endif

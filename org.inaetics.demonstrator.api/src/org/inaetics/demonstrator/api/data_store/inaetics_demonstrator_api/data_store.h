@@ -32,6 +32,8 @@ struct data_store_service {
 	int (*storeAll)(data_store_type *dataStore, struct result *results, uint32_t size, uint32_t *storedResult);
 
 	int (*findResultsBetween)(data_store_type *dataStore, uint64_t begin, uint64_t end, struct result **results, uint32_t *resultSize);
+
+	int (*getLoad) (data_store_type *dataStore, double* storeLoad);
 };
 
 #endif

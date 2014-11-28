@@ -37,6 +37,7 @@ celix_status_t dataStoreService_create(struct data_store_service** dsService) {
 		(*dsService)->dataStore = dsHandler;
 		(*dsService)->store = dataStoreService_store;
 		(*dsService)->storeAll = dataStoreService_storeAll;
+		(*dsService)->getLoad = dataStoreService_getLoad;
 		(*dsService)->findResultsBetween = NULL;
 
 		status = CELIX_SUCCESS;
@@ -92,7 +93,7 @@ int dataStoreService_store(data_store_type *dataStore, struct result result, boo
 		pthread_mutex_lock(&dataStore->lock);
 
 		if (!dataStoreService_isStoreFull(dataStore->store))
-				{
+		{
 			struct result* s = calloc(1, sizeof(struct result));
 
 			if (s != NULL) {
@@ -174,4 +175,22 @@ int dataStoreService_storeAll(data_store_type *dataStore, struct result *results
 
 	return (int) status;
 
+}
+
+int dataStoreService_getLoad(data_store_type *dataStore, double* storeLoad){
+	celix_status_t status = CELIX_ILLEGAL_STATE;
+
+	if(dataStore!=NULL){
+
+		pthread_mutex_lock(&dataStore->lock);
+
+		*storeLoad = ((double)(((double)arrayList_size(dataStore->store))/((double)MAX_STORE_SIZE)))*100.0f;
+		status=CELIX_SUCCESS;
+
+		pthread_mutex_unlock(&dataStore->lock);
+
+		msg(1, "DATA_STORE: Store Load = %f", *storeLoad);
+	}
+
+	return (int) status;
 }

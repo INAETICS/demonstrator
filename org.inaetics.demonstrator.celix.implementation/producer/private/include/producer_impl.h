@@ -35,10 +35,4 @@ celix_status_t producer_queueServiceAdded(void *handle, service_reference_pt ref
 celix_status_t producer_queueServiceRemoved(void *handle, service_reference_pt reference, void *service);
 
 
-
-
-
-
-void *produceSamples(void *handle);
-
 #endif

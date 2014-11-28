@@ -40,6 +40,7 @@ celix_status_t queueService_create(struct sample_queue_service** qService) {
 
 		(qQueue)->putCnt = 0;
 		(qQueue)->takeCnt = 0;
+		(qQueue)->max_queue_size = MAX_QUEUE_SIZE;
 		(qQueue)->statisticsRunning = false;
 
 		(*qService)->sampleQueue = qQueue;
@@ -47,6 +48,7 @@ celix_status_t queueService_create(struct sample_queue_service** qService) {
 		(*qService)->putAll = queueService_putAll;
 		(*qService)->take = queueService_take;
 		(*qService)->takeAll = queueService_takeAll;
+
 
 		pthread_create(&qQueue->statistics, NULL, printStatistics, qQueue);
 
@@ -197,7 +199,7 @@ int queueService_take(sample_queue_type *sampleQueue, struct sample *sample) {
 	}
 
 	if (rc == 0)
-			{
+	{
 		struct sample *tmpSample = arrayList_remove(sampleQueue->queue, 0);
 		memcpy(sample, tmpSample, sizeof(struct sample));
 		free(tmpSample);

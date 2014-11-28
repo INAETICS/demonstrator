@@ -11,6 +11,7 @@ include_directories(${CELIX_INCLUDE_DIRS})
 
 include_directories(org.inaetics.demonstrator.api/src/org/inaetics/demonstrator/api/data_store)
 include_directories(org.inaetics.demonstrator.api/src/org/inaetics/demonstrator/api/sample_queue)
+include_directories(org.inaetics.demonstrator.api/src/org/inaetics/demonstrator/api/service_statistics)
 
 add_subdirectory(org.inaetics.demonstrator.celix.implementation demonstrator)
 deploy_targets()

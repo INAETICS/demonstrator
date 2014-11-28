@@ -21,6 +21,7 @@ struct sample_queue {
 	array_list_pt queue;
 	long takeCnt;
 	long putCnt;
+	long max_queue_size;
 };
 
 celix_status_t queueService_create(struct sample_queue_service** qService);
