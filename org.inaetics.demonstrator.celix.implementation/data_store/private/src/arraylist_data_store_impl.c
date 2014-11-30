@@ -35,9 +35,9 @@ celix_status_t dataStoreService_create(struct data_store_service** dsService) {
 		arrayList_create(&((dsHandler)->store));
 
 		(*dsService)->dataStore = dsHandler;
-		(*dsService)->store = dataStoreService_store;
-		(*dsService)->storeAll = dataStoreService_storeAll;
-		(*dsService)->getLoad = dataStoreService_getLoad;
+		(*dsService)->store = (void *)dataStoreService_store;
+		(*dsService)->storeAll = (void *)dataStoreService_storeAll;
+		(*dsService)->getLoad = (void *)dataStoreService_getLoad;
 		(*dsService)->findResultsBetween = NULL;
 
 		status = CELIX_SUCCESS;

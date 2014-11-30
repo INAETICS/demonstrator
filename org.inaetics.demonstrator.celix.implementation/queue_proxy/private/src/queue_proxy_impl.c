@@ -237,10 +237,10 @@ celix_status_t queueProxy_registerProxyService(void* proxyFactoryService, endpoi
 	queueProxy_create(queueProxyFactoryService->context, &queue);
 	queueService = calloc(1, sizeof(*queueService));
 	queueService->sampleQueue = queue;
-	queueService->put = queueProxy_put;
-	queueService->putAll = queueProxy_putAll;
-	queueService->take = queueProxy_take;
-	queueService->takeAll = queueProxy_takeAll;
+	queueService->put = (void *)queueProxy_put;
+	queueService->putAll = (void *)queueProxy_putAll;
+	queueService->take = (void *)queueProxy_take;
+	queueService->takeAll = (void *)queueProxy_takeAll;
 
 	properties_pt srvcProps = properties_create();
 	properties_set(srvcProps, (char *) "proxy.interface", (char *) INAETICS_DEMONSTRATOR_API__SAMPLE_QUEUE_SERVICE_NAME);

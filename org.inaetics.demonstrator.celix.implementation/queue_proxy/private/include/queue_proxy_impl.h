@@ -13,6 +13,8 @@
 #include "endpoint_listener.h"
 #include "inaetics_demonstrator_api/sample_queue.h"
 
+typedef struct sample_queue sample_queue_type;
+
 struct sample_queue {
 	bundle_context_pt context;
 

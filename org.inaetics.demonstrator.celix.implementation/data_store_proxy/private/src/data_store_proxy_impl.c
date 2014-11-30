@@ -120,8 +120,8 @@ celix_status_t dataStoreProxy_registerProxyService(void* proxyFactoryService, en
 	dataStoreProxy_create(queueProxyFactoryService->context, &store);
 	storeService = calloc(1, sizeof(*storeService));
 	storeService->dataStore = store;
-	storeService->store = dataStoreProxy_store;
-	storeService->storeAll = dataStoreProxy_storeAll;
+	storeService->store = (void *)dataStoreProxy_store;
+	storeService->storeAll = (void *)dataStoreProxy_storeAll;
 
 	properties_pt srvcProps = properties_create();
 	properties_set(srvcProps, (char *) "proxy.interface", (char *) INAETICS_DEMONSTRATOR_API__DATA_STORE_SERVICE_NAME);

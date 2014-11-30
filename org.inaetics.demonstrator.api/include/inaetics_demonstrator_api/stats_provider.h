@@ -13,16 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __INAETICS_DEMONSTRATOR_API__RESULT_H_
-#define __INAETICS_DEMONSTRATOR_API__RESULT_H_
+#ifndef INAETICS_DEMONSTRATOR_API__STATS_PROVIDER_H_
+#define INAETICS_DEMONSTRATOR_API__STATS_PROVIDER_H_
 
-#include <stdint.h>
-#include "inaetics_demonstrator_api/sample.h"
+#define INAETICS_DEMONSTRATOR_API__STATS_PROVIDER_SERVICE_NAME "org.inaetics.demonstrator.api.stats.StatsProvider"
 
-struct result {
-	uint64_t time; //milliseconds since unix epoch
-	double value1;
-	struct sample sample;
+struct stats_provider_service {
+	void *statsProvider;
+
+	int (*getName)(void *statsProvider, char **name);
+	int (*getType)(void *statsProvider, char **type);
+	int (*getMeasurementUnit)(void *statsProvider, char **measurementUnit);
+	int (*getValue)(void *statsProvider, double *value);
+
 };
 
-#endif
+
+#endif /* INAETICS_DEMONSTRATOR_API__STATS_PROVIDER_H_ */

@@ -4,11 +4,36 @@
 #include <string.h>
 #include <stdarg.h>
 #include <unistd.h>
+#include <stdbool.h>
 
 #include "array_list.h"
 #include "celix_errno.h"
 
-#include "arraylist_queue_service_impl.h"
+#include "arraylist_sample_queue_impl.h"
+
+#define MAX_QUEUE_SIZE       	10000
+
+#define WAIT_TIME_SECONDS       2
+#define VERBOSE					1
+
+#define UTILIZATION_NAME_POSTFIX 		" Utilization"
+#define UTILIZATION_TYPE 				"utilization"
+#define UTILIZATION_MEASUREMENT_UNIT	"%"
+
+struct sample_queue {
+	char *name;
+	char *utilizationStatsName;
+	volatile bool statisticsRunning;
+	pthread_t statistics;
+	pthread_mutex_t lock;
+	pthread_cond_t listEmpty;
+	array_list_pt queue;
+	long takeCnt;
+	long putCnt;
+	volatile long currentQueueSize;
+	long max_queue_size;
+};
+
 
 void *printStatistics(void *handle);
 
@@ -23,74 +48,73 @@ static void msg(int lvl, char *fmsg, ...) {
 	}
 }
 
-celix_status_t queueService_create(struct sample_queue_service** qService) {
+celix_status_t sampleQueue_create(char *name, sample_queue_type **result) {
 
 	celix_status_t status = CELIX_ENOMEM;
-	sample_queue_type *qQueue = NULL;
+	sample_queue_type *sampleQueue = NULL;
 
-	*qService = calloc(1, sizeof(struct sample_queue_service));
-	qQueue = calloc(1, sizeof(struct sample_queue));
+	sampleQueue = calloc(1, sizeof(struct sample_queue));
+	if (sampleQueue != NULL) {
+		sampleQueue->name = strdup(name);
+		sampleQueue->utilizationStatsName = calloc(1, strlen(name) + strlen(UTILIZATION_NAME_POSTFIX) + 1);
+	}
 
-	if ((*qService != NULL) && (qQueue != NULL)) {
+	if (sampleQueue != NULL && sampleQueue->name != NULL && sampleQueue->utilizationStatsName != NULL) {
+		sprintf(sampleQueue->utilizationStatsName, "%s%s", sampleQueue->name, (char*)UTILIZATION_NAME_POSTFIX);
 
-		pthread_mutex_init(&(qQueue->lock), NULL);
-		pthread_cond_init(&qQueue->listEmpty, NULL);
+		pthread_mutex_init(&(sampleQueue->lock), NULL);
+		pthread_cond_init(&sampleQueue->listEmpty, NULL);
 
-		arrayList_create(&(qQueue->queue));
+		arrayList_create(&(sampleQueue->queue));
 
-		(qQueue)->putCnt = 0;
-		(qQueue)->takeCnt = 0;
-		(qQueue)->max_queue_size = MAX_QUEUE_SIZE;
-		(qQueue)->statisticsRunning = false;
+		sampleQueue->putCnt = 0;
+		sampleQueue->takeCnt = 0;
+		sampleQueue->max_queue_size = MAX_QUEUE_SIZE;
+		sampleQueue->currentQueueSize = 0;
+		sampleQueue->statisticsRunning = false;
 
-		(*qService)->sampleQueue = qQueue;
-		(*qService)->put = queueService_put;
-		(*qService)->putAll = queueService_putAll;
-		(*qService)->take = queueService_take;
-		(*qService)->takeAll = queueService_takeAll;
+		pthread_create(&sampleQueue->statistics, NULL, printStatistics, sampleQueue);
 
-
-		pthread_create(&qQueue->statistics, NULL, printStatistics, qQueue);
-
+		(*result) = sampleQueue;
 		status = CELIX_SUCCESS;
 	}
 
 	return status;
 }
 
-celix_status_t queueService_destroy(struct sample_queue_service* qService) {
+celix_status_t sampleQueue_destroy(sample_queue_type* sampleQueue) {
 
 	celix_status_t status = CELIX_SUCCESS;
-	sample_queue_type* qHandler = qService->sampleQueue;
 	int i = 0;
 
-	qHandler->statisticsRunning = false;
+	sampleQueue->statisticsRunning = false;
 
-	pthread_mutex_lock(&(qHandler->lock));
+	pthread_mutex_lock(&(sampleQueue->lock));
 
 	/* Empty the queue */
-	for (; i < arrayList_size(qHandler->queue); i++) {
-		free(arrayList_get(qHandler->queue, i));
+	for (; i < arrayList_size(sampleQueue->queue); i++) {
+		free(arrayList_get(sampleQueue->queue, i));
 	}
 
 	/* Destroy the queue */
-	arrayList_destroy(qHandler->queue);
-	qHandler->queue = NULL;
+	arrayList_destroy(sampleQueue->queue);
+	sampleQueue->queue = NULL;
 
-	pthread_mutex_unlock(&(qHandler->lock));
-	pthread_mutex_destroy(&(qHandler->lock));
+	pthread_mutex_unlock(&(sampleQueue->lock));
+	pthread_mutex_destroy(&(sampleQueue->lock));
 
 	void *exitStatus = NULL;
-	pthread_join(qHandler->statistics, &exitStatus);
+	pthread_join(sampleQueue->statistics, &exitStatus);
 
-	free(qService);
-	free(qHandler);
+	free(sampleQueue->name);
+	free(sampleQueue->utilizationStatsName);
+	free(sampleQueue);
 
 	return status;
 
 }
 
-int queueService_put(sample_queue_type *sampleQueue, struct sample sample, bool *sampleTaken) {
+int sampleQueue_put(sample_queue_type *sampleQueue, struct sample sample, bool *sampleTaken) {
 
 	celix_status_t status = CELIX_SUCCESS;
 
@@ -106,6 +130,7 @@ int queueService_put(sample_queue_type *sampleQueue, struct sample sample, bool 
 				bool ret = arrayList_add(sampleQueue->queue, localSample);
 				if (ret) {
 					sampleQueue->putCnt++;
+					sampleQueue->currentQueueSize += 1;
 					msg(3, "SAMPLE_QUEUE: Added sample {%llu | %f | %f }to queue\n", localSample->time, localSample->value1, localSample->value2);
 					pthread_cond_signal(&sampleQueue->listEmpty);
 				}
@@ -129,7 +154,7 @@ int queueService_put(sample_queue_type *sampleQueue, struct sample sample, bool 
 	return (int) status;
 }
 
-int queueService_putAll(sample_queue_type *sampleQueue, struct sample *samples, uint32_t size, uint32_t *samplesTaken) {
+int sampleQueue_putAll(sample_queue_type *sampleQueue, struct sample *samples, uint32_t size, uint32_t *samplesTaken) {
 
 	celix_status_t status = CELIX_SUCCESS;
 	uint32_t i = 0;
@@ -150,6 +175,7 @@ int queueService_putAll(sample_queue_type *sampleQueue, struct sample *samples, 
 				if (arrayList_add(sampleQueue->queue, s)) {
 					msg(3, "\tSAMPLE_QUEUE: Added sample {%llu | %f | %f } to queue\n", s->time, s->value1, s->value2);
 					samples_added++;
+					sampleQueue->currentQueueSize += 1;
 					pthread_cond_signal(&sampleQueue->listEmpty);
 				}
 				else {
@@ -184,7 +210,7 @@ int queueService_putAll(sample_queue_type *sampleQueue, struct sample *samples, 
 
 }
 
-int queueService_take(sample_queue_type *sampleQueue, struct sample *sample) {
+int sampleQueue_take(sample_queue_type *sampleQueue, struct sample *sample) {
 	celix_status_t status = CELIX_ILLEGAL_STATE;
 	struct timespec ts;
 	int rc = 0;
@@ -204,6 +230,7 @@ int queueService_take(sample_queue_type *sampleQueue, struct sample *sample) {
 		memcpy(sample, tmpSample, sizeof(struct sample));
 		free(tmpSample);
 		sampleQueue->takeCnt++;
+		sampleQueue->currentQueueSize -= 1;
 		status = CELIX_SUCCESS;
 	}
 
@@ -212,7 +239,7 @@ int queueService_take(sample_queue_type *sampleQueue, struct sample *sample) {
 	return (int) status;
 }
 
-int queueService_takeAll(sample_queue_type *sampleQueue, uint32_t min, uint32_t max, struct sample **samples, uint32_t *samplesSize) {
+int sampleQueue_takeAll(sample_queue_type *sampleQueue, uint32_t min, uint32_t max, struct sample **samples, uint32_t *samplesSize) {
 
 	celix_status_t status = CELIX_ILLEGAL_STATE;
 	struct timespec ts;
@@ -239,19 +266,41 @@ int queueService_takeAll(sample_queue_type *sampleQueue, uint32_t min, uint32_t 
 
 	*samplesSize = i;
 	sampleQueue->takeCnt += i;
+	sampleQueue->currentQueueSize -= i;
 	pthread_mutex_unlock(&sampleQueue->lock);
 
 	return (int) status;
 }
 
+int sampleQueue_getUtilizationStatsName(sample_queue_type *sampleQueue, char **name) {
+	(*name) = sampleQueue->utilizationStatsName;
+	return 0;
+}
+
+int sampleQueue_getUtilizationStatsType(sample_queue_type *sampleQueue, char **type) {
+	(*type) = (char *)UTILIZATION_TYPE;
+	return 0;
+}
+
+int SampleQueue_getUtilizationStatsValue(sample_queue_type *sampleQueue, double* statVal) {
+	//Note; read only access to maxQueueSize and currentQueueSize with no special need for percise value -> no synchronization needed.
+	(*statVal) = (sampleQueue->currentQueueSize + 100.0)/sampleQueue->max_queue_size;
+	return 0;
+}
+
+int sampleQueue_getUtilizationStatsMeasurementUnit(sample_queue_type *sampleQueue, char **mUnit) {
+	(*mUnit) = (char *)UTILIZATION_MEASUREMENT_UNIT;
+	return 0;
+}
+
 void *printStatistics(void *handle) {
-	sample_queue_type* qHandler = (sample_queue_type*) handle;
-	qHandler->statisticsRunning = true;
-	while (qHandler->statisticsRunning) {
+	sample_queue_type* sampleQueue = (sample_queue_type*) handle;
+	sampleQueue->statisticsRunning = true;
+	while (sampleQueue->statisticsRunning) {
 		// TODO: add lock
-		msg(1, "QUEUE: \tsamples put: %d \tsamples taken: %d \tqueue size: %d", qHandler->putCnt, qHandler->takeCnt, arrayList_size(qHandler->queue));
-		qHandler->putCnt = 0;
-		qHandler->takeCnt = 0;
+		msg(1, "QUEUE: \tsamples put: %d \tsamples taken: %d \tqueue size: %d", sampleQueue->putCnt, sampleQueue->takeCnt, arrayList_size(sampleQueue->queue));
+		sampleQueue->putCnt = 0;
+		sampleQueue->takeCnt = 0;
 		sleep(2);
 	}
 

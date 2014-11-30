@@ -13,6 +13,8 @@
 #include "endpoint_listener.h"
 #include "inaetics_demonstrator_api/data_store.h"
 
+typedef struct data_store data_store_type;
+
 struct data_store {
 	bundle_context_pt context;
 	endpoint_description_pt endpoint;

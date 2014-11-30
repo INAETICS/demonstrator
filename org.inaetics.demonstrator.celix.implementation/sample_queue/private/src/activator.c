@@ -20,17 +20,26 @@
 
 #include "inaetics_demonstrator_api/sample_queue.h"
 #include "inaetics_demonstrator_api/service_statistics.h"
+#include "inaetics_demonstrator_api/stats_provider.h"
 
-#include "arraylist_queue_service_impl.h"
-#include "arraylist_queue_service_statistics_impl.h"
+#include "arraylist_sample_queue_impl.h"
 
 struct activator {
+	bundle_context_pt context;
+	sample_queue_type *sampleQueue;
+
 	service_registration_pt queueRegistration;
 	struct sample_queue_service* queueService;
 
-	service_registration_pt queueStatRegistration;
-	struct service_statistics_service* queueStatService;
+	service_registration_pt queueStatsRegistration;
+	struct stats_provider_service* queueStatsService;
 };
+
+static celix_status_t bundleActivator_createQueueService(struct activator *act);
+static celix_status_t bundleActivator_createStatsService(struct activator *act);
+
+static celix_status_t bundleActivator_registerQueueService(struct activator *act);
+static celix_status_t bundleActivator_registerStatsService(struct activator *act);
 
 celix_status_t bundleActivator_create(bundle_context_pt context, void **userData) {
 	celix_status_t status = CELIX_SUCCESS;
@@ -38,8 +47,12 @@ celix_status_t bundleActivator_create(bundle_context_pt context, void **userData
 	*userData = calloc(1, sizeof(struct activator));
 
 	if (*userData) {
+		((struct activator *) *userData)->context = NULL;
+		((struct activator *) *userData)->sampleQueue = NULL;
 		((struct activator *) *userData)->queueService = NULL;
-		((struct activator *) *userData)->queueStatService = NULL;
+		((struct activator *) *userData)->queueRegistration = NULL;
+		((struct activator *) *userData)->queueStatsService = NULL;
+		((struct activator *) *userData)->queueStatsRegistration = NULL;
 
 	} else {
 		status = CELIX_ENOMEM;
@@ -52,71 +65,118 @@ celix_status_t bundleActivator_start(void * userData, bundle_context_pt context)
 	celix_status_t status = CELIX_SUCCESS;
 	struct activator *activator = userData;
 
-	struct sample_queue_service* qService = NULL;
-	struct service_statistics_service* qStatService = NULL;
+	//Creating sample queue Component
 
-	status = queueService_create(&qService);
+	//Setting up name for sample queue.
+	char *name;
+	char *uuid;
+	bundleContext_getProperty(context, "inaetics.demonstrator.queue.name", &name);
+	bundleContext_getProperty(context, OSGI_FRAMEWORK_FRAMEWORK_UUID, &uuid);
+	if (name == NULL && uuid != NULL) {
+		char uuidName[128];
+		sprintf("Sample Queue %.4s", uuid);
+		name = uuidName;
+	} else {
+		name = "queue";
+	}
 
-	if(status==CELIX_SUCCESS){
+	status = sampleQueue_create(name, &activator->sampleQueue);
 
-		char* fwUUID = NULL;
-		bundleContext_getProperty(context,OSGI_FRAMEWORK_FRAMEWORK_UUID,&fwUUID);
+	if(status==CELIX_SUCCESS) {
 
-		status=queueStatService_create(&qStatService,qService,fwUUID);
+		//Creating service structs for services provided by the component
+		bundleActivator_createQueueService(activator);
+		bundleActivator_createStatsService(activator);
 
-		if (status == CELIX_SUCCESS){
-			properties_pt queueProperties = NULL;
-
-			activator->queueService = qService;
-
-			queueProperties = properties_create();
-			properties_set(queueProperties, (char *) OSGI_RSA_SERVICE_EXPORTED_INTERFACES, (char *) INAETICS_DEMONSTRATOR_API__SAMPLE_QUEUE_SERVICE_NAME);
-
-			status = bundleContext_registerService(context, INAETICS_DEMONSTRATOR_API__SAMPLE_QUEUE_SERVICE_NAME,
-					activator->queueService, queueProperties, &activator->queueRegistration);
-
-			printf("SAMPLE_QUEUE: Service %s %s\n", INAETICS_DEMONSTRATOR_API__SAMPLE_QUEUE_SERVICE_NAME,
-					status == CELIX_SUCCESS ? "registered" : "registration failed");
-
-			if(status==CELIX_SUCCESS){
-				properties_pt queueStatProperties = NULL;
-
-				activator->queueStatService= qStatService;
-
-
-				queueStatProperties = properties_create();
-				properties_set(queueStatProperties, (char *) OSGI_RSA_SERVICE_EXPORTED_INTERFACES, (char *) INAETICS_DEMONSTRATOR_API_SERVICE_STATISTICS_SERVICE_NAME);
-
-				status = bundleContext_registerService(context, INAETICS_DEMONSTRATOR_API_SERVICE_STATISTICS_SERVICE_NAME,
-						activator->queueStatService, queueStatProperties, &activator->queueStatRegistration);
-
-				printf("SAMPLE_QUEUE: Service %s (fwUUID=%s) %s\n", INAETICS_DEMONSTRATOR_API_SERVICE_STATISTICS_SERVICE_NAME,fwUUID,
-						status == CELIX_SUCCESS ? "registered" : "registration failed");
-
-			}
-
+		if (activator->queueService != NULL) {
+			bundleActivator_registerQueueService(activator);
 		}
-		else{
-			printf("SAMPLE_QUEUE: Cannot create Queue Statistics Service\n");
+		if (activator->queueStatsService != NULL) {
+			bundleActivator_registerStatsService(activator);
+		}
+
+		if (	activator->queueService == NULL || activator->queueStatsService == NULL ||
+				activator->queueRegistration == NULL || activator->queueStatsRegistration == NULL) {
+			printf("SAMPLE QUEUE: Error creating/registering services\n");
+			status = CELIX_BUNDLE_EXCEPTION;
 		}
 	}
-	else{
-		printf("SAMPLE_QUEUE: Cannot create Queue Service\n");
+	return status;
+}
+
+static celix_status_t bundleActivator_createQueueService(struct activator *act) {
+	celix_status_t status = CELIX_SUCCESS;
+
+	act->queueService = calloc(1, sizeof(*act->queueService));
+
+	if (act->queueService != NULL) {
+		act->queueService->sampleQueue = act->sampleQueue;
+		act->queueService->put = (void *)sampleQueue_put;
+		act->queueService->putAll = (void *)sampleQueue_putAll;
+		act->queueService->take = (void *)sampleQueue_take;
+		act->queueService->takeAll = (void *)sampleQueue_takeAll;
+	} else {
+		status = CELIX_ENOMEM;
 	}
 
 	return status;
 }
+
+static celix_status_t bundleActivator_createStatsService(struct activator *act) {
+	celix_status_t status = CELIX_SUCCESS;
+
+	act->queueStatsService = calloc(1, sizeof(*act->queueStatsService));
+
+	if (act->queueStatsService != NULL) {
+		act->queueStatsService->statsProvider = act->sampleQueue;
+		act->queueStatsService->getName = (void *)sampleQueue_getUtilizationStatsName;
+		act->queueStatsService->getType = (void *)sampleQueue_getUtilizationStatsType;
+		act->queueStatsService->getMeasurementUnit = (void *)sampleQueue_getUtilizationStatsMeasurementUnit;
+		act->queueStatsService->getValue = (void *)SampleQueue_getUtilizationStatsValue;
+	} else {
+		status = CELIX_ENOMEM;
+	}
+
+	return status;
+}
+
+static celix_status_t bundleActivator_registerQueueService(struct activator *act) {
+	celix_status_t status = CELIX_SUCCESS;
+	properties_pt props = NULL;
+	props = properties_create();
+	properties_set(props, (char *) OSGI_RSA_SERVICE_EXPORTED_INTERFACES, (char *) INAETICS_DEMONSTRATOR_API__SAMPLE_QUEUE_SERVICE_NAME);
+
+	status = bundleContext_registerService(act->context, (char *)INAETICS_DEMONSTRATOR_API__SAMPLE_QUEUE_SERVICE_NAME,
+						act->queueService, props, &act->queueRegistration);
+
+	return status;
+}
+
+static celix_status_t bundleActivator_registerStatsService(struct activator *act) {
+	celix_status_t status = CELIX_SUCCESS;
+	properties_pt props = NULL;
+	props = properties_create();
+	properties_set(props, (char *) OSGI_RSA_SERVICE_EXPORTED_INTERFACES, (char *) INAETICS_DEMONSTRATOR_API__STATS_PROVIDER_SERVICE_NAME);
+
+	status = bundleContext_registerService(act->context, (char *)INAETICS_DEMONSTRATOR_API__STATS_PROVIDER_SERVICE_NAME,
+						act->queueStatsService, props, &act->queueStatsRegistration);
+
+	return status;
+}
+
 
 celix_status_t bundleActivator_stop(void * userData, bundle_context_pt context) {
 
 	celix_status_t status = CELIX_SUCCESS;
 	struct activator *activator = userData;
 
-	serviceRegistration_unregister(activator->queueStatRegistration);
+	serviceRegistration_unregister(activator->queueStatsRegistration);
 	serviceRegistration_unregister(activator->queueRegistration);
 
-	queueStatService_destroy(activator->queueStatService);
-	queueService_destroy(activator->queueService) ;
+	free(activator->queueService);
+	free(activator->queueStatsService);
+
+	sampleQueue_destroy(activator->sampleQueue);
 
 	return status;
 }

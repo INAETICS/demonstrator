@@ -12,6 +12,8 @@
 #define WAIT_TIME_SECONDS       2
 #define VERBOSE					3
 
+typedef struct data_store data_store_type;
+
 struct data_store {
 	pthread_mutex_t lock;
 	pthread_cond_t listEmpty;

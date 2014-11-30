@@ -8,8 +8,7 @@ include_directories("private/include")
 
 bundle(sample_queue 
 	SOURCES private/src/activator 
-		    private/src/arraylist_queue_service_impl
-		    private/src/arraylist_queue_service_statistics_impl
+		    private/src/arraylist_sample_queue_impl
 )
 
 target_link_libraries(sample_queue pthread ${CELIX_LIBRARIES})
