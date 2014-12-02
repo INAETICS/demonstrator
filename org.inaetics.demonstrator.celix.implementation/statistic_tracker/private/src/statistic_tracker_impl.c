@@ -12,6 +12,15 @@ struct statistic_tracker {
 	bool running;
 };
 
+
+unsigned int threadHash(void * thread) {
+	return *((unsigned int*) thread);
+}
+
+int threadEqual(void* thread1, void* thread2) {
+	return pthread_equal(*((pthread_t*) thread1), *((pthread_t*) thread2));
+}
+
 static void msg(int lvl, char *fmsg, ...) {
 	if (lvl <= VERBOSE) {
 		char msg[512];
@@ -23,7 +32,7 @@ static void msg(int lvl, char *fmsg, ...) {
 	}
 }
 
-void* statPoller(void* handle){
+void* statPoller(void* handle) {
 
 	statistic_tracker_pt statTracker = (statistic_tracker_pt) handle;
 	celix_status_t status = CELIX_SUCCESS;
@@ -44,32 +53,30 @@ void* statPoller(void* handle){
 		statService = (struct stats_provider_service*) hashMap_get(statTracker->statServices, &self);
 
 		if (statService != NULL) {
-			statService->getName(statService->statsProvider,&name);
-			statService->getType(statService->statsProvider,&type);
-			statService->getValue(statService->statsProvider,&statVal);
-			statService->getMeasurementUnit(statService->statsProvider,&mUnit);
+			statService->getName(statService->statsProvider, &name);
+			statService->getType(statService->statsProvider, &type);
+			statService->getValue(statService->statsProvider, &statVal);
+			statService->getMeasurementUnit(statService->statsProvider, &mUnit);
 		}
 		else {
 			status = CELIX_BUNDLE_EXCEPTION;
 		}
 		pthread_rwlock_unlock(&statTracker->statLock);
 
-		msg(1, "STAT_TRACKER: Statistic for %s (type %s): %f %s ",name,type,statVal,mUnit);
+		msg(1, "STAT_TRACKER: Statistic for %s (type %s): %f %s ", name, type, statVal, mUnit);
 
-
-		if(mUnit!=NULL){
+		if (mUnit != NULL) {
 			free(mUnit);
 		}
-		if(type!=NULL){
+		if (type != NULL) {
 			free(type);
 		}
-		if(name!=NULL){
+		if (name != NULL) {
 			free(name);
 		}
 
 		sleep(WAIT_TIME_SECONDS);
 	}
-
 
 	return NULL;
 
@@ -84,7 +91,7 @@ celix_status_t statistic_tracker_create(statistic_tracker_pt* statTracker)
 	if (lclStatTracker != NULL) {
 		lclStatTracker->running = false;
 		pthread_rwlock_init(&lclStatTracker->statLock, NULL);
-		lclStatTracker->statServices = hashMap_create(utils_stringHash, NULL, utils_stringEquals, NULL);
+		lclStatTracker->statServices = hashMap_create(threadHash, NULL, threadEqual, NULL);
 
 		(*statTracker) = lclStatTracker;
 	} else {
@@ -94,8 +101,7 @@ celix_status_t statistic_tracker_create(statistic_tracker_pt* statTracker)
 	return status;
 }
 
-
-celix_status_t statistic_tracker_stop(statistic_tracker_pt statTracker){
+celix_status_t statistic_tracker_stop(statistic_tracker_pt statTracker) {
 
 	celix_status_t status = CELIX_SUCCESS;
 
@@ -104,7 +110,6 @@ celix_status_t statistic_tracker_stop(statistic_tracker_pt statTracker){
 
 	return status;
 }
-
 
 celix_status_t statistic_tracker_destroy(statistic_tracker_pt statTracker)
 {
@@ -119,7 +124,7 @@ celix_status_t statistic_tracker_destroy(statistic_tracker_pt statTracker)
 	return status;
 }
 
-celix_status_t statistic_tracker_statServiceAdded(void *handle, service_reference_pt reference, void *service){
+celix_status_t statistic_tracker_statServiceAdded(void *handle, service_reference_pt reference, void *service) {
 
 	statistic_tracker_pt statTracker = (statistic_tracker_pt) handle;
 	pthread_t* thread_pt = calloc(1, sizeof(*thread_pt));
@@ -129,12 +134,12 @@ celix_status_t statistic_tracker_statServiceAdded(void *handle, service_referenc
 	hashMap_put(statTracker->statServices, thread_pt, service);
 	pthread_rwlock_unlock(&statTracker->statLock);
 
-	msg(1, "STAT_TRACKER: Service Added (handled by thread %lu)",(unsigned long)thread_pt);
+	msg(1, "STAT_TRACKER: Service Added (handled by thread %lu)", (unsigned long) *thread_pt);
 
 	return CELIX_SUCCESS;
 }
 
-celix_status_t statistic_tracker_statServiceRemoved(void *handle, service_reference_pt reference, void *service){
+celix_status_t statistic_tracker_statServiceRemoved(void *handle, service_reference_pt reference, void *service) {
 
 	celix_status_t status = CELIX_BUNDLE_EXCEPTION;
 	statistic_tracker_pt statTracker = (statistic_tracker_pt) handle;
@@ -159,7 +164,7 @@ celix_status_t statistic_tracker_statServiceRemoved(void *handle, service_refere
 
 	if (thread_pt != NULL) {
 		pthread_join(*thread_pt, NULL);
-		msg(1, "STAT_TRACKER: Service Removed. Thread %lu stopped.",(unsigned long)*thread_pt);
+		msg(1, "STAT_TRACKER: Service Removed. Thread %lu stopped.", (unsigned long) *thread_pt);
 		free(thread_pt);
 		status = CELIX_SUCCESS;
 	}
