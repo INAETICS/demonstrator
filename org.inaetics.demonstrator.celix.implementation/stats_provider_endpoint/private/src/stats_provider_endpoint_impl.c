@@ -1,10 +1,10 @@
+#include "stats_provider_endpoint_impl.h"
+
+#include <jansson.h>
 #include <stdbool.h>
 #include <string.h>
-#include <jansson.h>
 
 #include "celix_errno.h"
-
-#include "stats_provider_endpoint_impl.h"
 
 celix_status_t serviceStatisticsEndpoint_create(remote_endpoint_pt *endpoint) {
 	celix_status_t status = CELIX_SUCCESS;
@@ -38,15 +38,15 @@ celix_status_t statsProviderEndpoint_handleRequest(remote_endpoint_pt endpoint, 
 	root = json_loads(data, 0, &jsonError);
 	json_unpack(root, "{s:s}", "m", &sig);
 
-	if (strcmp(sig, "getName") == 0) {
+	if (strcmp(sig, "getName()Ljava/lang/String;") == 0) {
 		statsProviderEndpoint_getName(endpoint, data, reply);
-	} else if (strcmp(sig, "getType") == 0) {
+	} else if (strcmp(sig, "getType()Ljava/lang/String;") == 0) {
 		statsProviderEndpoint_getType(endpoint, data, reply);
 	}
-	else if (strcmp(sig, "getValue") == 0) {
+	else if (strcmp(sig, "getValue()D") == 0) {
 		statsProviderEndpoint_getValue(endpoint, data, reply);
 	}
-	else if (strcmp(sig, "getMeasurementUnit") == 0) {
+	else if (strcmp(sig, "getMeasurementUnit()Ljava/lang/String;") == 0) {
 		statsProviderEndpoint_getMeasurementUnit(endpoint, data, reply);
 	}
 	else {
@@ -78,7 +78,7 @@ celix_status_t statsProviderEndpoint_getName(remote_endpoint_pt endpoint, char *
 		int result = service->getName(service->statsProvider, &name);
 
 		if (result == 0) {
-			resultRoot = json_pack("{s:s}", "name", name);
+			resultRoot = json_pack("s", name);
 		}
 		else
 		{
@@ -118,7 +118,7 @@ celix_status_t statsProviderEndpoint_getType(remote_endpoint_pt endpoint, char *
 		int result = service->getType(service->statsProvider, &type);
 
 		if (result == 0) {
-			resultRoot = json_pack("{s:s}", "type", type);
+			resultRoot = json_pack("s", type);
 		}
 		else
 		{
@@ -158,7 +158,7 @@ celix_status_t statsProviderEndpoint_getMeasurementUnit(remote_endpoint_pt endpo
 		int result = service->getMeasurementUnit(service->statsProvider, &unitMeasurement);
 
 		if (result == 0) {
-			resultRoot = json_pack("{s:s}", "unitMeasurement", unitMeasurement);
+			resultRoot = json_pack("s", unitMeasurement);
 		}
 		else
 		{
@@ -198,7 +198,7 @@ celix_status_t statsProviderEndpoint_getValue(remote_endpoint_pt endpoint, char 
 		int result = service->getValue(service->statsProvider, &stat);
 
 		if (result == 0) {
-			resultRoot = json_pack("{s:f}", "statistic", stat);
+			resultRoot = json_pack("f", stat);
 		}
 		else
 		{
