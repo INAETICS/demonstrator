@@ -1,15 +1,47 @@
-#include <stdarg.h>
-#include <pthread.h>
-#include <utils.h>
-
 #include "producer_impl.h"
 
+#include <stdarg.h>
+#include <stdint.h>
+
+#include "celix_errno.h"
+#include "service_reference.h"
+#include "utils.h"
+#include "hash_map.h"
+#include "sample.h"
+
+#define SINGLE_SAMPLES_PER_SEC 	1000
+#define BURST_SAMPLES_PER_SEC 	1000
+
+#define MIN_BURST_LEN 			2
+#define MAX_BURST_LEN 			10
+
+#define VERBOSE					1
+#define WAIT_TIME_SECONDS       5
+
+#define THROUGHPUT_NAME_POSTFIX 		" Throughput"
+#define THROUGHPUT_TYPE 				"throughput"
+#define THROUGHPUT_MEASUREMENT_UNIT		"sample/sec"
+
 struct producer {
+	char *name;
+	char *utilizationStatsName;
+
 	hash_map_pt queueServices;
 	pthread_rwlock_t queueLock;
-
-	bool running;
 };
+
+struct producer_thread_data {
+	pthread_t thread;
+	bool running;
+
+	struct sample_queue_service* service;
+
+	pthread_rwlock_t throughputLock;
+	unsigned long single_throughput;
+	unsigned long burst_throughput;
+};
+
+typedef struct producer_thread_data* producer_thread_data_pt;
 
 static void msg(int lvl, char *fmsg, ...) {
 	if (lvl <= VERBOSE) {
@@ -43,10 +75,10 @@ static void producer_fillSample(struct sample* s) {
 
 }
 
-celix_status_t producer_sendSamples(producer_pt producer, int samplesPerSec)
+celix_status_t producer_sendSamples(producer_thread_data_pt th_data, int samplesPerSec)
 {
 	celix_status_t status = CELIX_SUCCESS;
-	struct sample_queue_service* queueService = NULL;
+	struct sample_queue_service* queueService = th_data->service;
 	struct sample smpl;
 	struct timespec ts_start;
 	struct timespec ts_end;
@@ -60,10 +92,6 @@ celix_status_t producer_sendSamples(producer_pt producer, int samplesPerSec)
 
 		memset(&smpl, 0, sizeof(struct sample));
 		producer_fillSample(&smpl);
-
-		pthread_rwlock_rdlock(&producer->queueLock);
-		pthread_t self = pthread_self();
-		queueService = (struct sample_queue_service*) hashMap_get(producer->queueServices, &self);
 
 		if (queueService != NULL) {
 			queueService->put(queueService->sampleQueue, smpl, &ret);
@@ -80,10 +108,14 @@ celix_status_t producer_sendSamples(producer_pt producer, int samplesPerSec)
 		else {
 			status = CELIX_BUNDLE_EXCEPTION;
 		}
-		pthread_rwlock_unlock(&producer->queueLock);
 
 		clock_gettime(CLOCK_REALTIME, &ts_end);
 	}
+
+	/* Update the statistic */
+	pthread_rwlock_rdlock(&th_data->throughputLock);
+	th_data->single_throughput = singleSampleCnt;
+	pthread_rwlock_unlock(&th_data->throughputLock);
 
 	msg(1, "PRODUCER: %d single samples sent.", singleSampleCnt);
 
@@ -94,10 +126,10 @@ celix_status_t producer_sendSamples(producer_pt producer, int samplesPerSec)
 	return status;
 }
 
-celix_status_t producer_sendBursts(producer_pt producer, int samplesPerSec) {
+celix_status_t producer_sendBursts(producer_thread_data_pt th_data, int samplesPerSec) {
 
 	celix_status_t status = CELIX_SUCCESS;
-	struct sample_queue_service* queueService = NULL;
+	struct sample_queue_service* queueService = th_data->service;
 	struct timespec ts_start;
 	struct timespec ts_end;
 	int burstSampleCnt = 0;
@@ -120,10 +152,6 @@ celix_status_t producer_sendBursts(producer_pt producer, int samplesPerSec) {
 					burst[j].value2);
 		}
 
-		pthread_rwlock_rdlock(&producer->queueLock);
-		pthread_t self = pthread_self();
-		queueService = (struct sample_queue_service*) hashMap_get(producer->queueServices, &self);
-
 		if (queueService != NULL) {
 			queueService->putAll(queueService->sampleQueue, burst, burst_len, &burst_samples_stored);
 		}
@@ -131,11 +159,15 @@ celix_status_t producer_sendBursts(producer_pt producer, int samplesPerSec) {
 			status = CELIX_BUNDLE_EXCEPTION;
 		}
 
-		pthread_rwlock_unlock(&producer->queueLock);
 		burstSampleCnt += burst_samples_stored;
 
 		clock_gettime(CLOCK_REALTIME, &ts_end);
 	}
+
+	/* Update the statistic */
+	pthread_rwlock_rdlock(&th_data->throughputLock);
+	th_data->burst_throughput = burstSampleCnt;
+	pthread_rwlock_unlock(&th_data->throughputLock);
 
 	msg(1, "PRODUCER: %d burst samples sent.", burstSampleCnt);
 
@@ -147,37 +179,49 @@ celix_status_t producer_sendBursts(producer_pt producer, int samplesPerSec) {
 }
 
 void *producer_generate(void *handle) {
-	producer_pt producer = (producer_pt) handle;
+	producer_thread_data_pt th_data = (producer_thread_data_pt) handle;
 	celix_status_t status = CELIX_SUCCESS;
 
-	producer->running = true;
+	th_data->running = true;
 
-	while (producer->running && status == CELIX_SUCCESS) {
+	while (th_data->running && status == CELIX_SUCCESS) {
 
 		if (BURST_SAMPLES_PER_SEC > 0) {
-			status = producer_sendBursts(producer, BURST_SAMPLES_PER_SEC);
+			status = producer_sendBursts(th_data, BURST_SAMPLES_PER_SEC);
 		}
 
 		if (SINGLE_SAMPLES_PER_SEC > 0) {
-			status = producer_sendSamples(producer, SINGLE_SAMPLES_PER_SEC);
+			status = producer_sendSamples(th_data, SINGLE_SAMPLES_PER_SEC);
 		}
 	}
 
 	return NULL;
 }
 
-celix_status_t producer_create(producer_pt* producer)
+celix_status_t producer_create(char* name, producer_pt* producer)
 {
 	celix_status_t status = CELIX_SUCCESS;
 
 	producer_pt lclProducer = calloc(1, sizeof(*lclProducer));
 
 	if (lclProducer != NULL) {
-		lclProducer->running = false;
-		pthread_rwlock_init(&lclProducer->queueLock, NULL);
-		lclProducer->queueServices = hashMap_create(utils_stringHash, NULL, utils_stringEquals, NULL);
 
-		(*producer) = lclProducer;
+		lclProducer->name = strdup(name);
+		lclProducer->utilizationStatsName = calloc(1, strlen(name) + strlen(THROUGHPUT_NAME_POSTFIX) + 1);
+
+		if (lclProducer->name != NULL && lclProducer->utilizationStatsName != NULL) {
+
+			sprintf(lclProducer->utilizationStatsName, "%s%s", lclProducer->name, (char*) THROUGHPUT_NAME_POSTFIX);
+
+			pthread_rwlock_init(&lclProducer->queueLock, NULL);
+
+			lclProducer->queueServices = hashMap_create(utils_stringHash, NULL, utils_stringEquals, NULL);
+
+			(*producer) = lclProducer;
+		}
+		else {
+			status = CELIX_ENOMEM;
+		}
 	} else {
 		status = CELIX_ENOMEM;
 	}
@@ -190,7 +234,17 @@ celix_status_t producer_stop(producer_pt producer)
 	celix_status_t status = CELIX_SUCCESS;
 
 	printf("PRODUCER: Stopping Producer.\n");
-	producer->running = false;
+
+	pthread_rwlock_rdlock(&producer->queueLock);
+	hash_map_iterator_pt iter = hashMapIterator_create(producer->queueServices);
+
+	while (hashMapIterator_hasNext(iter)) {
+		producer_thread_data_pt th_data = hashMapIterator_nextValue(iter);
+		th_data->running = false;
+	}
+
+	hashMapIterator_destroy(iter);
+	pthread_rwlock_unlock(&producer->queueLock);
 
 	return status;
 }
@@ -200,10 +254,18 @@ celix_status_t producer_destroy(producer_pt producer)
 	celix_status_t status = CELIX_SUCCESS;
 
 	pthread_rwlock_wrlock(&producer->queueLock);
-	hashMap_destroy(producer->queueServices, false, false);
+	hashMap_destroy(producer->queueServices, false, true);
 	pthread_rwlock_unlock(&producer->queueLock);
 
 	pthread_rwlock_destroy(&producer->queueLock);
+
+	if (producer->utilizationStatsName != NULL) {
+		free(producer->utilizationStatsName);
+	}
+
+	if (producer->name != NULL) {
+		free(producer->name);
+	}
 
 	return status;
 }
@@ -211,11 +273,14 @@ celix_status_t producer_destroy(producer_pt producer)
 celix_status_t producer_queueServiceAdded(void *handle, service_reference_pt reference, void *service)
 {
 	producer_pt producer = (producer_pt) handle;
-	pthread_t* thread_pt = calloc(1, sizeof(*thread_pt));
 
 	pthread_rwlock_wrlock(&producer->queueLock);
-	pthread_create(thread_pt, NULL, producer_generate, producer);
-	hashMap_put(producer->queueServices, thread_pt, service);
+
+	producer_thread_data_pt th_data = calloc(1, sizeof(struct producer_thread_data));
+	th_data->service = service;
+	pthread_create(&th_data->thread, NULL, producer_generate, th_data);
+	hashMap_put(producer->queueServices, service, th_data);
+
 	pthread_rwlock_unlock(&producer->queueLock);
 
 	return CELIX_SUCCESS;
@@ -223,20 +288,59 @@ celix_status_t producer_queueServiceAdded(void *handle, service_reference_pt ref
 
 celix_status_t producer_queueServiceRemoved(void *handle, service_reference_pt reference, void *service)
 {
-	celix_status_t status = CELIX_BUNDLE_EXCEPTION;
+	celix_status_t status = CELIX_SUCCESS;
 	producer_pt producer = (producer_pt) handle;
-	pthread_t* thread_pt = NULL;
 
 	pthread_rwlock_wrlock(&producer->queueLock);
 
+	producer_thread_data_pt th_data = (producer_thread_data_pt) hashMap_get(producer->queueServices, service);
+	th_data->running = false;
+	pthread_join(th_data->thread, NULL);
+
+	hashMap_remove(producer->queueServices, service);
+	free(th_data);
+
+	pthread_rwlock_unlock(&producer->queueLock);
+
+	return status;
+}
+
+int producer_getUtilizationStatsName(producer_pt producer, char **name) {
+	celix_status_t status = CELIX_SUCCESS;
+
+	if (producer->utilizationStatsName != NULL) {
+		(*name) = producer->utilizationStatsName;
+	}
+	else {
+		msg(0, "PRODUCER_STAT: getName denied because service is removed");
+		status = CELIX_ILLEGAL_STATE;
+	}
+
+	return (int) status;
+}
+
+int producer_getUtilizationStatsType(producer_pt producer, char **type) {
+	(*type) = (char*) THROUGHPUT_TYPE;
+	return (int) CELIX_SUCCESS;
+}
+
+int producer_getUtilizationStatsValue(producer_pt producer, double* statVal) {
+
+	double total_average = 0;
+
+	pthread_rwlock_rdlock(&producer->queueLock);
+
 	hash_map_iterator_pt iter = hashMapIterator_create(producer->queueServices);
 
-	while (hashMapIterator_hasNext(iter) && thread_pt == NULL) {
+	while (hashMapIterator_hasNext(iter)) {
+
 		hash_map_entry_pt entry = hashMapIterator_nextEntry(iter);
 
-		if (service == hashMapEntry_getValue(entry)) {
-			thread_pt = hashMapEntry_getKey(entry);
-			hashMap_remove(producer->queueServices, thread_pt);
+		if (entry != NULL) {
+			producer_thread_data_pt value = (producer_thread_data_pt) hashMapEntry_getValue(entry);
+			if (value != NULL) {
+				total_average += (double) (((double) (value->single_throughput + value->burst_throughput)) / ((double) 2.0f));
+			}
 		}
 	}
 
@@ -244,11 +348,11 @@ celix_status_t producer_queueServiceRemoved(void *handle, service_reference_pt r
 
 	pthread_rwlock_unlock(&producer->queueLock);
 
-	if (thread_pt != NULL) {
-		pthread_join(*thread_pt, NULL);
-		free(thread_pt);
-		status = CELIX_SUCCESS;
-	}
+	(*statVal) = total_average;
+	return (int) CELIX_SUCCESS;
+}
 
-	return status;
+int producer_getUtilizationStatsMeasurementUnit(producer_pt producer, char **mUnit) {
+	(*mUnit) = (char*) THROUGHPUT_MEASUREMENT_UNIT;
+	return (int) CELIX_SUCCESS;
 }
