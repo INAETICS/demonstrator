@@ -144,7 +144,7 @@ int queueProxy_take(sample_queue_type* queue, struct sample *sample) {
 			json_t *js_reply = json_loads(reply, 0, &error);
 			if (js_reply) {
 
-				if (json_unpack(js_reply, "{s:i,s:f,s:f}", "sampleTime", &sample->time, "value1", &sample->value1, "value1", &sample->value2) != 0)
+				if (json_unpack(js_reply, "{s:i,s:f,s:f}", "sampleTime", &sample->time, "value1", &sample->value1, "value2", &sample->value2) != 0)
 					status = CELIX_BUNDLE_EXCEPTION;
 			} else {
 				printf("PROXY: got error '%s' for '%s'\n", error.text, reply);
