@@ -9,13 +9,11 @@
 
 #include "inaetics_demonstrator_api/service_statistics.h"
 
-
 celix_status_t serviceStatisticsProxy_setEndpointDescription(void *proxy, endpoint_description_pt endpoint);
 celix_status_t serviceStatisticsProxy_setHandler(void *proxy, void *handler);
 celix_status_t serviceStatisticsProxy_setCallback(void *proxy, sendToHandle callback);
 
-
-celix_status_t serviceStatisticsProxy_create(bundle_context_pt context, service_statistics_type **stat)  {
+celix_status_t serviceStatisticsProxy_create(bundle_context_pt context, service_statistics_type **stat) {
 	celix_status_t status = CELIX_SUCCESS;
 	*stat = calloc(1, sizeof(**stat));
 	if (!*stat) {
@@ -30,8 +28,7 @@ celix_status_t serviceStatisticsProxy_create(bundle_context_pt context, service_
 	return status;
 }
 
-
-celix_status_t serviceStatisticsProxy_getServiceName(service_statistics_type* serviceStatistics, char** name){
+celix_status_t serviceStatisticsProxy_getServiceName(service_statistics_type* serviceStatistics, char** name) {
 
 	celix_status_t status = CELIX_SUCCESS;
 
@@ -53,11 +50,11 @@ celix_status_t serviceStatisticsProxy_getServiceName(service_statistics_type* se
 
 				char* sn = NULL;
 
-				if (json_unpack(js_reply, "{s:s}", "serviceName", &sn) != 0){
+				if (json_unpack(js_reply, "{s:s}", "serviceName", &sn) != 0) {
 					status = CELIX_BUNDLE_EXCEPTION;
 				}
-				else{
-					*name=strdup(sn);
+				else {
+					*name = strdup(sn);
 				}
 			} else {
 				printf("SERVICE_STATISTICS_PROXY: got error '%s' for '%s'\n", error.text, reply);
@@ -80,7 +77,7 @@ celix_status_t serviceStatisticsProxy_getServiceName(service_statistics_type* se
 	return status;
 }
 
-celix_status_t serviceStatisticsProxy_getServiceType(service_statistics_type* serviceStatistics, char** type){
+celix_status_t serviceStatisticsProxy_getServiceType(service_statistics_type* serviceStatistics, char** type) {
 
 	celix_status_t status = CELIX_SUCCESS;
 
@@ -102,11 +99,11 @@ celix_status_t serviceStatisticsProxy_getServiceType(service_statistics_type* se
 
 				char* st = NULL;
 
-				if (json_unpack(js_reply, "{s:s}", "serviceType", &st) != 0){
+				if (json_unpack(js_reply, "{s:s}", "serviceType", &st) != 0) {
 					status = CELIX_BUNDLE_EXCEPTION;
 				}
-				else{
-					*type=strdup(st);
+				else {
+					*type = strdup(st);
 				}
 			} else {
 				printf("SERVICE_STATISTICS_PROXY: got error '%s' for '%s'\n", error.text, reply);
@@ -129,7 +126,7 @@ celix_status_t serviceStatisticsProxy_getServiceType(service_statistics_type* se
 	return status;
 }
 
-celix_status_t serviceStatisticsProxy_getStatistic(service_statistics_type* serviceStatistics, double* statVal){
+celix_status_t serviceStatisticsProxy_getStatistic(service_statistics_type* serviceStatistics, double* statVal) {
 
 	celix_status_t status = CELIX_SUCCESS;
 
@@ -149,8 +146,7 @@ celix_status_t serviceStatisticsProxy_getStatistic(service_statistics_type* serv
 			json_t *js_reply = json_loads(reply, 0, &error);
 			if (js_reply) {
 
-
-				if (json_unpack(js_reply, "{s:f}", "statistic", statVal) != 0){
+				if (json_unpack(js_reply, "{s:f}", "statistic", statVal) != 0) {
 					status = CELIX_BUNDLE_EXCEPTION;
 				}
 
@@ -175,7 +171,7 @@ celix_status_t serviceStatisticsProxy_getStatistic(service_statistics_type* serv
 	return status;
 }
 
-celix_status_t serviceStatisticsProxy_getMeasurementUnit(service_statistics_type* serviceStatistics, char** mUnit){
+celix_status_t serviceStatisticsProxy_getMeasurementUnit(service_statistics_type* serviceStatistics, char** mUnit) {
 
 	celix_status_t status = CELIX_SUCCESS;
 
@@ -197,11 +193,11 @@ celix_status_t serviceStatisticsProxy_getMeasurementUnit(service_statistics_type
 
 				char* um = NULL;
 
-				if (json_unpack(js_reply, "{s:s}", "unitMeasurement", &um) != 0){
+				if (json_unpack(js_reply, "{s:s}", "unitMeasurement", &um) != 0) {
 					status = CELIX_BUNDLE_EXCEPTION;
 				}
-				else{
-					*mUnit=strdup(um);
+				else {
+					*mUnit = strdup(um);
 				}
 			} else {
 				printf("SERVICE_STATISTICS_PROXY: got error '%s' for '%s'\n", error.text, reply);
@@ -224,7 +220,6 @@ celix_status_t serviceStatisticsProxy_getMeasurementUnit(service_statistics_type
 	return status;
 }
 
-
 celix_status_t serviceStatisticsProxy_registerProxyService(void* proxyFactoryService, endpoint_description_pt endpointDescription, void* rsa, sendToHandle sendToCallback) {
 	celix_status_t status = CELIX_SUCCESS;
 
@@ -238,7 +233,7 @@ celix_status_t serviceStatisticsProxy_registerProxyService(void* proxyFactorySer
 	statService->getServiceName = serviceStatisticsProxy_getServiceName;
 	statService->getServiceType = serviceStatisticsProxy_getServiceType;
 	statService->getStatistic = serviceStatisticsProxy_getStatistic;
-	statService->getMeasurementUnit =  serviceStatisticsProxy_getMeasurementUnit;
+	statService->getMeasurementUnit = serviceStatisticsProxy_getMeasurementUnit;
 
 	properties_pt srvcProps = properties_create();
 	properties_set(srvcProps, (char *) "proxy.interface", (char *) INAETICS_DEMONSTRATOR_API_SERVICE_STATISTICS_SERVICE_NAME);
@@ -251,16 +246,14 @@ celix_status_t serviceStatisticsProxy_registerProxyService(void* proxyFactorySer
 	serviceStatisticsProxy_setCallback(stat, sendToCallback);
 
 	if (bundleContext_registerService(serviceStatisticsProxyFactoryService->context, INAETICS_DEMONSTRATOR_API_SERVICE_STATISTICS_SERVICE_NAME, statService, srvcProps, &proxyReg) != CELIX_SUCCESS)
-	{
+			{
 		printf("SERVICE_STATISTICS_PROXY: error while registering statistics service\n");
 	}
 
 	hashMap_put(serviceStatisticsProxyFactoryService->proxy_registrations, endpointDescription, proxyReg);
 
-
 	return status;
 }
-
 
 celix_status_t serviceStatisticsProxy_unregisterProxyService(void* proxyFactoryService, endpoint_description_pt endpointDescription) {
 	celix_status_t status = CELIX_SUCCESS;
@@ -269,13 +262,12 @@ celix_status_t serviceStatisticsProxy_unregisterProxyService(void* proxyFactoryS
 	service_registration_pt proxyReg = hashMap_get(serviceStatisticsProxyFactoryService->proxy_registrations, endpointDescription);
 
 	if (proxyReg != NULL)
-	{
+			{
 		serviceRegistration_unregister(proxyReg);
 	}
 
 	return status;
 }
-
 
 celix_status_t serviceStatisticsProxy_setEndpointDescription(void *proxy, endpoint_description_pt endpoint) {
 	celix_status_t status = CELIX_SUCCESS;
@@ -286,7 +278,6 @@ celix_status_t serviceStatisticsProxy_setEndpointDescription(void *proxy, endpoi
 	return status;
 }
 
-
 celix_status_t serviceStatisticsProxy_setHandler(void *proxy, void *handler) {
 	celix_status_t status = CELIX_SUCCESS;
 
@@ -295,7 +286,6 @@ celix_status_t serviceStatisticsProxy_setHandler(void *proxy, void *handler) {
 
 	return status;
 }
-
 
 celix_status_t serviceStatisticsProxy_setCallback(void *proxy, sendToHandle callback) {
 	celix_status_t status = CELIX_SUCCESS;

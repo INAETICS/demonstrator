@@ -12,7 +12,7 @@
 #include <array_list.h>
 #include <service_tracker.h>
 
-#include "inaetics_demonstrator_api/service_statistics.h"
+#include "inaetics_demonstrator_api/stats_provider.h"
 
 
 #define VERBOSE					1

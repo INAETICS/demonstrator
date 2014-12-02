@@ -19,7 +19,6 @@
 #include <pthread.h>
 
 #include "inaetics_demonstrator_api/sample_queue.h"
-#include "inaetics_demonstrator_api/service_statistics.h"
 #include "inaetics_demonstrator_api/stats_provider.h"
 
 #include "arraylist_sample_queue_impl.h"
@@ -47,7 +46,7 @@ celix_status_t bundleActivator_create(bundle_context_pt context, void **userData
 	*userData = calloc(1, sizeof(struct activator));
 
 	if (*userData) {
-		((struct activator *) *userData)->context = NULL;
+		((struct activator *) *userData)->context = context;
 		((struct activator *) *userData)->sampleQueue = NULL;
 		((struct activator *) *userData)->queueService = NULL;
 		((struct activator *) *userData)->queueRegistration = NULL;
@@ -68,19 +67,24 @@ celix_status_t bundleActivator_start(void * userData, bundle_context_pt context)
 	//Creating sample queue Component
 
 	//Setting up name for sample queue.
-	char *name;
-	char *uuid;
+	char *name = NULL;
+	char *uuid = NULL;
+	char uuidName[128];
+	memset(uuidName,0,128);
+
 	bundleContext_getProperty(context, "inaetics.demonstrator.queue.name", &name);
 	bundleContext_getProperty(context, OSGI_FRAMEWORK_FRAMEWORK_UUID, &uuid);
-	if (name == NULL && uuid != NULL) {
-		char uuidName[128];
-		sprintf("Sample Queue %.4s", uuid);
-		name = uuidName;
+
+	if(name!=NULL){
+		snprintf(uuidName,128,"Sample Queue %s", name);
+	}
+	else if (name == NULL && uuid != NULL) {
+		snprintf(uuidName,128,"Sample Queue %.8s", uuid);
 	} else {
-		name = "queue";
+		snprintf(uuidName,128,"Sample Queue (unknown ID)");
 	}
 
-	status = sampleQueue_create(name, &activator->sampleQueue);
+	status = sampleQueue_create(uuidName, &activator->sampleQueue);
 
 	if(status==CELIX_SUCCESS) {
 
@@ -99,6 +103,9 @@ celix_status_t bundleActivator_start(void * userData, bundle_context_pt context)
 				activator->queueRegistration == NULL || activator->queueStatsRegistration == NULL) {
 			printf("SAMPLE QUEUE: Error creating/registering services\n");
 			status = CELIX_BUNDLE_EXCEPTION;
+		}
+		else{
+			printf("SAMPLE QUEUE: Created queue with name %s\n",uuidName);
 		}
 	}
 	return status;
@@ -132,7 +139,7 @@ static celix_status_t bundleActivator_createStatsService(struct activator *act) 
 		act->queueStatsService->getName = (void *)sampleQueue_getUtilizationStatsName;
 		act->queueStatsService->getType = (void *)sampleQueue_getUtilizationStatsType;
 		act->queueStatsService->getMeasurementUnit = (void *)sampleQueue_getUtilizationStatsMeasurementUnit;
-		act->queueStatsService->getValue = (void *)SampleQueue_getUtilizationStatsValue;
+		act->queueStatsService->getValue = (void *)sampleQueue_getUtilizationStatsValue;
 	} else {
 		status = CELIX_ENOMEM;
 	}
@@ -147,7 +154,7 @@ static celix_status_t bundleActivator_registerQueueService(struct activator *act
 	properties_set(props, (char *) OSGI_RSA_SERVICE_EXPORTED_INTERFACES, (char *) INAETICS_DEMONSTRATOR_API__SAMPLE_QUEUE_SERVICE_NAME);
 
 	status = bundleContext_registerService(act->context, (char *)INAETICS_DEMONSTRATOR_API__SAMPLE_QUEUE_SERVICE_NAME,
-						act->queueService, props, &act->queueRegistration);
+			act->queueService, props, &act->queueRegistration);
 
 	return status;
 }
@@ -159,7 +166,7 @@ static celix_status_t bundleActivator_registerStatsService(struct activator *act
 	properties_set(props, (char *) OSGI_RSA_SERVICE_EXPORTED_INTERFACES, (char *) INAETICS_DEMONSTRATOR_API__STATS_PROVIDER_SERVICE_NAME);
 
 	status = bundleContext_registerService(act->context, (char *)INAETICS_DEMONSTRATOR_API__STATS_PROVIDER_SERVICE_NAME,
-						act->queueStatsService, props, &act->queueStatsRegistration);
+			act->queueStatsService, props, &act->queueStatsRegistration);
 
 	return status;
 }

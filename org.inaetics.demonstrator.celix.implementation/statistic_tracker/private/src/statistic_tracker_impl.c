@@ -32,7 +32,7 @@ void* statPoller(void* handle){
 
 	while (statTracker->running && status == CELIX_SUCCESS) {
 
-		struct service_statistics_service* statService = NULL;
+		struct stats_provider_service* statService = NULL;
 
 		char* name = NULL;
 		char* type = NULL;
@@ -41,13 +41,13 @@ void* statPoller(void* handle){
 
 		pthread_rwlock_rdlock(&statTracker->statLock);
 		pthread_t self = pthread_self();
-		statService = (struct service_statistics_service*) hashMap_get(statTracker->statServices, &self);
+		statService = (struct stats_provider_service*) hashMap_get(statTracker->statServices, &self);
 
 		if (statService != NULL) {
-			statService->getServiceName(statService->serviceStatistics,&name);
-			statService->getServiceType(statService->serviceStatistics,&type);
-			statService->getStatistic(statService->serviceStatistics,&statVal);
-			statService->getMeasurementUnit(statService->serviceStatistics,&mUnit);
+			statService->getName(statService->statsProvider,&name);
+			statService->getType(statService->statsProvider,&type);
+			statService->getValue(statService->statsProvider,&statVal);
+			statService->getMeasurementUnit(statService->statsProvider,&mUnit);
 		}
 		else {
 			status = CELIX_BUNDLE_EXCEPTION;
@@ -55,6 +55,7 @@ void* statPoller(void* handle){
 		pthread_rwlock_unlock(&statTracker->statLock);
 
 		msg(1, "STAT_TRACKER: Statistic for %s (type %s): %f %s ",name,type,statVal,mUnit);
+
 
 		if(mUnit!=NULL){
 			free(mUnit);

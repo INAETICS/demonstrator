@@ -19,19 +19,28 @@
 #include <pthread.h>
 
 #include "inaetics_demonstrator_api/data_store.h"
-#include "inaetics_demonstrator_api/service_statistics.h"
+#include "inaetics_demonstrator_api/stats_provider.h"
 
 #include "arraylist_data_store_impl.h"
-#include "arraylist_data_store_statistics_impl.h"
 
 
 struct activator {
+	bundle_context_pt context;
+	data_store_type *dataStore;
+
 	service_registration_pt dataStoreRegistration;
 	struct data_store_service* dataStoreService;
 
-	service_registration_pt dataStoreStatRegistration;
-	struct service_statistics_service* dataStoreStatService;
+	service_registration_pt dataStoreStatsRegistration;
+	struct stats_provider_service* dataStoreStatsService;
 };
+
+static celix_status_t bundleActivator_createDataStoreService(struct activator *act);
+static celix_status_t bundleActivator_createStatsService(struct activator *act);
+
+static celix_status_t bundleActivator_registerDataStoreService(struct activator *act);
+static celix_status_t bundleActivator_registerStatsService(struct activator *act);
+
 
 celix_status_t bundleActivator_create(bundle_context_pt context, void **userData) {
 	celix_status_t status = CELIX_SUCCESS;
@@ -39,8 +48,12 @@ celix_status_t bundleActivator_create(bundle_context_pt context, void **userData
 	*userData = calloc(1, sizeof(struct activator));
 
 	if (*userData) {
+		((struct activator *) *userData)->context = context;
+		((struct activator *) *userData)->dataStore = NULL;
 		((struct activator *) *userData)->dataStoreService = NULL;
-		((struct activator *) *userData)->dataStoreStatService = NULL;
+		((struct activator *) *userData)->dataStoreRegistration = NULL;
+		((struct activator *) *userData)->dataStoreStatsService = NULL;
+		((struct activator *) *userData)->dataStoreStatsRegistration = NULL;
 	} else {
 		status = CELIX_ENOMEM;
 	}
@@ -51,70 +64,125 @@ celix_status_t bundleActivator_start(void * userData, bundle_context_pt context)
 	celix_status_t status = CELIX_SUCCESS;
 	struct activator *activator = userData;
 
-	struct data_store_service* dsService = NULL;
-	struct service_statistics_service* dsStatService = NULL;
+	//Creating data store Component
 
-	status = dataStoreService_create(&dsService);
+	//Setting up name for data store.
+	char *name = NULL;
+	char *uuid = NULL;
+	char uuidName[128];
+	memset(uuidName,0,128);
 
-	if(status==CELIX_SUCCESS){
+	bundleContext_getProperty(context, "inaetics.demonstrator.datastore.name", &name);
+	bundleContext_getProperty(context, OSGI_FRAMEWORK_FRAMEWORK_UUID, &uuid);
 
-		char* fwUUID = NULL;
-		bundleContext_getProperty(context,OSGI_FRAMEWORK_FRAMEWORK_UUID,&fwUUID);
-
-		status=dataStoreStatService_create(&dsStatService,dsService,fwUUID);
-
-		if (status == CELIX_SUCCESS){
-			properties_pt dsProperties = NULL;
-
-			activator->dataStoreService = dsService;
-
-			dsProperties = properties_create();
-			properties_set(dsProperties, (char *) OSGI_RSA_SERVICE_EXPORTED_INTERFACES, (char *) INAETICS_DEMONSTRATOR_API__DATA_STORE_SERVICE_NAME);
-
-			status = bundleContext_registerService(context, INAETICS_DEMONSTRATOR_API__DATA_STORE_SERVICE_NAME,
-					activator->dataStoreService, dsProperties, &activator->dataStoreRegistration);
-
-			printf("DATA_STORE: Service %s %s\n", INAETICS_DEMONSTRATOR_API__DATA_STORE_SERVICE_NAME,
-					status == CELIX_SUCCESS ? "registered" : "registration failed");
-
-			if(status==CELIX_SUCCESS){
-				properties_pt dsStatProperties = NULL;
-
-				activator->dataStoreStatService = dsStatService;
+	if(name!=NULL){
+		snprintf(uuidName,128,"Data Store %s", name);
+	}
+	else if (name == NULL && uuid != NULL) {
+		snprintf(uuidName,128,"Data Store %.8s", uuid);
+	} else {
+		snprintf(uuidName,128,"Data Store (unknown ID)");
+	}
 
 
-				dsStatProperties = properties_create();
-				properties_set(dsStatProperties, (char *) OSGI_RSA_SERVICE_EXPORTED_INTERFACES, (char *) INAETICS_DEMONSTRATOR_API_SERVICE_STATISTICS_SERVICE_NAME);
+	status = dataStore_create(uuidName, &activator->dataStore);
 
-				status = bundleContext_registerService(context, INAETICS_DEMONSTRATOR_API_SERVICE_STATISTICS_SERVICE_NAME,
-						activator->dataStoreStatService, dsStatProperties, &activator->dataStoreStatRegistration);
+	if(status==CELIX_SUCCESS) {
 
-				printf("DATA_STORE: Service %s (fwUUID=%s) %s\n", INAETICS_DEMONSTRATOR_API_SERVICE_STATISTICS_SERVICE_NAME,fwUUID,
-						status == CELIX_SUCCESS ? "registered" : "registration failed");
+		//Creating service structs for services provided by the component
+		bundleActivator_createDataStoreService(activator);
+		bundleActivator_createStatsService(activator);
 
-			}
+		if (activator->dataStoreService != NULL) {
+			bundleActivator_registerDataStoreService(activator);
+		}
+		if (activator->dataStoreStatsService != NULL) {
+			bundleActivator_registerStatsService(activator);
+		}
 
+		if (	activator->dataStoreService == NULL || activator->dataStoreStatsService == NULL ||
+				activator->dataStoreRegistration == NULL || activator->dataStoreStatsRegistration == NULL) {
+			printf("DATA STORE: Error creating/registering services\n");
+			status = CELIX_BUNDLE_EXCEPTION;
 		}
 		else{
-			printf("DATA_STORE: Cannot create DataStore Statistics Service\n");
+			printf("DATA STORE: Created datastore with name %s\n",uuidName);
 		}
 	}
-	else{
-		printf("DATA_STORE: Cannot create DataStore Service\n");
+	return status;
+}
+
+static celix_status_t bundleActivator_createDataStoreService(struct activator *act) {
+	celix_status_t status = CELIX_SUCCESS;
+
+	act->dataStoreService = calloc(1, sizeof(*act->dataStoreService));
+
+	if (act->dataStoreService != NULL) {
+		act->dataStoreService->dataStore = act->dataStore;
+		act->dataStoreService->store= (void *)dataStore_store;
+		act->dataStoreService->storeAll = (void *)dataStore_storeAll;
+		act->dataStoreService->findResultsBetween = NULL;
+	} else {
+		status = CELIX_ENOMEM;
 	}
 
 	return status;
 }
 
+static celix_status_t bundleActivator_createStatsService(struct activator *act) {
+	celix_status_t status = CELIX_SUCCESS;
+
+	act->dataStoreStatsService = calloc(1, sizeof(*act->dataStoreStatsService));
+
+	if (act->dataStoreStatsService != NULL) {
+		act->dataStoreStatsService->statsProvider = act->dataStore;
+		act->dataStoreStatsService->getName = (void *)dataStore_getUtilizationStatsName;
+		act->dataStoreStatsService->getType = (void *)dataStore_getUtilizationStatsType;
+		act->dataStoreStatsService->getMeasurementUnit = (void *)dataStore_getUtilizationStatsMeasurementUnit;
+		act->dataStoreStatsService->getValue = (void *)dataStore_getUtilizationStatsValue;
+	} else {
+		status = CELIX_ENOMEM;
+	}
+
+	return status;
+}
+
+static celix_status_t bundleActivator_registerDataStoreService(struct activator *act) {
+	celix_status_t status = CELIX_SUCCESS;
+	properties_pt props = NULL;
+	props = properties_create();
+	properties_set(props, (char *) OSGI_RSA_SERVICE_EXPORTED_INTERFACES, (char *) INAETICS_DEMONSTRATOR_API__DATA_STORE_SERVICE_NAME);
+
+	status = bundleContext_registerService(act->context, (char *)INAETICS_DEMONSTRATOR_API__DATA_STORE_SERVICE_NAME,
+			act->dataStoreService, props, &act->dataStoreRegistration);
+
+	return status;
+}
+
+static celix_status_t bundleActivator_registerStatsService(struct activator *act) {
+	celix_status_t status = CELIX_SUCCESS;
+	properties_pt props = NULL;
+	props = properties_create();
+	properties_set(props, (char *) OSGI_RSA_SERVICE_EXPORTED_INTERFACES, (char *) INAETICS_DEMONSTRATOR_API__STATS_PROVIDER_SERVICE_NAME);
+
+	status = bundleContext_registerService(act->context, (char *)INAETICS_DEMONSTRATOR_API__STATS_PROVIDER_SERVICE_NAME,
+			act->dataStoreStatsService, props, &act->dataStoreStatsRegistration);
+
+	return status;
+}
+
+
 celix_status_t bundleActivator_stop(void * userData, bundle_context_pt context) {
 	celix_status_t status = CELIX_SUCCESS;
 	struct activator *activator = userData;
 
-	serviceRegistration_unregister(activator->dataStoreStatRegistration);
+	serviceRegistration_unregister(activator->dataStoreStatsRegistration);
 	serviceRegistration_unregister(activator->dataStoreRegistration);
 
-	dataStoreStatService_destroy(activator->dataStoreStatService);
-	dataStoreService_destroy(activator->dataStoreService);
+	free(activator->dataStoreService);
+	free(activator->dataStoreStatsService);
+
+	dataStore_destroy(activator->dataStore);
 
 	return status;
 }

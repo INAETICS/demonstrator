@@ -12,7 +12,6 @@
 
 #include <array_list.h>
 
-#include "inaetics_demonstrator_api/service_statistics.h"
 #include "statistic_tracker_impl.h"
 
 struct bundle_activator {
@@ -48,7 +47,7 @@ celix_status_t bundleActivator_start(void * userData, bundle_context_pt context)
 	service_tracker_customizer_pt customizer = NULL;
 	serviceTrackerCustomizer_create(activator->statTracker, NULL, statistic_tracker_statServiceAdded, NULL, statistic_tracker_statServiceRemoved, &customizer);
 
-	serviceTracker_create(context, INAETICS_DEMONSTRATOR_API_SERVICE_STATISTICS_SERVICE_NAME, customizer, &activator->tracker);
+	serviceTracker_create(context, INAETICS_DEMONSTRATOR_API__STATS_PROVIDER_SERVICE_NAME, customizer, &activator->tracker);
 	serviceTracker_open(activator->tracker);
 
 	return status;

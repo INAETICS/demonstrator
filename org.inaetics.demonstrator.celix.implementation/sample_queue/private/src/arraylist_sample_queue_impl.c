@@ -282,9 +282,9 @@ int sampleQueue_getUtilizationStatsType(sample_queue_type *sampleQueue, char **t
 	return 0;
 }
 
-int SampleQueue_getUtilizationStatsValue(sample_queue_type *sampleQueue, double* statVal) {
-	//Note; read only access to maxQueueSize and currentQueueSize with no special need for percise value -> no synchronization needed.
-	(*statVal) = (sampleQueue->currentQueueSize + 100.0)/sampleQueue->max_queue_size;
+int sampleQueue_getUtilizationStatsValue(sample_queue_type *sampleQueue, double* statVal) {
+	//Note; read only access to maxQueueSize and currentQueueSize with no special need for precise value -> no synchronization needed.
+	(*statVal)=(double)((((double)sampleQueue->currentQueueSize)/((double)sampleQueue->max_queue_size))*100.0f);
 	return 0;
 }
 

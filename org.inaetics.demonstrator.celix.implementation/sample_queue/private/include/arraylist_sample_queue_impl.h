@@ -20,7 +20,7 @@ int sampleQueue_takeAll(sample_queue_type *sampleQueue, uint32_t min, uint32_t m
 //stats provider service
 int sampleQueue_getUtilizationStatsName(sample_queue_type *sampleQueue, char **name);
 int sampleQueue_getUtilizationStatsType(sample_queue_type *sampleQueue, char **type);
-int SampleQueue_getUtilizationStatsValue(sample_queue_type *sampleQueue, double* statVal);
+int sampleQueue_getUtilizationStatsValue(sample_queue_type *sampleQueue, double* statVal);
 int sampleQueue_getUtilizationStatsMeasurementUnit(sample_queue_type *sampleQueue, char **mUnit);
 
 //stats provider service

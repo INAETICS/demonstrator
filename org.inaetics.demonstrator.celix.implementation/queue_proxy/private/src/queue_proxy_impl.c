@@ -9,13 +9,11 @@
 
 #include "inaetics_demonstrator_api/sample_queue.h"
 
-
 celix_status_t queueProxy_setEndpointDescription(void *proxy, endpoint_description_pt endpoint);
 celix_status_t queueProxy_setHandler(void *proxy, void *handler);
 celix_status_t queueProxy_setCallback(void *proxy, sendToHandle callback);
 
-
-celix_status_t queueProxy_create(bundle_context_pt context, sample_queue_type **queue)  {
+celix_status_t queueProxy_create(bundle_context_pt context, sample_queue_type **queue) {
 	celix_status_t status = CELIX_SUCCESS;
 	*queue = calloc(1, sizeof(**queue));
 	if (!*queue) {
@@ -29,7 +27,6 @@ celix_status_t queueProxy_create(bundle_context_pt context, sample_queue_type **
 
 	return status;
 }
-
 
 // { "m": "" "a":["arg1", "arg2"] }
 celix_status_t queueProxy_put(sample_queue_type* queue, struct sample workSample, bool *sampleTaken) {
@@ -73,7 +70,6 @@ celix_status_t queueProxy_put(sample_queue_type* queue, struct sample workSample
 
 	return status;
 }
-
 
 celix_status_t queueProxy_putAll(sample_queue_type *queue, struct sample *samples, uint32_t size, uint32_t *samplesTaken)
 {
@@ -167,9 +163,6 @@ int queueProxy_take(sample_queue_type* queue, struct sample *sample) {
 	return status;
 }
 
-
-
-
 int queueProxy_takeAll(sample_queue_type* queue, uint32_t min, uint32_t max, struct sample **samples, uint32_t *samplesSize) {
 	celix_status_t status = CELIX_SUCCESS;
 
@@ -225,8 +218,6 @@ int queueProxy_takeAll(sample_queue_type* queue, uint32_t min, uint32_t max, str
 	return status;
 }
 
-
-
 celix_status_t queueProxy_registerProxyService(void* proxyFactoryService, endpoint_description_pt endpointDescription, void* rsa, sendToHandle sendToCallback) {
 	celix_status_t status = CELIX_SUCCESS;
 
@@ -237,10 +228,10 @@ celix_status_t queueProxy_registerProxyService(void* proxyFactoryService, endpoi
 	queueProxy_create(queueProxyFactoryService->context, &queue);
 	queueService = calloc(1, sizeof(*queueService));
 	queueService->sampleQueue = queue;
-	queueService->put = (void *)queueProxy_put;
-	queueService->putAll = (void *)queueProxy_putAll;
-	queueService->take = (void *)queueProxy_take;
-	queueService->takeAll = (void *)queueProxy_takeAll;
+	queueService->put = (void *) queueProxy_put;
+	queueService->putAll = (void *) queueProxy_putAll;
+	queueService->take = (void *) queueProxy_take;
+	queueService->takeAll = (void *) queueProxy_takeAll;
 
 	properties_pt srvcProps = properties_create();
 	properties_set(srvcProps, (char *) "proxy.interface", (char *) INAETICS_DEMONSTRATOR_API__SAMPLE_QUEUE_SERVICE_NAME);
@@ -253,16 +244,14 @@ celix_status_t queueProxy_registerProxyService(void* proxyFactoryService, endpoi
 	queueProxy_setCallback(queue, sendToCallback);
 
 	if (bundleContext_registerService(queueProxyFactoryService->context, INAETICS_DEMONSTRATOR_API__SAMPLE_QUEUE_SERVICE_NAME, queueService, srvcProps, &proxyReg) != CELIX_SUCCESS)
-	{
+			{
 		printf("QUEUE_PROXY: error while registering queue service\n");
 	}
 
 	hashMap_put(queueProxyFactoryService->proxy_registrations, endpointDescription, proxyReg);
 
-
 	return status;
 }
-
 
 celix_status_t queueProxy_unregisterProxyService(void* proxyFactoryService, endpoint_description_pt endpointDescription) {
 	celix_status_t status = CELIX_SUCCESS;
@@ -271,13 +260,12 @@ celix_status_t queueProxy_unregisterProxyService(void* proxyFactoryService, endp
 	service_registration_pt proxyReg = hashMap_get(queueProxyFactoryService->proxy_registrations, endpointDescription);
 
 	if (proxyReg != NULL)
-	{
+			{
 		serviceRegistration_unregister(proxyReg);
 	}
 
 	return status;
 }
-
 
 celix_status_t queueProxy_setEndpointDescription(void *proxy, endpoint_description_pt endpoint) {
 	celix_status_t status = CELIX_SUCCESS;
@@ -288,7 +276,6 @@ celix_status_t queueProxy_setEndpointDescription(void *proxy, endpoint_descripti
 	return status;
 }
 
-
 celix_status_t queueProxy_setHandler(void *proxy, void *handler) {
 	celix_status_t status = CELIX_SUCCESS;
 
@@ -297,7 +284,6 @@ celix_status_t queueProxy_setHandler(void *proxy, void *handler) {
 
 	return status;
 }
-
 
 celix_status_t queueProxy_setCallback(void *proxy, sendToHandle callback) {
 	celix_status_t status = CELIX_SUCCESS;

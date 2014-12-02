@@ -9,7 +9,6 @@ include_directories("private/include")
 bundle(data_store 
 	SOURCES private/src/activator 
 		    private/src/arraylist_data_store_impl
-		    private/src/arraylist_data_store_statistics_impl
 )
 
 target_link_libraries(data_store pthread ${CELIX_LIBRARIES})

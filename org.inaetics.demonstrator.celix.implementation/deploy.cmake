@@ -15,7 +15,7 @@ deploy("inaetics-demonstrator" BUNDLES
 		sample_queue
         ENDPOINTS 
         org.inaetics.demonstrator.api.queue.SampleQueue_endpoint
-        org.inaetics.demonstrator.api.servstat.ServiceStatistics_endpoint
+        org.inaetics.demonstrator.api.stats.StatsProvider_endpoint
       )
 
   deploy("inaetics-demonstrator-statistic-tracker" BUNDLES
@@ -25,7 +25,7 @@ deploy("inaetics-demonstrator" BUNDLES
 		${CELIX_BUNDLES_DIR}/discovery_configured.zip
 		${CELIX_BUNDLES_DIR}/remote_service_admin_http.zip
         statistic_tracker
-        ENDPOINTS org.inaetics.demonstrator.api.servstat.ServiceStatistics_proxy
+        ENDPOINTS org.inaetics.demonstrator.api.stats.StatsProvider_proxy
       )
 
   deploy("inaetics-demonstrator-producer" BUNDLES
@@ -59,5 +59,5 @@ deploy("inaetics-demonstrator" BUNDLES
         data_store
         ENDPOINTS 
         org.inaetics.demonstrator.api.datastore.DataStore_endpoint
-        org.inaetics.demonstrator.api.servstat.ServiceStatistics_endpoint
+        org.inaetics.demonstrator.api.stats.StatsProvider_endpoint
       )
