@@ -10,8 +10,8 @@
 #include "inaetics_demonstrator_api/result.h"
 #include "inaetics_demonstrator_api/sample.h"
 
-#define SINGLE_SAMPLES_PER_SEC  250
-#define BURST_SAMPLES_PER_SEC 	250
+#define SINGLE_SAMPLES_PER_SEC  10000
+#define BURST_SAMPLES_PER_SEC 	10000
 
 #define MIN_BURST_LEN 			2
 #define MAX_BURST_LEN 			10
@@ -283,6 +283,8 @@ celix_status_t processor_destroy(processor_pt processor)
 	if (processor->name != NULL) {
 		free(processor->name);
 	}
+
+	free(processor);
 
 	return status;
 }

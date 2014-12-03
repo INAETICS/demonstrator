@@ -137,11 +137,19 @@ int queueProxy_take(sample_queue_type* queue, struct sample *sample) {
 
 		if (status == CELIX_SUCCESS && replyStatus == 0) {
 			json_error_t error;
-			json_t *js_reply = json_loads(reply, 0, &error);
+			json_t *js_reply = json_loads(reply, JSON_DECODE_ANY, &error);
 			if (js_reply) {
+				json_t* js_sample = NULL;
 
-				if (json_unpack(js_reply, "{s:i,s:f,s:f}", "sampleTime", &sample->time, "value1", &sample->value1, "value1", &sample->value2) != 0)
+				if (json_unpack(js_reply, "o", &js_sample) != 0) {
 					status = CELIX_BUNDLE_EXCEPTION;
+				}
+				else if (json_is_null(js_sample)) {
+					status = CELIX_BUNDLE_EXCEPTION;
+				}
+				else if (json_unpack(js_sample, "{s:i,s:f,s:f}", "sampleTime", &sample->time, "value1", &sample->value1, "value1", &sample->value2) != 0) {
+					status = CELIX_BUNDLE_EXCEPTION;
+				}
 			} else {
 				printf("PROXY: got error '%s' for '%s'\n", error.text, reply);
 				status = CELIX_BUNDLE_EXCEPTION;
@@ -180,20 +188,24 @@ int queueProxy_takeAll(sample_queue_type* queue, uint32_t min, uint32_t max, str
 
 		if (status == CELIX_SUCCESS && replyStatus == 0) {
 			json_error_t error;
-			json_t *js_reply = json_loads(reply, 0, &error);
+			json_t *js_reply = json_loads(reply, JSON_DECODE_ANY, &error);
 			if (js_reply) {
 				json_t* array;
 
 				if (json_unpack(js_reply, "o", &array) != 0) {
 					status = CELIX_BUNDLE_EXCEPTION;
 				}
-				else
+				else if (json_is_array(array))
 				{
 					*samplesSize = json_array_size(array);
 					for (arrayCnt = 0; arrayCnt < *samplesSize; arrayCnt++) {
 						json_t* sample = json_array_get(array, arrayCnt);
 						json_unpack(sample, "{s:I,s:f,s:f]}", "sampleTime", &samples[arrayCnt]->time, "value1", &samples[arrayCnt]->value1, "value2", &samples[arrayCnt]->value2);
 					}
+				}
+				else
+				{
+					*samplesSize = 0;
 				}
 			} else {
 				printf("PROXY: got error '%s' for '%s'\n", error.text, reply);

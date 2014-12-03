@@ -46,7 +46,7 @@ celix_status_t queueEndpoint_handleRequest(remote_endpoint_pt endpoint, char *da
 	} else if (strcmp(sig, "takeMinMax(II)Ljava/util/Collection;") == 0) {
 		queueEndpoint_takeAll(endpoint, data, reply);
 	} else {
-		printf("unknown incoming sig %s w/ data %s\n", sig, data);
+		printf("queueEndpoint received unknown incoming sig %s w/ data %s\n", sig, data);
 		status = CELIX_ILLEGAL_ARGUMENT;
 	}
 
@@ -251,7 +251,7 @@ celix_status_t queueEndpoint_takeAll(remote_endpoint_pt endpoint, char *data, ch
 			resultRoot = json_pack("n");
 		}
 
-		char *c = json_dumps(resultRoot, 0);
+		char *c = json_dumps(resultRoot, JSON_ENCODE_ANY);
 		*reply = c;
 
 		json_decref(array);
