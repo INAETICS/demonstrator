@@ -165,7 +165,7 @@ celix_status_t producer_sendBursts(producer_thread_data_pt th_data, int samplesP
 	}
 
 	/* Update the statistic */
-	pthread_rwlock_rdlock(&th_data->throughputLock);
+	pthread_rwlock_wrlock(&th_data->throughputLock);
 	th_data->burst_throughput = burstSampleCnt;
 	pthread_rwlock_unlock(&th_data->throughputLock);
 
