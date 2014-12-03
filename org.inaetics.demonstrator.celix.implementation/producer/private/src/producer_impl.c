@@ -7,7 +7,7 @@
 #include "service_reference.h"
 #include "utils.h"
 #include "hash_map.h"
-#include "sample.h"
+#include "inaetics_demonstrator_api/sample.h"
 
 #define SINGLE_SAMPLES_PER_SEC 	1000
 #define BURST_SAMPLES_PER_SEC 	1000

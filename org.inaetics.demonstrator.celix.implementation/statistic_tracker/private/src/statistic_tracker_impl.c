@@ -57,13 +57,14 @@ void* statPoller(void* handle) {
 			statService->getType(statService->statsProvider, &type);
 			statService->getValue(statService->statsProvider, &statVal);
 			statService->getMeasurementUnit(statService->statsProvider, &mUnit);
+
+			msg(1, "STAT_TRACKER: Statistic for %s (type %s): %f %s ", name, type, statVal, mUnit);
 		}
 		else {
 			status = CELIX_BUNDLE_EXCEPTION;
 		}
 		pthread_rwlock_unlock(&statTracker->statLock);
 
-		msg(1, "STAT_TRACKER: Statistic for %s (type %s): %f %s ", name, type, statVal, mUnit);
 
 		if (mUnit != NULL) {
 			free(mUnit);
