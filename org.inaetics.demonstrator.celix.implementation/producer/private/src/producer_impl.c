@@ -1,3 +1,5 @@
+#define _GNU_SOURCE
+
 #include "producer_impl.h"
 
 #include <stdarg.h>
@@ -75,6 +77,19 @@ static void producer_fillSample(struct sample* s) {
 
 }
 
+static void timespec_diff(struct timespec* diff, struct timespec* start, struct timespec* end)
+{
+
+	if ((end->tv_nsec-start->tv_nsec)<0) {
+		diff->tv_sec = end->tv_sec-start->tv_sec-1;
+		diff->tv_nsec = 1000000000+end->tv_nsec-start->tv_nsec;
+	} else {
+		diff->tv_sec = end->tv_sec-start->tv_sec;
+		diff->tv_nsec = end->tv_nsec-start->tv_nsec;
+	}
+
+}
+
 celix_status_t producer_sendSamples(producer_thread_data_pt th_data, int samplesPerSec)
 {
 	celix_status_t status = CELIX_SUCCESS;
@@ -82,12 +97,14 @@ celix_status_t producer_sendSamples(producer_thread_data_pt th_data, int samples
 	struct sample smpl;
 	struct timespec ts_start;
 	struct timespec ts_end;
+	struct timespec ts_diff;
 	int singleSampleCnt = 0;
 
 	clock_gettime(CLOCK_REALTIME, &ts_start);
+	timespec_diff(&ts_diff,&ts_start,&ts_start);
 
 	// send single samples per second
-	for (ts_end = ts_start; (singleSampleCnt < SINGLE_SAMPLES_PER_SEC) && (ts_start.tv_sec == ts_end.tv_sec);) {
+	for (ts_end = ts_start; (singleSampleCnt < SINGLE_SAMPLES_PER_SEC) && (ts_diff.tv_sec<=0);) {
 		bool ret = false;
 
 		memset(&smpl, 0, sizeof(struct sample));
@@ -110,6 +127,7 @@ celix_status_t producer_sendSamples(producer_thread_data_pt th_data, int samples
 		}
 
 		clock_gettime(CLOCK_REALTIME, &ts_end);
+		timespec_diff(&ts_diff,&ts_start,&ts_end);
 	}
 
 	/* Update the statistic */
@@ -132,11 +150,13 @@ celix_status_t producer_sendBursts(producer_thread_data_pt th_data, int samplesP
 	struct sample_queue_service* queueService = th_data->service;
 	struct timespec ts_start;
 	struct timespec ts_end;
+	struct timespec ts_diff;
 	int burstSampleCnt = 0;
 
 	clock_gettime(CLOCK_REALTIME, &ts_start);
+	timespec_diff(&ts_diff,&ts_start,&ts_start);
 
-	for (ts_end = ts_start; (burstSampleCnt < BURST_SAMPLES_PER_SEC) && (ts_start.tv_sec == ts_end.tv_sec);) {
+	for (ts_end = ts_start; (burstSampleCnt < BURST_SAMPLES_PER_SEC) && (ts_diff.tv_sec<=0);) {
 		int burst_len = producer_rand_range(MIN_BURST_LEN, MAX_BURST_LEN);
 		uint32_t burst_samples_stored = 0;
 
@@ -162,6 +182,7 @@ celix_status_t producer_sendBursts(producer_thread_data_pt th_data, int samplesP
 		burstSampleCnt += burst_samples_stored;
 
 		clock_gettime(CLOCK_REALTIME, &ts_end);
+		timespec_diff(&ts_diff,&ts_start,&ts_end);
 	}
 
 	/* Update the statistic */
@@ -193,6 +214,8 @@ void *producer_generate(void *handle) {
 		if (SINGLE_SAMPLES_PER_SEC > 0) {
 			status = producer_sendSamples(th_data, SINGLE_SAMPLES_PER_SEC);
 		}
+
+		pthread_yield();
 	}
 
 	return NULL;

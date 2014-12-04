@@ -111,8 +111,8 @@ int dataStore_store(data_store_type *dataStore, struct result result, bool *resu
 
 	celix_status_t status = CELIX_SUCCESS;
 
+	pthread_mutex_lock(&dataStore->lock);
 	if (dataStore->store != NULL) {
-		pthread_mutex_lock(&dataStore->lock);
 
 		if (!dataStoreService_isStoreFull(dataStore->store))
 		{
@@ -138,12 +138,13 @@ int dataStore_store(data_store_type *dataStore, struct result result, bool *resu
 				status = CELIX_ENOMEM;
 			}
 		}
-		pthread_mutex_unlock(&dataStore->lock);
+
 	}
 	else {
 		msg(0, "DATA_STORE: store denied because service is removed");
 		status = CELIX_ILLEGAL_STATE;
 	}
+	pthread_mutex_unlock(&dataStore->lock);
 
 	return (int) status;
 }
@@ -154,8 +155,9 @@ int dataStore_storeAll(data_store_type *dataStore, struct result *results, uint3
 	uint32_t i = 0;
 	uint32_t results_added = 0;
 
+	pthread_mutex_lock(&dataStore->lock);
+
 	if (dataStore->store != NULL) {
-		pthread_mutex_lock(&dataStore->lock);
 
 		msg(3, "DATA_STORE: Adding a burst of %u results", size);
 
@@ -182,7 +184,6 @@ int dataStore_storeAll(data_store_type *dataStore, struct result *results, uint3
 		}
 
 		msg(3, "DATA_STORE: End burst");
-		pthread_mutex_unlock(&dataStore->lock);
 
 		*storedResult = results_added;
 
@@ -196,6 +197,8 @@ int dataStore_storeAll(data_store_type *dataStore, struct result *results, uint3
 		msg(0, "DATA_STORE: storeAll denied because service is removed");
 		status = CELIX_ILLEGAL_STATE;
 	}
+
+	pthread_mutex_unlock(&dataStore->lock);
 
 	return (int) status;
 

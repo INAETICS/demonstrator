@@ -1,3 +1,5 @@
+#define _GNU_SOURCE
+
 #include "processor_impl.h"
 
 #include <stdarg.h>
@@ -86,16 +88,32 @@ static void processor_processSample(struct sample* sample, struct result* result
 	memcpy(&(result->sample), sample, sizeof(struct sample));
 }
 
+static void timespec_diff(struct timespec* diff, struct timespec* start, struct timespec* end)
+{
+
+	if ((end->tv_nsec-start->tv_nsec)<0) {
+		diff->tv_sec = end->tv_sec-start->tv_sec-1;
+		diff->tv_nsec = 1000000000+end->tv_nsec-start->tv_nsec;
+	} else {
+		diff->tv_sec = end->tv_sec-start->tv_sec;
+		diff->tv_nsec = end->tv_nsec-start->tv_nsec;
+	}
+
+}
+
+
 celix_status_t processor_receiveSamples(processor_thread_data_pt th_data, int samplesPerSec) {
 	celix_status_t status = CELIX_SUCCESS;
 	struct sample_queue_service* queueService = th_data->service;
 	struct timespec ts_start;
 	struct timespec ts_end;
+	struct timespec ts_diff;
 	int singleSampleCnt = 0;
 
 	clock_gettime(CLOCK_REALTIME, &ts_start);
+	timespec_diff(&ts_diff,&ts_start,&ts_start);
 
-	for (ts_end = ts_start; (singleSampleCnt < SINGLE_SAMPLES_PER_SEC) && (ts_start.tv_sec == ts_end.tv_sec);) {
+	for (ts_end = ts_start; (singleSampleCnt < SINGLE_SAMPLES_PER_SEC) && (ts_diff.tv_sec<=0);) {
 		struct sample *recvSample = calloc(1, sizeof(struct sample));
 
 		if (queueService != NULL) {
@@ -118,6 +136,7 @@ celix_status_t processor_receiveSamples(processor_thread_data_pt th_data, int sa
 
 		free(recvSample);
 		clock_gettime(CLOCK_REALTIME, &ts_end);
+		timespec_diff(&ts_diff,&ts_start,&ts_end);
 	}
 
 	/* Update the statistic */
@@ -140,12 +159,14 @@ celix_status_t processor_receiveBursts(processor_thread_data_pt th_data, int sam
 	struct sample *recvSamples[MAX_BURST_LEN];
 	struct timespec ts_start;
 	struct timespec ts_end;
+	struct timespec ts_diff;
 	uint32_t numOfRecvSamples;
 	int burstSampleCnt = 0;
 
 	clock_gettime(CLOCK_REALTIME, &ts_start);
+	timespec_diff(&ts_diff,&ts_start,&ts_start);
 
-	for (ts_end = ts_start; (burstSampleCnt < samplesPerSec) && (ts_start.tv_sec == ts_end.tv_sec);) {
+	for (ts_end = ts_start; (burstSampleCnt < samplesPerSec) && (ts_diff.tv_sec<=0);) {
 		int j;
 
 		for (j = 0; j < MAX_BURST_LEN; j++) {
@@ -181,6 +202,7 @@ celix_status_t processor_receiveBursts(processor_thread_data_pt th_data, int sam
 		}
 
 		clock_gettime(CLOCK_REALTIME, &ts_end);
+		timespec_diff(&ts_diff,&ts_start,&ts_end);
 	}
 
 	/* Update the statistic */
@@ -211,7 +233,11 @@ void* processor_receive(void *handle) {
 		if (SINGLE_SAMPLES_PER_SEC > 0) {
 			status = processor_receiveSamples(th_data, SINGLE_SAMPLES_PER_SEC);
 		}
+
+		pthread_yield();
 	}
+
+
 
 	return NULL;
 }
