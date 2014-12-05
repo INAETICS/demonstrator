@@ -1,10 +1,18 @@
-#include <stdbool.h>
-#include <string.h>
-#include <jansson.h>
-
-#include "celix_errno.h"
-
 #include "queue_endpoint_impl.h"
+
+#include <jansson.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "celix_threads.h"
+#include "celix_errno.h"
+#include "remote_endpoint.h"
+#include "remote_endpoint_impl.h"
+#include "inaetics_demonstrator_api/sample.h"
+#include "inaetics_demonstrator_api/sample_queue.h"
 
 celix_status_t queueEndpoint_create(remote_endpoint_pt *endpoint) {
 	celix_status_t status = CELIX_SUCCESS;
@@ -14,6 +22,7 @@ celix_status_t queueEndpoint_create(remote_endpoint_pt *endpoint) {
 		status = CELIX_ENOMEM;
 	} else {
 		(*endpoint)->service = NULL;
+		celixThreadMutex_create(&(*endpoint)->serviceLock, NULL);
 	}
 
 	return status;
@@ -21,7 +30,10 @@ celix_status_t queueEndpoint_create(remote_endpoint_pt *endpoint) {
 
 celix_status_t queueEndpoint_setService(remote_endpoint_pt endpoint, void *service) {
 	celix_status_t status = CELIX_SUCCESS;
+
+	celixThreadMutex_lock(&endpoint->serviceLock);
 	endpoint->service = service;
+	celixThreadMutex_unlock(&endpoint->serviceLock);
 	return status;
 }
 
@@ -74,15 +86,17 @@ celix_status_t queueEndpoint_put(remote_endpoint_pt endpoint, char *data, char *
 	if (!root) {
 		status = CELIX_ILLEGAL_ARGUMENT;
 	} else {
-		struct sample_queue_service* service = endpoint->service;
-
 		uint64_t time;
 		double value1;
 		double value2;
 
 		json_unpack(root, "{s:[{s:I,s:f,s:f}]}", "a", "sampleTime", &time, "value1", &value1, "value2", &value2);
 
+		celixThreadMutex_lock(&endpoint->serviceLock);
+
 		if (endpoint->service != NULL) {
+			struct sample_queue_service* service = endpoint->service;
+
 			json_t *resultRoot;
 			struct sample workSample;
 			bool result = false;
@@ -108,6 +122,8 @@ celix_status_t queueEndpoint_put(remote_endpoint_pt endpoint, char *data, char *
 			status = CELIX_BUNDLE_EXCEPTION;
 		}
 
+		celixThreadMutex_unlock(&endpoint->serviceLock);
+
 	}
 
 	json_decref(root);
@@ -121,6 +137,8 @@ celix_status_t queueEndpoint_putAll(remote_endpoint_pt endpoint, char *data, cha
 	json_t *root;
 
 	root = json_loads(data, 0, &jsonError);
+
+	celixThreadMutex_lock(&endpoint->serviceLock);
 
 	if (!root) {
 		status = CELIX_ILLEGAL_ARGUMENT;
@@ -166,6 +184,8 @@ celix_status_t queueEndpoint_putAll(remote_endpoint_pt endpoint, char *data, cha
 		status = CELIX_BUNDLE_EXCEPTION;
 	}
 
+	celixThreadMutex_unlock(&endpoint->serviceLock);
+
 	json_decref(root);
 
 	return status;
@@ -177,6 +197,8 @@ celix_status_t queueEndpoint_take(remote_endpoint_pt endpoint, char *data, char 
 	json_t *root;
 
 	root = json_loads(data, 0, &jsonError);
+
+	celixThreadMutex_lock(&endpoint->serviceLock);
 
 	if (!root) {
 		status = CELIX_ILLEGAL_ARGUMENT;
@@ -205,6 +227,8 @@ celix_status_t queueEndpoint_take(remote_endpoint_pt endpoint, char *data, char 
 		status = CELIX_BUNDLE_EXCEPTION;
 	}
 
+	celixThreadMutex_unlock(&endpoint->serviceLock);
+
 	json_decref(root);
 
 	return status;
@@ -216,6 +240,7 @@ celix_status_t queueEndpoint_takeAll(remote_endpoint_pt endpoint, char *data, ch
 	json_t *root;
 
 	root = json_loads(data, 0, &jsonError);
+	celixThreadMutex_lock(&endpoint->serviceLock);
 
 	if (!root) {
 		status = CELIX_ILLEGAL_ARGUMENT;
@@ -263,6 +288,8 @@ celix_status_t queueEndpoint_takeAll(remote_endpoint_pt endpoint, char *data, ch
 		printf("QUEUE_ENDPOINT: No service available");
 		status = CELIX_BUNDLE_EXCEPTION;
 	}
+
+	celixThreadMutex_unlock(&endpoint->serviceLock);
 
 	json_decref(root);
 
