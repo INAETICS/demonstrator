@@ -26,6 +26,7 @@ import org.inaetics.demonstrator.api.data.Sample;
 import org.inaetics.demonstrator.api.datastore.DataStore;
 import org.inaetics.demonstrator.api.processor.Processor;
 import org.inaetics.demonstrator.api.queue.SampleQueue;
+import org.inaetics.demonstrator.api.stats.StatsProvider;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedService;
 import org.osgi.service.log.LogService;
@@ -34,10 +35,12 @@ import org.osgi.service.log.LogService;
  * Simple {@link Processor} implementation that take the last N samples from the
  * queue and store them in a datastore.
  */
-public class IdentityProcessor implements Processor, Runnable, ManagedService {
+public class IdentityProcessor implements Processor, StatsProvider, Runnable, ManagedService {
 
 	private ScheduledExecutorService m_executor;
 	private ScheduledFuture<?> m_future;
+
+    private int storedSamples;
 
 	// Injected by Felix DM...
 	private volatile SampleQueue m_queue;
@@ -52,6 +55,9 @@ public class IdentityProcessor implements Processor, Runnable, ManagedService {
 			m_store.store(result);
 			
 			m_log.log(LogService.LOG_INFO, "Processed: " + sample + " to " + result);
+			synchronized(this) {
+				storedSamples++;
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -66,6 +72,7 @@ public class IdentityProcessor implements Processor, Runnable, ManagedService {
 	 * Called by Felix DM when starting this component.
 	 */
 	protected void start() throws Exception {
+		storedSamples = 0;
 		m_executor = Executors.newSingleThreadScheduledExecutor();
 		m_future = m_executor.scheduleAtFixedRate(this, 500, 20, TimeUnit.MILLISECONDS);
 	}
@@ -79,5 +86,32 @@ public class IdentityProcessor implements Processor, Runnable, ManagedService {
 		}
 		m_executor.shutdown();
 		m_executor.awaitTermination(10, TimeUnit.SECONDS);
+	}
+
+	@Override
+	public String getMeasurementUnit() {
+        return "";
+	}
+
+	@Override
+	public String getName() {
+		return "Processor (Java)";
+	}
+
+	@Override
+	public String getType() {
+		return "throughput";
+	}
+
+	@Override
+	public double getValue() {
+
+		int currentValue = 0;
+		
+		synchronized(this) {
+			currentValue = storedSamples;
+			storedSamples = 0;
+		}
+		return currentValue;
 	}
 }

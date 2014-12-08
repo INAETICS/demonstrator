@@ -21,6 +21,7 @@ import org.apache.felix.dm.DependencyActivatorBase;
 import org.apache.felix.dm.DependencyManager;
 import org.inaetics.demonstrator.api.producer.Producer;
 import org.inaetics.demonstrator.api.queue.SampleQueue;
+import org.inaetics.demonstrator.api.stats.StatsProvider;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.service.cm.ManagedService;
@@ -35,6 +36,16 @@ public class Activator extends DependencyActivatorBase {
 		String[] ifaces = { Producer.class.getName(), ManagedService.class.getName() };
 		
 		Properties props = new Properties();
+        props.put(RemoteConstants.SERVICE_EXPORTED_INTERFACES, StatsProvider.class.getName());
+
+        manager.add(createComponent()
+            .setInterface(StatsProvider.class.getName(), props)
+            .setImplementation(RandomSampleProducer.class)
+			.add(createServiceDependency().setService(SampleQueue.class).setRequired(true))
+			.add(createServiceDependency().setService(LogService.class).setRequired(false))
+        );
+        
+		props = new Properties();
 		props.put(Constants.SERVICE_PID, PID);
 		props.put(RemoteConstants.SERVICE_EXPORTED_INTERFACES, ifaces[0]);
 		props.put("type", "random");

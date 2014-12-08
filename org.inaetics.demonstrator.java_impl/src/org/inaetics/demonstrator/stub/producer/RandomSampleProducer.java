@@ -26,6 +26,7 @@ import java.util.concurrent.TimeUnit;
 import org.inaetics.demonstrator.api.data.Sample;
 import org.inaetics.demonstrator.api.producer.Producer;
 import org.inaetics.demonstrator.api.queue.SampleQueue;
+import org.inaetics.demonstrator.api.stats.StatsProvider;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedService;
 import org.osgi.service.log.LogService;
@@ -33,11 +34,13 @@ import org.osgi.service.log.LogService;
 /**
  * Generates a random sample once every 10 ms.
  */
-public class RandomSampleProducer implements Producer, Runnable, ManagedService {
+public class RandomSampleProducer implements Producer, StatsProvider, Runnable, ManagedService {
 	private final Random m_rnd = new Random();
 
 	private ScheduledExecutorService m_executor;
 	private ScheduledFuture<?> m_future;
+
+    private int sendSamples;
 
 	// Injected by Felix DM...
 	private volatile SampleQueue m_queue;
@@ -53,6 +56,9 @@ public class RandomSampleProducer implements Producer, Runnable, ManagedService 
 			m_queue.putAll(Arrays.asList(sample));
 
 			m_log.log(LogService.LOG_INFO, "Produced: " + sample);
+			synchronized(this) {
+				sendSamples++;
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -67,6 +73,7 @@ public class RandomSampleProducer implements Producer, Runnable, ManagedService 
 	 * Called by Felix DM when starting this component.
 	 */
 	protected void start() throws Exception {
+		sendSamples = 0;
 		m_executor = Executors.newSingleThreadScheduledExecutor();
 		m_future = m_executor.scheduleAtFixedRate(this, 500, 10, TimeUnit.MILLISECONDS);
 	}
@@ -84,5 +91,30 @@ public class RandomSampleProducer implements Producer, Runnable, ManagedService 
 
 	private double randomSampleValue() {
 		return (m_rnd.nextDouble() * 200.0) - 100.0;
+	}
+
+	@Override
+	public String getMeasurementUnit() {
+		return "";
+	}
+
+	@Override
+	public String getName() {
+		return "Producer (Java)";
+	}
+
+	@Override
+	public String getType() {
+		return "throughput";
+	}
+
+	@Override
+	public double getValue() {
+		int currentValue = 0;
+		synchronized(this) {
+			currentValue = sendSamples;
+			sendSamples = 0;
+		}
+		return currentValue;
 	}
 }
