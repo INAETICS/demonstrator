@@ -40,7 +40,9 @@ public class IdentityProcessor implements Processor, StatsProvider, Runnable, Ma
 	private ScheduledExecutorService m_executor;
 	private ScheduledFuture<?> m_future;
 
-    private int storedSamples;
+	private long storedSamplesStartTime;
+	private int storedSamplesCurrentSecond;
+	private int storedSamplesLastSecond;
 
 	// Injected by Felix DM...
 	private volatile SampleQueue m_queue;
@@ -50,13 +52,21 @@ public class IdentityProcessor implements Processor, StatsProvider, Runnable, Ma
 	@Override
 	public void run() {
 		try {
+
 			Sample sample = m_queue.take();
 			Result result = new Result(10, 1.0, sample); // XXX
 			m_store.store(result);
 			
 			m_log.log(LogService.LOG_INFO, "Processed: " + sample + " to " + result);
-			synchronized(this) {
-				storedSamples++;
+
+			if (System.nanoTime() - storedSamplesStartTime < TimeUnit.SECONDS.toNanos(1)) {
+				storedSamplesCurrentSecond++;
+			} else {
+				synchronized (this) {
+					storedSamplesLastSecond = storedSamplesCurrentSecond;
+				}
+				storedSamplesStartTime = System.nanoTime();
+				storedSamplesCurrentSecond = 0;
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -72,7 +82,9 @@ public class IdentityProcessor implements Processor, StatsProvider, Runnable, Ma
 	 * Called by Felix DM when starting this component.
 	 */
 	protected void start() throws Exception {
-		storedSamples = 0;
+		storedSamplesCurrentSecond = 0;
+		storedSamplesLastSecond = 0;
+		storedSamplesStartTime = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(500);
 		m_executor = Executors.newSingleThreadScheduledExecutor();
 		m_future = m_executor.scheduleAtFixedRate(this, 500, 20, TimeUnit.MILLISECONDS);
 	}
@@ -100,17 +112,16 @@ public class IdentityProcessor implements Processor, StatsProvider, Runnable, Ma
 
 	@Override
 	public String getType() {
-		return "throughput";
+		return "throughput/sec";
 	}
 
 	@Override
 	public double getValue() {
 
 		int currentValue = 0;
-		
-		synchronized(this) {
-			currentValue = storedSamples;
-			storedSamples = 0;
+
+		synchronized (this) {
+			currentValue = storedSamplesLastSecond;
 		}
 		return currentValue;
 	}

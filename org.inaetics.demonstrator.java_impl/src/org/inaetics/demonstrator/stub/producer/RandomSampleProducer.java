@@ -40,8 +40,10 @@ public class RandomSampleProducer implements Producer, StatsProvider, Runnable, 
 	private ScheduledExecutorService m_executor;
 	private ScheduledFuture<?> m_future;
 
-    private int sendSamples;
-
+    private long sendSamplesStartTime;
+    private int sendSamplesCurrentSecond;
+    private int sendSamplesLastSecond;
+    
 	// Injected by Felix DM...
 	private volatile SampleQueue m_queue;
 	private volatile LogService m_log;
@@ -56,8 +58,14 @@ public class RandomSampleProducer implements Producer, StatsProvider, Runnable, 
 			m_queue.putAll(Arrays.asList(sample));
 
 			m_log.log(LogService.LOG_INFO, "Produced: " + sample);
-			synchronized(this) {
-				sendSamples++;
+			if (System.nanoTime() - sendSamplesStartTime < TimeUnit.SECONDS.toNanos(1)) {
+				sendSamplesCurrentSecond++;
+			} else {
+				synchronized (this) {
+					sendSamplesLastSecond = sendSamplesCurrentSecond;
+				}
+				sendSamplesStartTime = System.nanoTime();
+				sendSamplesCurrentSecond = 0;
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -73,7 +81,9 @@ public class RandomSampleProducer implements Producer, StatsProvider, Runnable, 
 	 * Called by Felix DM when starting this component.
 	 */
 	protected void start() throws Exception {
-		sendSamples = 0;
+		sendSamplesCurrentSecond = 0;
+		sendSamplesLastSecond = 0;
+		sendSamplesStartTime = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(500);
 		m_executor = Executors.newSingleThreadScheduledExecutor();
 		m_future = m_executor.scheduleAtFixedRate(this, 500, 10, TimeUnit.MILLISECONDS);
 	}
@@ -105,15 +115,14 @@ public class RandomSampleProducer implements Producer, StatsProvider, Runnable, 
 
 	@Override
 	public String getType() {
-		return "throughput";
+		return "throughput/sec";
 	}
 
 	@Override
 	public double getValue() {
 		int currentValue = 0;
-		synchronized(this) {
-			currentValue = sendSamples;
-			sendSamples = 0;
+		synchronized (this) {
+			currentValue = sendSamplesLastSecond;
 		}
 		return currentValue;
 	}
