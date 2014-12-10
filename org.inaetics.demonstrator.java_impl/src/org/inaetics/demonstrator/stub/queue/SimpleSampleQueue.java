@@ -30,6 +30,7 @@ import org.osgi.service.cm.ManagedService;
 import org.osgi.service.log.LogService;
 
 public class SimpleSampleQueue implements SampleQueue, StatsProvider, ManagedService {
+    private static final int MAX_QUEUE_SIZE = 10 * 1000;
 
     private final BlockingQueue<Sample> m_queue;
 
@@ -37,7 +38,7 @@ public class SimpleSampleQueue implements SampleQueue, StatsProvider, ManagedSer
     private volatile LogService m_log;
 
     public SimpleSampleQueue() {
-        m_queue = new LinkedBlockingQueue<>();
+        m_queue = new LinkedBlockingQueue<>(MAX_QUEUE_SIZE);
     }
 
     @Override
@@ -47,7 +48,7 @@ public class SimpleSampleQueue implements SampleQueue, StatsProvider, ManagedSer
 
     @Override
     public String getMeasurementUnit() {
-        return "";
+        return "%";
     }
 
     @Override
@@ -57,7 +58,7 @@ public class SimpleSampleQueue implements SampleQueue, StatsProvider, ManagedSer
 
     @Override
     public double getValue() {
-        return m_queue.size(); // XXX
+        return (100.0 * m_queue.size()) / MAX_QUEUE_SIZE;
     }
 
     @Override

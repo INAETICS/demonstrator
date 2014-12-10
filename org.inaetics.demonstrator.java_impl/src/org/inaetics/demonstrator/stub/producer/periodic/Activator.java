@@ -13,14 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.inaetics.demonstrator.stub.processor;
+package org.inaetics.demonstrator.stub.producer.periodic;
 
 import java.util.Properties;
 
 import org.apache.felix.dm.DependencyActivatorBase;
 import org.apache.felix.dm.DependencyManager;
-import org.inaetics.demonstrator.api.datastore.DataStore;
-import org.inaetics.demonstrator.api.processor.Processor;
+import org.inaetics.demonstrator.api.producer.Producer;
 import org.inaetics.demonstrator.api.queue.SampleQueue;
 import org.inaetics.demonstrator.api.stats.StatsProvider;
 import org.osgi.framework.BundleContext;
@@ -30,22 +29,22 @@ import org.osgi.service.log.LogService;
 import org.osgi.service.remoteserviceadmin.RemoteConstants;
 
 public class Activator extends DependencyActivatorBase {
-	private static final String PID = "IdentityProcessor";
+	private static final String PID = "PeriodicSampleProducer";
 
 	@Override
 	public void init(BundleContext context, DependencyManager manager) throws Exception {
-		String[] ifaces = { Processor.class.getName(), ManagedService.class.getName() };
+		String[] ifaces = { Producer.class.getName(), ManagedService.class.getName() };
 		
 		Properties props = new Properties();
 		props.put(Constants.SERVICE_PID, PID);
 		props.put(RemoteConstants.SERVICE_EXPORTED_INTERFACES, ifaces[0]);
+		props.put("type", "periodic");
 		
-		Processor service = new IdentityProcessor();
+		Producer service = new PeriodicSampleProducer();
 
 		manager.add(createComponent()
 			.setInterface(ifaces, props)
 			.setImplementation(service)
-			.add(createServiceDependency().setService(DataStore.class).setRequired(true))
 			.add(createServiceDependency().setService(SampleQueue.class).setRequired(true))
 			.add(createServiceDependency().setService(LogService.class).setRequired(false))
 		);

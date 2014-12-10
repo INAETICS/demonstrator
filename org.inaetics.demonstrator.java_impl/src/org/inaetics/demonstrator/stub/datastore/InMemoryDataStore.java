@@ -30,6 +30,8 @@ import org.osgi.service.cm.ManagedService;
 import org.osgi.service.log.LogService;
 
 public class InMemoryDataStore implements DataStore, StatsProvider, ManagedService {
+    private static final int MAX_STORE_SIZE = 1 * 1000 * 1000; // 1 million records
+
     private final CopyOnWriteArrayList<Result> m_store;
 
     // Injected by Felix DM...
@@ -59,27 +61,31 @@ public class InMemoryDataStore implements DataStore, StatsProvider, ManagedServi
 
     @Override
     public String getMeasurementUnit() {
-        return "";
+        return "%";
     }
 
     @Override
     public String getType() {
-        return "size";
+        return "utilization";
     }
 
     @Override
     public double getValue() {
-        return m_store.size();
+        return (100.0 * m_store.size()) / MAX_STORE_SIZE;
     }
 
     @Override
     public void store(Result result) {
-        m_store.add(result);
+        if (m_store.size() < MAX_STORE_SIZE) {
+            m_store.add(result);
+        }
     }
 
     @Override
     public void storeAll(Collection<Result> results) {
-        m_store.addAll(results);
+        if (m_store.size() + results.size() < MAX_STORE_SIZE) {
+            m_store.addAll(results);
+        }
     }
 
     @Override

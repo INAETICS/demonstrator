@@ -1,4 +1,0 @@
-Bundle-Activator: \
-	org.inaetics.demonstrator.stub.producer.Activator
-Private-Package:  \
-	org.inaetics.demonstrator.stub.producer

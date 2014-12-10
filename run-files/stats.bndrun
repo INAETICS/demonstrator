@@ -32,5 +32,4 @@
 
 -runproperties: \
 	org.osgi.service.http.port=9000,\
-	org.apache.felix.log.storeDebug=true,\
 	org.amdatu.remote.discovery.bonjour.schedule=2

@@ -1,10 +1,10 @@
 /*! ineatics.js - INAETICS specific stuff */
 "use strict";
 
-var interval = 5000; // ms
+var interval = 500; // ms
 
-var chartNames = [];
-
+var chartWidth = 450;
+var chartHeight = 350;
 
 function fmtChartJSPerso(config, value, fmt) {
 	if (fmt == "DateTime") {
@@ -14,22 +14,28 @@ function fmtChartJSPerso(config, value, fmt) {
 }
 
 function getChartOpts(stats) {
-	return { 
+	var opts = { 
 		canvasBorders: false,
 		inGraphDataShow: false,
-		annotateDisplay : false,
 		responsive: false,
 	    graphTitleFontSize: 16,
-		scaleBeginAtZero: true, 
 		pointDot: false, 
 		bezierCurve: false,
-		rotateLabels: 90,
+		rotateLabels: 60,
 		datasetFill: true,
-		yAxisUnitFontSize: 12,
-		yAxisLabel: stats.unit,
+		yAxisUnitFontSize: 14,
+		yAxisLabel: stats.type,
+		yAxisUnit: stats.unit,
 		fmtXLabel: "DateTime",
-		graphTitle: stats.displayName + " " + stats.type
+		graphTitle: stats.displayName
 	};
+	if (stats.type == "utilization") {
+		opts.scaleOverride = true
+		opts.scaleStartValue = 0
+		opts.scaleSteps = 5
+		opts.scaleStepWidth = 10
+	}
+	return opts;
 }
 
 function getData(stats) {
@@ -47,7 +53,7 @@ function renderAllStats() {
 	$.get("/stats")
 		.done(function(response) {
 			var total = response.length
-			
+
 			$.each(response, function(idx, val) {
 				$.ajax({ url: val.url, async: false })
 					.done(function(response) {
@@ -57,18 +63,17 @@ function renderAllStats() {
 
 						var el = $("#stats-container #" + id)
 						if (el.length == 0) {
-							$("#stats-container").append("<canvas id='" + id + "' width='" + 500 + "' height='" + 400 + "'></canvas>")
+							$("#stats-container").append("<canvas id='" + id + "' width='" + chartWidth + "' height='" + chartHeight + "'></canvas>")
 						}
 
 						// Create our chart context...
 						var chartCtx = document.getElementById(id).getContext('2d');
-						var chart = new Chart(chartCtx);
 
-						if (chartNames.indexOf(val.name) < 0) {
-							opts.animate = true
+						if (el.length == 0) {
+							opts.animation = true
 	
-							chart.Line(data, opts, chart);
-							chartNames.push(val.name);
+							var chart = new Chart(chartCtx);
+							chart.Line(data, opts);
 						} else {
 							updateChart(chartCtx, data, opts, false /* animation */, false /* runanimationcompletefunction */);
 						}

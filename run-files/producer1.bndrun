@@ -25,7 +25,7 @@
 	org.inaetics.demonstrator.api.producer;version=latest,\
 	org.inaetics.demonstrator.api.queue;version=latest,\
 	org.inaetics.demonstrator.api.stats;version=latest,\
-	org.inaetics.demonstrator.java_impl.producer;version=latest
+	org.inaetics.demonstrator.java_impl.producer.periodic;version=latest
 
 -runproperties: \
 	org.osgi.service.http.port=9010,\

@@ -13,45 +13,47 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.inaetics.demonstrator.stub.processor;
+package org.inaetics.demonstrator.stub.producer.periodic;
 
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.inaetics.demonstrator.api.data.Result;
 import org.inaetics.demonstrator.api.data.Sample;
-import org.inaetics.demonstrator.api.datastore.DataStore;
-import org.inaetics.demonstrator.api.processor.Processor;
 import org.inaetics.demonstrator.api.queue.SampleQueue;
+import org.inaetics.demonstrator.stub.producer.AbstractSampleProducer;
 
 /**
- * Simple {@link Processor} implementation that take the last N samples from the
- * queue and store them in a datastore.
+ * Generates a random sample once every 10 ms.
  */
-public class IdentityProcessor extends AbstractSampleProcessor {
-    private final AtomicLong m_processed;
+public class PeriodicSampleProducer extends AbstractSampleProducer {
+    private final AtomicLong m_produced;
 
     // Injected by Felix DM...
     private volatile SampleQueue m_queue;
-    private volatile DataStore m_store;
 
-    public IdentityProcessor() {
-        super(20 /* msec */);
-        m_processed = new AtomicLong(0L);
+    public PeriodicSampleProducer() {
+        super(10 /* msec */);
+        m_produced = new AtomicLong(0L);
     }
 
     @Override
-    public void processSamples() {
-        Sample sample = m_queue.take();
-        Result result = new Result(10, 1.0, sample);
-
-        m_store.store(result);
-        m_processed.incrementAndGet();
-
-        info("Processed: %s to %s", sample, result);
+    public String getName() {
+        return "Periodic Sample Producer";
     }
 
     @Override
     protected double calculateThroughput(long time) {
-        return (1000 * m_processed.get()) / time;
+        return (1000 * m_produced.get()) / time;
+    }
+
+    @Override
+    protected void produceSamples() {
+        double val1 = randomSampleValue();
+        double val2 = randomSampleValue();
+        Sample sample = new Sample(System.currentTimeMillis(), val1, val2);
+
+        m_queue.put(sample);
+        m_produced.addAndGet(1L);
+
+        info("Produced sample: %s", sample);
     }
 }
