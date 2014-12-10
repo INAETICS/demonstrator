@@ -1,57 +1,95 @@
 /*! ineatics.js - INAETICS specific stuff */
+"use strict";
 
-function getStats(url) {
-	qwest.get(url, {}, { 'async': true })
-		.then(function(response) {
-			renderStats(response);
-		})
-		.catch(function(response) {
-			console.log("Failed to get provider for " + url);
-			console.log(response);
-		})
+var interval = 5000; // ms
+
+var chartNames = [];
+
+
+function fmtChartJSPerso(config, value, fmt) {
+	if (fmt == "DateTime") {
+		return new Date(value).toLocaleTimeString('nl-NL', { hour12: false })
+	}
+	return value;
 }
 
-function renderStats(stats) {
-	var width = 400;
-	var height = 250;
+function getChartOpts(stats) {
+	return { 
+		canvasBorders: false,
+		inGraphDataShow: false,
+		annotateDisplay : false,
+		responsive: false,
+	    graphTitleFontSize: 16,
+		scaleBeginAtZero: true, 
+		pointDot: false, 
+		bezierCurve: false,
+		rotateLabels: 90,
+		datasetFill: true,
+		yAxisUnitFontSize: 12,
+		yAxisLabel: stats.unit,
+		fmtXLabel: "DateTime",
+		graphTitle: stats.displayName + " " + stats.type
+	};
+}
 
-	var id = "st-" + stats.name.replace(/\W+/g, '');
-
-	var el = $("#stats-container #" + id)
-	if (el.length == 0) {
-		$("#stats-container").append("<div id='" + id + "'></div>")
-	} else {
-		$("#stats-container #" + id + " svg").remove();
+function getData(stats) {
+	return { 
+		labels: stats.timestamps, 
+		datasets: [ {
+			fillColor: "rgba(151,187,205,0.5)",
+	        strokeColor: "rgba(151,187,205,1)",
+			data: stats.values
+		} ] 
 	}
-	
-	var valuesx = stats.timestamps;
-	var valuesy = stats.values;
-	// ensure we always start with zero...
-	valuesx.unshift(valuesx[0] - 1);
-	valuesy.unshift(0);
-
-	var r = Raphael(id, 100 + width, 50 + height);
-	r.text(160, 10, stats.name + " " + stats.type + " " + stats.unit).attr({'font-size': '12pt', 'font-family': '"Helvetica Neue", "Helvetica", sans-serif'});
-	r.linechart(100, 10, width - 100, height - 10, valuesx, valuesy, {'axis': '0 0 1 1', 'axisxstep': 5, 'axisystep': 5, 'gutter': 10});
 }
 
 function renderAllStats() {
-	qwest.get("/stats")
-		.then(function(response) {
+	$.get("/stats")
+		.done(function(response) {
+			var total = response.length
+			
 			$.each(response, function(idx, val) {
-				getStats(val);
-			});
-		})
-		.catch(function(response) { 
-			console.log("Failed to get provider names!"); 
-		})
-		.complete(function(response) {
+				$.ajax({ url: val.url, async: false })
+					.done(function(response) {
+						var data = getData(response)
+						var opts = getChartOpts(response)
+						var id = val.name
+
+						var el = $("#stats-container #" + id)
+						if (el.length == 0) {
+							$("#stats-container").append("<canvas id='" + id + "' width='" + 500 + "' height='" + 400 + "'></canvas>")
+						}
+
+						// Create our chart context...
+						var chartCtx = document.getElementById(id).getContext('2d');
+						var chart = new Chart(chartCtx);
+
+						if (chartNames.indexOf(val.name) < 0) {
+							opts.animate = true
+	
+							chart.Line(data, opts, chart);
+							chartNames.push(val.name);
+						} else {
+							updateChart(chartCtx, data, opts, false /* animation */, false /* runanimationcompletefunction */);
+						}
+					})
+					.fail(function(response) {
+						console.log("Failed to get provider for " + val.url);
+						console.log(response);
+					})
+			})
+			
 			// Reschedule a recurrent call...
-			setTimeout(renderAllStats, 2000 /* ms */);
-		});
+			setTimeout(renderAllStats, interval);
+		})
+		.fail(function(response) { 
+			console.log("Failed to get provider names!"); 
+			// Reschedule a recurrent call...
+			setTimeout(renderAllStats, interval);
+		})
 }
 
 $(document).ready(function() {
 	// install window timeout
-	setTimeout(renderAllStats, 2000 /* ms */);
+	setTimeout(renderAllStats, 500);
 });

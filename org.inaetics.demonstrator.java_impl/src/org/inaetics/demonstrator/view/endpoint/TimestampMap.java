@@ -21,7 +21,7 @@ import java.util.LinkedHashMap;
  * Provides a simple map of timestamps to any kind of value with a bounded size.
  */
 public class TimestampMap<V> extends LinkedHashMap<Long, V> {
-    private static final int DEFAULT_MAX_SIZE = 50;
+    private static final int DEFAULT_MAX_SIZE = 25;
 
     private final int m_maxSize;
 

@@ -19,9 +19,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
@@ -43,7 +44,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
  * Tracks all {@link StatsProvider}s and shows them in a single view.
  */
 public class ViewStatsServlet extends HttpServlet {
-    private final CopyOnWriteArrayList<StatsProvider> m_providers;
+    private final ConcurrentMap<String, StatsProvider> m_providers;
     private final ConcurrentMap<String, TimestampMap<Double>> m_statistics;
     private final ScheduledExecutorService m_executor;
     // Injected by Felix DM...
@@ -52,28 +53,40 @@ public class ViewStatsServlet extends HttpServlet {
     private volatile Future<?> m_pollFuture;
 
     public ViewStatsServlet() {
-        m_providers = new CopyOnWriteArrayList<>();
+        m_providers = new ConcurrentHashMap<>();
         m_statistics = new ConcurrentHashMap<>();
         m_executor = Executors.newSingleThreadScheduledExecutor();
     }
 
     public void add(StatsProvider provider) {
-        if (m_providers.addIfAbsent(provider)) {
-            m_statistics.putIfAbsent(provider.getName(), new TimestampMap<>());
+        String name = getKey(provider);
+
+        if (m_providers.putIfAbsent(name, provider) == null) {
+            m_statistics.putIfAbsent(name, new TimestampMap<>());
         }
     }
 
     public void remove(StatsProvider provider) {
-        if (m_providers.remove(provider)) {
-            m_statistics.remove(provider.getName());
+        // Do *not* use the getKey method, as we're not sure the provider is still "alive"...
+        String name = null;
+        for (Entry<String, StatsProvider> entry : m_providers.entrySet()) {
+            if (entry.getValue() == provider) {
+                // Found it...
+                name = entry.getKey();
+            }
+        }
+        if (name != null) {
+            m_providers.remove(name);
+            m_statistics.remove(name);
         }
     }
 
     final void pollAllProviders() {
-        for (StatsProvider provider : m_providers) {
+        for (Entry<String, StatsProvider> entry : m_providers.entrySet()) {
             try {
-                TimestampMap<Double> values = m_statistics.get(provider.getName());
+                TimestampMap<Double> values = m_statistics.get(entry.getKey());
                 if (values != null) {
+                    StatsProvider provider = entry.getValue();
                     // Best effort...
                     values.put(provider.getValue());
                 }
@@ -97,9 +110,15 @@ public class ViewStatsServlet extends HttpServlet {
                 generator.writeStartArray();
 
                 // Return an array with all providers...
-                for (StatsProvider provider : m_providers) {
+                for (Entry<String, StatsProvider> entry : m_providers.entrySet()) {
                     try {
-                        generator.writeString(getProviderStatsURL(req.getRequestURL(), provider));
+                        String name = entry.getKey();
+                        String url = getProviderStatsURL(req.getRequestURL(), name);
+
+                        generator.writeStartObject();
+                        generator.writeStringField("name", name);
+                        generator.writeStringField("url", url);
+                        generator.writeEndObject();
                     } catch (Exception e) {
                         m_log.log(LogService.LOG_WARNING, "Failed to write provider name to JSON!", e);
                     }
@@ -107,27 +126,29 @@ public class ViewStatsServlet extends HttpServlet {
 
                 generator.writeEndArray();
             } else {
-                String providerName = getProviderName(path);
-
-                for (StatsProvider provider : m_providers) {
-                    try {
-                        if (providerName.equals(provider.getName())) {
-                            writeAsJSON(generator, provider);
+                try {
+                    String providerName = getProviderName(path);
+                    StatsProvider provider = m_providers.get(providerName);
+                    if (provider != null) {
+                        TimestampMap<Double> stats = m_statistics.get(providerName);
+                        if (stats != null) {
+                            writeAsJSON(generator, provider, stats);
+                        } else {
+                            resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
                         }
-                    } catch (Exception e) {
-                        m_log.log(LogService.LOG_WARNING, "Failed to write provider to JSON!", e);
+                    } else {
+                        resp.sendError(HttpServletResponse.SC_NOT_FOUND);
                     }
+
+                    resp.flushBuffer();
+                } catch (Exception e) {
+                    if (!resp.isCommitted()) {
+                        resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+                    }
+                    m_log.log(LogService.LOG_WARNING, "Failed to write provider to JSON!", e);
                 }
             }
         }
-    }
-
-    private String getProviderStatsURL(StringBuffer baseURL, StatsProvider provider) {
-        if (baseURL.charAt(baseURL.length() - 1) != '/') {
-            baseURL.append('/');
-        }
-        baseURL.append(provider.getName());
-        return baseURL.toString();
     }
 
     /**
@@ -157,6 +178,11 @@ public class ViewStatsServlet extends HttpServlet {
         }
     }
 
+    private String getKey(StatsProvider provider) {
+        String name = provider.getName();
+        return name.toLowerCase(Locale.US).replaceAll("\\W+", "");
+    }
+
     private String getProviderName(String path) {
         String providerName = path;
         if (providerName == null) {
@@ -171,17 +197,26 @@ public class ViewStatsServlet extends HttpServlet {
         return providerName;
     }
 
-    private void writeAsJSON(JsonGenerator generator, StatsProvider provider) throws IOException {
-        String name = provider.getName();
+    private String getProviderStatsURL(StringBuffer baseURL, String providerName) {
+        if (baseURL.charAt(baseURL.length() - 1) != '/') {
+            baseURL.append('/');
+        }
+        baseURL.append(providerName);
+        return baseURL.toString();
+    }
+
+    private void writeAsJSON(JsonGenerator generator, StatsProvider provider, TimestampMap<Double> stats) throws IOException {
+        String name = getKey(provider);
+        String displayName = provider.getName();
         String type = provider.getType();
         String unit = provider.getMeasurementUnit();
 
-        TimestampMap<Double> values = m_statistics.get(name);
-        List<Long> timestamps = new ArrayList<Long>(values.keySet());
+        List<Long> timestamps = new ArrayList<Long>(stats.keySet());
         Collections.sort(timestamps);
 
         generator.writeStartObject();
         generator.writeStringField("name", name);
+        generator.writeStringField("displayName", displayName);
         generator.writeStringField("type", type);
         generator.writeStringField("unit", unit);
         generator.writeArrayFieldStart("timestamps");
@@ -191,7 +226,7 @@ public class ViewStatsServlet extends HttpServlet {
         generator.writeEndArray();
         generator.writeArrayFieldStart("values");
         for (Long timestamp : timestamps) {
-            generator.writeNumber(values.get(timestamp));
+            generator.writeNumber(stats.get(timestamp));
         }
         generator.writeEndArray();
 
