@@ -13,8 +13,8 @@
 #define WAIT_TIME_SECONDS       2
 #define VERBOSE					3
 
-#define UTILIZATION_NAME_POSTFIX 		" Utilization"
-#define UTILIZATION_TYPE 				"utilization"
+#define UTILIZATION_NAME_POSTFIX 		" Statistics"
+#define UTILIZATION_TYPE 				"(utilization)"
 #define UTILIZATION_MEASUREMENT_UNIT	"%"
 
 struct data_store {

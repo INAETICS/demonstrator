@@ -14,6 +14,8 @@
 #include "inaetics_demonstrator_api/stats_provider.h"
 #include "producer_impl.h"
 
+#define PRODUCER_STATS_SERVICE_NAME_PREFIX "Celix Producer"
+
 struct bundle_activator {
 	bundle_context_pt context;
 
@@ -60,12 +62,12 @@ celix_status_t bundleActivator_start(void * userData, bundle_context_pt context)
 	bundleContext_getProperty(context, OSGI_FRAMEWORK_FRAMEWORK_UUID, &uuid);
 
 	if (name != NULL) {
-		snprintf(uuidName, 128, "Producer %s", name);
+		snprintf(uuidName, 128, "%s %s",PRODUCER_STATS_SERVICE_NAME_PREFIX, name);
 	}
 	else if (name == NULL && uuid != NULL) {
-		snprintf(uuidName, 128, "Producer %.8s", uuid);
+		snprintf(uuidName, 128, "%s %.8s",PRODUCER_STATS_SERVICE_NAME_PREFIX, uuid);
 	} else {
-		snprintf(uuidName, 128, "Producer (unknown ID)");
+		snprintf(uuidName, 128, "%s (unknown ID)",PRODUCER_STATS_SERVICE_NAME_PREFIX);
 	}
 
 	printf("PRODUCER: Starting bundle...\n");

@@ -15,6 +15,8 @@
 #include "inaetics_demonstrator_api/stats_provider.h"
 #include "processor_impl.h"
 
+#define PROCESSOR_STATS_SERVICE_NAME_PREFIX "Celix Processor"
+
 struct bundle_activator {
 	bundle_context_pt context;
 
@@ -69,12 +71,12 @@ celix_status_t bundleActivator_start(void * userData, bundle_context_pt context)
 	bundleContext_getProperty(context, OSGI_FRAMEWORK_FRAMEWORK_UUID, &uuid);
 
 	if (name != NULL) {
-		snprintf(uuidName, 128, "Processor %s", name);
+		snprintf(uuidName, 128, "%s %s",PROCESSOR_STATS_SERVICE_NAME_PREFIX, name);
 	}
 	else if (name == NULL && uuid != NULL) {
-		snprintf(uuidName, 128, "Processor %.8s", uuid);
+		snprintf(uuidName, 128, "%s %.8s",PROCESSOR_STATS_SERVICE_NAME_PREFIX, uuid);
 	} else {
-		snprintf(uuidName, 128, "Processor (unknown ID)");
+		snprintf(uuidName, 128, "%s (unknown ID)",PROCESSOR_STATS_SERVICE_NAME_PREFIX);
 	}
 
 	printf("PROCESSOR: Starting bundle...\n");

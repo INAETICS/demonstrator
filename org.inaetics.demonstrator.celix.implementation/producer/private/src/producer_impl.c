@@ -4,6 +4,7 @@
 
 #include <stdarg.h>
 #include <stdint.h>
+#include <unistd.h>
 
 #include "celix_errno.h"
 #include "service_reference.h"
@@ -14,14 +15,14 @@
 #define SINGLE_SAMPLES_PER_SEC 	1000
 #define BURST_SAMPLES_PER_SEC 	1000
 
-#define MIN_BURST_LEN 			2
-#define MAX_BURST_LEN 			10
+#define MIN_BURST_LEN 			100
+#define MAX_BURST_LEN 			500
 
 #define VERBOSE					1
-#define WAIT_TIME_SECONDS       5
+#define WAIT_TIME_USECONDS      500000
 
-#define THROUGHPUT_NAME_POSTFIX 		" Throughput"
-#define THROUGHPUT_TYPE 				"throughput"
+#define THROUGHPUT_NAME_POSTFIX 		" Statistics"
+#define THROUGHPUT_TYPE 				"(throughput)"
 #define THROUGHPUT_MEASUREMENT_UNIT		"sample/sec"
 
 struct producer {
@@ -137,9 +138,7 @@ celix_status_t producer_sendSamples(producer_thread_data_pt th_data, int samples
 
 	msg(1, "PRODUCER: %d single samples sent.", singleSampleCnt);
 
-	while (ts_start.tv_sec >= ts_end.tv_sec) {
-		clock_gettime(CLOCK_REALTIME, &ts_end);
-	}
+	usleep(WAIT_TIME_USECONDS);
 
 	return status;
 }
@@ -151,10 +150,14 @@ celix_status_t producer_sendBursts(producer_thread_data_pt th_data, int samplesP
 	struct timespec ts_start;
 	struct timespec ts_end;
 	struct timespec ts_diff;
+	struct timespec ts_before;
+	struct timespec ts_after;
 	int burstSampleCnt = 0;
 
 	clock_gettime(CLOCK_REALTIME, &ts_start);
 	timespec_diff(&ts_diff,&ts_start,&ts_start);
+
+	int counter=0;
 
 	for (ts_end = ts_start; (burstSampleCnt < BURST_SAMPLES_PER_SEC) && (ts_diff.tv_sec<=0);) {
 		int burst_len = producer_rand_range(MIN_BURST_LEN, MAX_BURST_LEN);
@@ -164,7 +167,7 @@ celix_status_t producer_sendBursts(producer_thread_data_pt th_data, int samplesP
 		memset(burst, 0, burst_len * sizeof(struct sample));
 		int j = 0;
 
-		msg(3, "PRODUCER: Preparing burst of %u samples", burst_len);
+		msg(1, "PRODUCER: Preparing burst of %u samples, round %d", burst_len,counter++);
 
 		for (; j < burst_len; j++) {
 			producer_fillSample(&burst[j]);
@@ -173,7 +176,10 @@ celix_status_t producer_sendBursts(producer_thread_data_pt th_data, int samplesP
 		}
 
 		if (queueService != NULL) {
+			clock_gettime(CLOCK_REALTIME, &ts_before);
+
 			queueService->putAll(queueService->sampleQueue, burst, burst_len, &burst_samples_stored);
+			clock_gettime(CLOCK_REALTIME, &ts_after);
 		}
 		else {
 			status = CELIX_BUNDLE_EXCEPTION;
@@ -190,11 +196,11 @@ celix_status_t producer_sendBursts(producer_thread_data_pt th_data, int samplesP
 	th_data->burst_throughput = burstSampleCnt;
 	pthread_rwlock_unlock(&th_data->throughputLock);
 
-	msg(1, "PRODUCER: %d burst samples sent.", burstSampleCnt);
+	timespec_diff(&ts_diff,&ts_before,&ts_after);
 
-	while (ts_start.tv_sec >= ts_end.tv_sec) {
-		clock_gettime(CLOCK_REALTIME, &ts_end);
-	}
+	msg(1, "PRODUCER: %d burst samples sent in %d %d\n", burstSampleCnt, ts_diff.tv_sec, ts_diff.tv_nsec);
+
+	usleep(WAIT_TIME_USECONDS);
 
 	return status;
 }
@@ -207,6 +213,7 @@ void *producer_generate(void *handle) {
 
 	while (th_data->running && status == CELIX_SUCCESS) {
 
+		
 		if (BURST_SAMPLES_PER_SEC > 0) {
 			status = producer_sendBursts(th_data, BURST_SAMPLES_PER_SEC);
 		}
@@ -214,6 +221,7 @@ void *producer_generate(void *handle) {
 		if (SINGLE_SAMPLES_PER_SEC > 0) {
 			status = producer_sendSamples(th_data, SINGLE_SAMPLES_PER_SEC);
 		}
+
 
 		pthread_yield();
 	}

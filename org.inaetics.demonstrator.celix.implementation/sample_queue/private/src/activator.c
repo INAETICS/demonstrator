@@ -23,6 +23,8 @@
 
 #include "arraylist_sample_queue_impl.h"
 
+#define QUEUE_STATS_SERVICE_NAME_PREFIX "Celix Queue"
+
 struct activator {
 	bundle_context_pt context;
 	sample_queue_type *sampleQueue;
@@ -76,12 +78,12 @@ celix_status_t bundleActivator_start(void * userData, bundle_context_pt context)
 	bundleContext_getProperty(context, OSGI_FRAMEWORK_FRAMEWORK_UUID, &uuid);
 
 	if(name!=NULL){
-		snprintf(uuidName,128,"Sample Queue %s", name);
+		snprintf(uuidName,128,"%s %s",QUEUE_STATS_SERVICE_NAME_PREFIX, name);
 	}
 	else if (name == NULL && uuid != NULL) {
-		snprintf(uuidName,128,"Sample Queue %.8s", uuid);
+		snprintf(uuidName,128,"%s %.8s",QUEUE_STATS_SERVICE_NAME_PREFIX, uuid);
 	} else {
-		snprintf(uuidName,128,"Sample Queue (unknown ID)");
+		snprintf(uuidName,128,"%s (unknown ID)",QUEUE_STATS_SERVICE_NAME_PREFIX);
 	}
 
 	status = sampleQueue_create(uuidName, &activator->sampleQueue);

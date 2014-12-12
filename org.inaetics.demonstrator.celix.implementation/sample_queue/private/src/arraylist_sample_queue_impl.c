@@ -16,8 +16,8 @@
 #define WAIT_TIME_SECONDS       2
 #define VERBOSE					1
 
-#define UTILIZATION_NAME_POSTFIX 		" Utilization"
-#define UTILIZATION_TYPE 				"utilization"
+#define UTILIZATION_NAME_POSTFIX 		" Statistics"
+#define UTILIZATION_TYPE 				"(utilization)"
 #define UTILIZATION_MEASUREMENT_UNIT	"%"
 
 struct sample_queue {
@@ -27,7 +27,6 @@ struct sample_queue {
 	pthread_t statistics;
 	pthread_mutex_t lock;
 	pthread_cond_t listEmpty;
-	pthread_mutex_t listEmptyLock;
 	array_list_pt queue;
 	long takeCnt;
 	long putCnt;
@@ -64,7 +63,6 @@ celix_status_t sampleQueue_create(char *name, sample_queue_type **result) {
 		sprintf(sampleQueue->utilizationStatsName, "%s%s", sampleQueue->name, (char*)UTILIZATION_NAME_POSTFIX);
 
 		pthread_mutex_init(&(sampleQueue->lock), NULL);
-		pthread_mutex_init(&(sampleQueue->listEmptyLock), NULL);
 		pthread_cond_init(&sampleQueue->listEmpty, NULL);
 
 		arrayList_create(&(sampleQueue->queue));
@@ -102,14 +100,16 @@ celix_status_t sampleQueue_destroy(sample_queue_type* sampleQueue) {
 	arrayList_destroy(sampleQueue->queue);
 	sampleQueue->queue = NULL;
 
+	pthread_cond_broadcast(&(sampleQueue->listEmpty));
+
+	pthread_cond_destroy(&(sampleQueue->listEmpty));
+
 	pthread_mutex_unlock(&(sampleQueue->lock));
 	pthread_mutex_destroy(&(sampleQueue->lock));
 
 	void *exitStatus = NULL;
 	pthread_join(sampleQueue->statistics, &exitStatus);
 
-	pthread_cond_destroy(&(sampleQueue->listEmpty));
-	pthread_mutex_destroy(&(sampleQueue->listEmptyLock));
 
 	free(sampleQueue->name);
 	free(sampleQueue->utilizationStatsName);
@@ -232,13 +232,9 @@ int sampleQueue_take(sample_queue_type *sampleQueue, struct sample *sample) {
 
 	pthread_mutex_lock(&sampleQueue->lock);
 
-	pthread_mutex_lock(&sampleQueue->listEmptyLock);
-
 	while (sampleQueue->queue!=NULL && arrayList_size(sampleQueue->queue) == 0 && rc != ETIMEDOUT) {
-		rc = pthread_cond_timedwait(&sampleQueue->listEmpty, &sampleQueue->listEmptyLock, &ts);
+		rc = pthread_cond_timedwait(&sampleQueue->listEmpty, &sampleQueue->lock, &ts);
 	}
-
-	pthread_mutex_unlock(&sampleQueue->listEmptyLock);
 
 	if (rc == 0 && sampleQueue->queue!=NULL && arrayList_size(sampleQueue->queue)>0)
 	{
@@ -269,14 +265,10 @@ int sampleQueue_takeAll(sample_queue_type *sampleQueue, uint32_t min, uint32_t m
 
 	pthread_mutex_lock(&sampleQueue->lock);
 
-	pthread_mutex_lock(&sampleQueue->listEmptyLock);
-
 	/* block, till sufficient elements available */
 	while (sampleQueue->queue!=NULL && arrayList_size(sampleQueue->queue) < min && rc != ETIMEDOUT) {
-		rc = pthread_cond_timedwait(&sampleQueue->listEmpty, &sampleQueue->listEmptyLock, &ts);
+		rc = pthread_cond_timedwait(&sampleQueue->listEmpty, &sampleQueue->lock, &ts);
 	}
-
-	pthread_mutex_unlock(&sampleQueue->listEmptyLock);
 
 	if (rc == 0 && sampleQueue->queue!=NULL) {
 		status = CELIX_SUCCESS;

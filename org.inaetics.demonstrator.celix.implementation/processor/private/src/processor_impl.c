@@ -4,6 +4,7 @@
 
 #include <stdarg.h>
 #include <stdint.h>
+#include <unistd.h>
 
 #include "celix_errno.h"
 #include "service_reference.h"
@@ -12,17 +13,17 @@
 #include "inaetics_demonstrator_api/result.h"
 #include "inaetics_demonstrator_api/sample.h"
 
-#define SINGLE_SAMPLES_PER_SEC  10000
-#define BURST_SAMPLES_PER_SEC 	10000
+#define SINGLE_SAMPLES_PER_SEC  1000
+#define BURST_SAMPLES_PER_SEC 	1000
 
 #define MIN_BURST_LEN 			2
-#define MAX_BURST_LEN 			10
+#define MAX_BURST_LEN 			200
 
 #define VERBOSE					1
-#define WAIT_TIME_SECONDS       2
+#define WAIT_TIME_USECONDS      500000
 
-#define THROUGHPUT_NAME_POSTFIX 		" Throughput"
-#define THROUGHPUT_TYPE 				"throughput"
+#define THROUGHPUT_NAME_POSTFIX 		" Statistics"
+#define THROUGHPUT_TYPE 				"(throughput)"
 #define THROUGHPUT_MEASUREMENT_UNIT		"result/sec"
 
 struct processor {
@@ -83,9 +84,15 @@ static void processor_sendResult(processor_pt processor, struct result result) {
 
 static void processor_processSample(struct sample* sample, struct result* result) {
 
+	int i;
+
 	result->time = sample->time;
-	result->value1 = sample->value1 + sample->value2;
+	for (i =0; i < 10000; i++)
+	{
+		result->value1 = sample->value1 + sample->value2;
+	}
 	memcpy(&(result->sample), sample, sizeof(struct sample));
+
 }
 
 static void timespec_diff(struct timespec* diff, struct timespec* start, struct timespec* end)
@@ -146,12 +153,11 @@ celix_status_t processor_receiveSamples(processor_thread_data_pt th_data, int sa
 
 	msg(1, "PROCESSOR: %d single samples received.", singleSampleCnt);
 
-	while (ts_start.tv_sec >= ts_end.tv_sec) {
-		clock_gettime(CLOCK_REALTIME, &ts_end);
-	}
+	usleep(WAIT_TIME_USECONDS);
 
 	return status;
 }
+
 
 celix_status_t processor_receiveBursts(processor_thread_data_pt th_data, int samplesPerSec) {
 	celix_status_t status = CELIX_SUCCESS;
@@ -205,19 +211,17 @@ celix_status_t processor_receiveBursts(processor_thread_data_pt th_data, int sam
 		timespec_diff(&ts_diff,&ts_start,&ts_end);
 	}
 
-	/* Update the statistic */
 	pthread_rwlock_wrlock(&th_data->throughputLock);
 	th_data->burst_throughput = burstSampleCnt;
 	pthread_rwlock_unlock(&th_data->throughputLock);
 
 	msg(1, "PROCESSOR:  %d samples in bursts received.", burstSampleCnt);
-
-	while (ts_start.tv_sec >= ts_end.tv_sec) {
-		clock_gettime(CLOCK_REALTIME, &ts_end);
-	}
+	
+  usleep(WAIT_TIME_USECONDS);
 
 	return status;
 }
+
 
 void* processor_receive(void *handle) {
 	processor_thread_data_pt th_data = (processor_thread_data_pt) handle;
@@ -225,19 +229,15 @@ void* processor_receive(void *handle) {
 	th_data->running = true;
 
 	while (th_data->running && status == CELIX_SUCCESS) {
-
 		if (BURST_SAMPLES_PER_SEC > 0) {
 			status = processor_receiveBursts(th_data, BURST_SAMPLES_PER_SEC);
 		}
-
 		if (SINGLE_SAMPLES_PER_SEC > 0) {
 			status = processor_receiveSamples(th_data, SINGLE_SAMPLES_PER_SEC);
 		}
 
 		pthread_yield();
 	}
-
-
 
 	return NULL;
 }

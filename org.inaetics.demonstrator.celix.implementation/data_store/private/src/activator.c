@@ -23,6 +23,8 @@
 
 #include "arraylist_data_store_impl.h"
 
+#define DATASTORE_STATS_SERVICE_NAME_PREFIX "Celix DataStore"
+
 
 struct activator {
 	bundle_context_pt context;
@@ -76,12 +78,12 @@ celix_status_t bundleActivator_start(void * userData, bundle_context_pt context)
 	bundleContext_getProperty(context, OSGI_FRAMEWORK_FRAMEWORK_UUID, &uuid);
 
 	if(name!=NULL){
-		snprintf(uuidName,128,"Data Store %s", name);
+		snprintf(uuidName,128,"%s %s",DATASTORE_STATS_SERVICE_NAME_PREFIX, name);
 	}
 	else if (name == NULL && uuid != NULL) {
-		snprintf(uuidName,128,"Data Store %.8s", uuid);
+		snprintf(uuidName,128,"%s %.8s",DATASTORE_STATS_SERVICE_NAME_PREFIX, uuid);
 	} else {
-		snprintf(uuidName,128,"Data Store (unknown ID)");
+		snprintf(uuidName,128,"%s (unknown ID)",DATASTORE_STATS_SERVICE_NAME_PREFIX);
 	}
 
 
