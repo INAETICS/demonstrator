@@ -1,7 +1,7 @@
 /*! ineatics.js - INAETICS specific stuff */
 "use strict";
 
-var interval = 500; // ms
+var interval = 1000; // ms
 
 var chartWidth = 450;
 var chartHeight = 350;
@@ -17,7 +17,11 @@ function getChartOpts(stats) {
 	var opts = { 
 		canvasBorders: false,
 		inGraphDataShow: false,
-		responsive: false,
+		responsive: true,
+		responsiveMinWidth: chartWidth,
+		responsiveMaxWidth: chartWidth,
+		responsiveMinHeight: chartHeight,
+		responsiveMaxHeight: chartHeight,
 	    graphTitleFontSize: 16,
 		pointDot: false, 
 		bezierCurve: false,

@@ -40,7 +40,7 @@ public class Activator extends DependencyActivatorBase {
         manager.add(createComponent()
             .setInterface(Servlet.class.getName(), props)
             .setImplementation(ViewStatsServlet.class)
-            .add(createServiceDependency().setService(StatsProvider.class, "(service.imported=true)").setCallbacks("add", "remove").setRequired(false))
+            .add(createServiceDependency().setService(StatsProvider.class).setCallbacks("add", "remove").setRequired(false))
             .add(createServiceDependency().setService(LogService.class).setRequired(false)));
     }
 }
