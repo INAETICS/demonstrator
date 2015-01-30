@@ -1,0 +1,9 @@
+Bundle-Activator: \
+	org.inaetics.demonstrator.view.endpoint.Activator
+Private-Package: \
+	org.inaetics.demonstrator.view.endpoint
+Include-Resource: \
+	resources
+X-Web-Resource-Version: 1.1
+X-Web-Resource: /
+X-Web-Resource-Default-Page: index.html

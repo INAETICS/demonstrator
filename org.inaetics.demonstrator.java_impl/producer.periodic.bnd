@@ -1,0 +1,5 @@
+Bundle-Activator: \
+	org.inaetics.demonstrator.stub.producer.periodic.Activator
+Private-Package:  \
+	org.inaetics.demonstrator.stub.producer,\
+	org.inaetics.demonstrator.stub.producer.periodic
