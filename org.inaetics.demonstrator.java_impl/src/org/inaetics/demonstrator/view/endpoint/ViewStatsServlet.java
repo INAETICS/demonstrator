@@ -62,7 +62,7 @@ public class ViewStatsServlet extends HttpServlet {
         String name = getKey(provider);
 
         if (m_providers.putIfAbsent(name, provider) == null) {
-            m_statistics.putIfAbsent(name, new TimestampMap<>());
+            m_statistics.putIfAbsent(name, new TimestampMap<Double>());
         }
     }
 
