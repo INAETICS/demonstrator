@@ -179,7 +179,7 @@ public class ViewStatsServlet extends HttpServlet {
     }
 
     private String getKey(StatsProvider provider) {
-        String name = provider.getName();
+        String name = provider.getName() + "-" + provider.hashCode();
         return name.toLowerCase(Locale.US).replaceAll("\\W+", "");
     }
 
