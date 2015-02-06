@@ -179,8 +179,9 @@ public class ViewStatsServlet extends HttpServlet {
     }
 
     private String getKey(StatsProvider provider) {
-        String name = provider.getName() + "-" + provider.hashCode();
-        return name.toLowerCase(Locale.US).replaceAll("\\W+", "");
+        String name = provider.getName();
+        name = name.toLowerCase(Locale.US).replaceAll("\\W+", "");
+        return name + "_" + System.identityHashCode(provider);
     }
 
     private String getProviderName(String path) {
@@ -205,7 +206,8 @@ public class ViewStatsServlet extends HttpServlet {
         return baseURL.toString();
     }
 
-    private void writeAsJSON(JsonGenerator generator, StatsProvider provider, TimestampMap<Double> stats) throws IOException {
+    private void writeAsJSON(JsonGenerator generator, StatsProvider provider, TimestampMap<Double> stats)
+        throws IOException {
         String name = getKey(provider);
         String displayName = provider.getName();
         String type = provider.getType();

@@ -46,8 +46,6 @@ public class IdentityProcessor extends AbstractSampleProcessor {
 
         m_store.store(result);
         m_processed.incrementAndGet();
-
-        info("Processed: %s to %s", sample, result);
     }
 
     @Override

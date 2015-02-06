@@ -57,7 +57,7 @@ public abstract class AbstractSampleProcessor implements Processor, StatsProvide
     }
 
     @Override
-    public String getName() {
+    public final String getName() {
         Long id = (Long) m_component.getServiceRegistration().getReference().getProperty(Constants.SERVICE_ID);
         return String.format("Sample processor #%d", id);
     }

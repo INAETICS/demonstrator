@@ -31,13 +31,8 @@ public class PeriodicSampleProducer extends AbstractSampleProducer {
     private volatile SampleQueue m_queue;
 
     public PeriodicSampleProducer() {
-        super(10 /* msec */);
+        super("Periodic Sample Producer", 10 /* msec */);
         m_produced = new AtomicLong(0L);
-    }
-
-    @Override
-    public String getName() {
-        return "Periodic Sample Producer";
     }
 
     @Override

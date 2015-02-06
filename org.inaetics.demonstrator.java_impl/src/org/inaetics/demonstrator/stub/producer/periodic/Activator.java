@@ -59,6 +59,7 @@ public class Activator extends DependencyActivatorBase {
         manager.add(createComponent()
             .setInterface(StatsProvider.class.getName(), props)
             .setImplementation(service)
+            .setCallbacks(null, null, null, null) // init/start/stop/destroy already called for the 1st component...
         );
 	}
 }

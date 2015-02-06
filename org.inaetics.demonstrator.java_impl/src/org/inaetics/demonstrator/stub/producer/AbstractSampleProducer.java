@@ -22,8 +22,10 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.felix.dm.Component;
 import org.inaetics.demonstrator.api.producer.Producer;
 import org.inaetics.demonstrator.api.stats.StatsProvider;
+import org.osgi.framework.Constants;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedService;
 import org.osgi.service.log.LogService;
@@ -33,6 +35,7 @@ import org.osgi.service.log.LogService;
  */
 public abstract class AbstractSampleProducer implements Producer, StatsProvider, ManagedService {
     private final Random m_rnd;
+    private final String m_name;
     private final long m_taskInterval;
 
     private ScheduledExecutorService m_executor;
@@ -40,16 +43,25 @@ public abstract class AbstractSampleProducer implements Producer, StatsProvider,
     private ScheduledFuture<?> m_samplerFuture;
 
     private volatile double m_producedAvg = 0;
+    // Injected by Felix DM...
+    private volatile Component m_component;
     private volatile LogService m_log;
 
-    protected AbstractSampleProducer(long taskInterval) {
+    protected AbstractSampleProducer(String name, long taskInterval) {
         m_rnd = new Random();
+        m_name = name;
         m_taskInterval = taskInterval;
     }
 
     @Override
     public String getMeasurementUnit() {
         return "samples/sec";
+    }
+
+    @Override
+    public final String getName() {
+        Long id = (Long) m_component.getServiceRegistration().getReference().getProperty(Constants.SERVICE_ID);
+        return String.format("%s #%d", m_name, id);
     }
 
     @Override
@@ -107,7 +119,8 @@ public abstract class AbstractSampleProducer implements Producer, StatsProvider,
                     produceSamples();
                 } catch (Exception e) {
                     // Ignore, not much we can do about this...
-                    info("Failed to produce sample(s)! Cause: %s", (e.getMessage() == null ? "NullPointerException" : e.getMessage()));
+                    info("Failed to produce sample(s)! Cause: %s",
+                        (e.getMessage() == null ? "NullPointerException" : e.getMessage()));
                     m_log.log(LogService.LOG_DEBUG, "Failed to produce sample(s)!", e);
                 }
             }

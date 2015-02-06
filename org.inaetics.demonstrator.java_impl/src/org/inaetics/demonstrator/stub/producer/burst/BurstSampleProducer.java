@@ -33,13 +33,8 @@ public class BurstSampleProducer extends AbstractSampleProducer {
     private volatile SampleQueue m_queue;
 
     public BurstSampleProducer() {
-        super(500 /* msec */);
+        super("Burst Sample Producer", 500 /* msec */);
         m_produced = new AtomicLong(0L);
-    }
-
-    @Override
-    public String getName() {
-        return "Burst Sample Producer";
     }
 
     @Override
@@ -60,7 +55,5 @@ public class BurstSampleProducer extends AbstractSampleProducer {
             m_queue.put(sample);
             m_produced.addAndGet(1l);
         }
-
-        info("Produced burst of #%d samples...", BURST_LENGTH);
     }
 }
