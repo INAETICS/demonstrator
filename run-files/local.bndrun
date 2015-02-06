@@ -18,12 +18,18 @@
 	org.apache.felix.metatype,\
 	org.apache.felix.log,\
 	org.apache.felix.webconsole,\
+	org.amdatu.web.resourcehandler,\
+	com.fasterxml.jackson.core.jackson-annotations;version='[2.3,2.4)',\
+	com.fasterxml.jackson.core.jackson-core;version='[2.3,2.4)',\
+	com.fasterxml.jackson.core.jackson-databind;version='[2.3,2.4)',\
 	org.inaetics.demonstrator.api.data;version=latest,\
 	org.inaetics.demonstrator.api.datastore;version=latest,\
 	org.inaetics.demonstrator.api.processor;version=latest,\
 	org.inaetics.demonstrator.api.producer;version=latest,\
 	org.inaetics.demonstrator.api.queue;version=latest,\
+	org.inaetics.demonstrator.api.stats;version=latest,\
 	org.inaetics.demonstrator.java_impl.datastore;version=latest,\
 	org.inaetics.demonstrator.java_impl.processor;version=latest,\
-	org.inaetics.demonstrator.java_impl.producer;version=latest,\
-	org.inaetics.demonstrator.java_impl.queue;version=latest
+	org.inaetics.demonstrator.java_impl.producer.burst;version=latest,\
+	org.inaetics.demonstrator.java_impl.queue;version=latest,\
+	org.inaetics.demonstrator.java_impl.view;version=latest
