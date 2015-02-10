@@ -36,7 +36,7 @@ function getChartOpts(stats) {
 	if (stats.type == "utilization") {
 		opts.scaleOverride = true
 		opts.scaleStartValue = 0
-		opts.scaleSteps = 5
+		opts.scaleSteps = 10
 		opts.scaleStepWidth = 10
 	}
 	return opts;
