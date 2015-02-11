@@ -57,14 +57,20 @@ function renderAllStats() {
 	$.get("/stats")
 		.done(function(response) {
 			var total = response.length
-
+			var ids = []
+			
 			$.each(response, function(idx, val) {
 				$.ajax({ url: val.url, async: false })
 					.done(function(response) {
+						
+						// wait until we at least 2 datasets, else ChartNew.js breaks
+						if (response.values.length < 2) return;
+
 						var data = getData(response)
 						var opts = getChartOpts(response)
 						var id = val.name
-
+						ids[ids.length] = id;
+						
 						var el = $("#stats-container #" + id)
 						if (el.length == 0) {
 							$("#stats-container").append("<canvas id='" + id + "' width='" + chartWidth + "' height='" + chartHeight + "'></canvas>")
@@ -81,6 +87,24 @@ function renderAllStats() {
 						} else {
 							updateChart(chartCtx, data, opts, false /* animation */, false /* runanimationcompletefunction */);
 						}
+						
+						// if we are the last graph, check if we have to delete old graphs
+						if (ids.length == total) {
+							$("#stats-container").children().each(function() { 
+							    var id = this.id;
+							    var alive = false;
+							    for (var i=0; i<ids.length; i++) {
+							    	if (ids[i] == id) {
+							    		alive = true;
+							    		break;
+							    	}
+							    }
+							    if (!alive) {
+							    	$("#" + id).remove()
+							    }
+							});
+						}			
+
 					})
 					.fail(function(response) {
 						console.log("Failed to get provider for " + val.url);
