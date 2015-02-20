@@ -1,3 +1,6 @@
+/**
+ * Licensed under Apache License v2. See LICENSE for more information.
+ */
 
 #ifndef QUEUE_ENDPOINT_IMPL_H_
 #define QUEUE_ENDPOINT_IMPL_H_

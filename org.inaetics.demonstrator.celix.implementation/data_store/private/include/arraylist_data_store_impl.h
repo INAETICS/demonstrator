@@ -1,3 +1,6 @@
+/**
+ * Licensed under Apache License v2. See LICENSE for more information.
+ */
 #ifndef DATA_STORE_SERVICE_IMPL_H_
 #define DATA_STORE_SERVICE_IMPL_H_
 

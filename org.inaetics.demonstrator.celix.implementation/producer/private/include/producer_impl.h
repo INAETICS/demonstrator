@@ -1,3 +1,6 @@
+/**
+ * Licensed under Apache License v2. See LICENSE for more information.
+ */
 #ifndef PRODUCER_IMPL_H_
 #define PRODUCER_IMPL_H_
 

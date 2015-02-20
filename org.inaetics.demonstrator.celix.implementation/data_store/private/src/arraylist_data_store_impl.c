@@ -1,3 +1,6 @@
+/**
+ * Licensed under Apache License v2. See LICENSE for more information.
+ */
 #include <stdarg.h>
 #include <stdlib.h>
 #include <stdio.h>

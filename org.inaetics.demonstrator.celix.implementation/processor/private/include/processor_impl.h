@@ -1,3 +1,6 @@
+/**
+ * Licensed under Apache License v2. See LICENSE for more information.
+ */
 #ifndef PROCESSOR_IMPL_H_
 #define PROCESSOR_IMPL_H_
 

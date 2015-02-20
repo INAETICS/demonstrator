@@ -1,3 +1,6 @@
+/**
+ * Licensed under Apache License v2. See LICENSE for more information.
+ */
 
 #ifndef QUEUE_SERVICE_IMPL_H_
 #define QUEUE_SERVICE_IMPL_H_
