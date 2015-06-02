@@ -13,10 +13,6 @@
 #include "inaetics_demonstrator_api/sample_queue.h"
 
 
-celix_status_t queueProxy_setEndpointDescription(void *proxy, endpoint_description_pt endpoint);
-celix_status_t queueProxy_setHandler(void *proxy, void *handler);
-celix_status_t queueProxy_setCallback(void *proxy, sendToHandle callback);
-
 
 celix_status_t queueProxy_create(bundle_context_pt context, sample_queue_type **queue)  {
 	celix_status_t status = CELIX_SUCCESS;
@@ -33,6 +29,15 @@ celix_status_t queueProxy_create(bundle_context_pt context, sample_queue_type **
 	return status;
 }
 
+
+celix_status_t queueProxy_destroy(sample_queue_type **queue)  {
+	celix_status_t status = CELIX_SUCCESS;
+
+	free(*queue);
+	*queue = NULL;
+
+	return status;
+}
 
 // { "m": "" "a":["arg1", "arg2"] }
 celix_status_t queueProxy_put(sample_queue_type* queue, struct sample workSample, bool *sampleTaken) {
@@ -224,89 +229,6 @@ int queueProxy_takeAll(sample_queue_type* queue, uint32_t min, uint32_t max, str
 		printf("QUEUE_PROXY: No endpoint information available\n");
 		status = CELIX_BUNDLE_EXCEPTION;
 	}
-
-	return status;
-}
-
-
-
-celix_status_t queueProxy_registerProxyService(void* proxyFactoryService, endpoint_description_pt endpointDescription, void* rsa, sendToHandle sendToCallback) {
-	celix_status_t status = CELIX_SUCCESS;
-
-	remote_proxy_factory_service_pt queueProxyFactoryService = (remote_proxy_factory_service_pt) proxyFactoryService;
-	sample_queue_type* queue = NULL;
-	struct sample_queue_service* queueService = NULL;
-
-	queueProxy_create(queueProxyFactoryService->context, &queue);
-	queueService = calloc(1, sizeof(*queueService));
-	queueService->sampleQueue = queue;
-	queueService->put = queueProxy_put;
-	queueService->putAll = queueProxy_putAll;
-	queueService->take = queueProxy_take;
-	queueService->takeAll = queueProxy_takeAll;
-
-	properties_pt srvcProps = properties_create();
-	properties_set(srvcProps, (char *) "proxy.interface", (char *) INAETICS_DEMONSTRATOR_API__SAMPLE_QUEUE_SERVICE_NAME);
-	properties_set(srvcProps, (char *) "endpoint.framework.uuid", (char *) endpointDescription->frameworkUUID);
-
-	service_registration_pt proxyReg = NULL;
-
-	queueProxy_setEndpointDescription(queue, endpointDescription);
-	queueProxy_setHandler(queue, rsa);
-	queueProxy_setCallback(queue, sendToCallback);
-
-	if (bundleContext_registerService(queueProxyFactoryService->context, INAETICS_DEMONSTRATOR_API__SAMPLE_QUEUE_SERVICE_NAME, queueService, srvcProps, &proxyReg) != CELIX_SUCCESS)
-	{
-		printf("QUEUE_PROXY: error while registering queue service\n");
-	}
-
-	hashMap_put(queueProxyFactoryService->proxy_registrations, endpointDescription, proxyReg);
-
-
-	return status;
-}
-
-
-celix_status_t queueProxy_unregisterProxyService(void* proxyFactoryService, endpoint_description_pt endpointDescription) {
-	celix_status_t status = CELIX_SUCCESS;
-
-	remote_proxy_factory_service_pt queueProxyFactoryService = (remote_proxy_factory_service_pt) proxyFactoryService;
-	service_registration_pt proxyReg = hashMap_get(queueProxyFactoryService->proxy_registrations, endpointDescription);
-
-	if (proxyReg != NULL)
-	{
-		serviceRegistration_unregister(proxyReg);
-	}
-
-	return status;
-}
-
-
-celix_status_t queueProxy_setEndpointDescription(void *proxy, endpoint_description_pt endpoint) {
-	celix_status_t status = CELIX_SUCCESS;
-
-	sample_queue_type* queue = proxy;
-	queue->endpoint = endpoint;
-
-	return status;
-}
-
-
-celix_status_t queueProxy_setHandler(void *proxy, void *handler) {
-	celix_status_t status = CELIX_SUCCESS;
-
-	sample_queue_type* queue = proxy;
-	queue->sendToHandler = handler;
-
-	return status;
-}
-
-
-celix_status_t queueProxy_setCallback(void *proxy, sendToHandle callback) {
-	celix_status_t status = CELIX_SUCCESS;
-
-	sample_queue_type* queue = proxy;
-	queue->sendToCallback = callback;
 
 	return status;
 }
