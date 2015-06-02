@@ -9,7 +9,7 @@ include_directories("${PROJECT_SOURCE_DIR}/org.inaetics.demonstrator.api/src/org
 include_directories("private/include")
 
 
-set(BUNDLE_SYMBOLICNAME "org.inaetics.demonstrator.data_store_endpoint")
+set(BUNDLE_SYMBOLICNAME "org.inaetics.demonstrator.data_store_proxy")
 set(BUNDLE_VERSION "1.0.0")
 set(BUNDLE_NAME "org.inaetics.demonstrator.api.datastore.DataStore_proxy")
 
