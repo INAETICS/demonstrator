@@ -23,7 +23,7 @@
 #define INAETICS_DEMONSTRATOR_API__DATA_STORE_SERVICE_NAME "org.inaetics.demonstrator.api.datastore.DataStore"
 
 struct data_store_service {
-	void  *dataStore;
+	void *dataStore;
 
 	int (*store)(void *dataStore, struct result result, bool *resultStored);
 

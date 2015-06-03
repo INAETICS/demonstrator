@@ -24,9 +24,12 @@ struct sample_queue {
 };
 
 
-celix_status_t queueProxy_put(sample_queue_type* queue, struct sample workSample, bool *sampleTaken);
+celix_status_t queueProxy_create(bundle_context_pt context, sample_queue_type** queue);
+celix_status_t queueProxy_destroy(sample_queue_type** queue);
 
-celix_status_t queueProxy_registerProxyService(void* proxyFactoryService, endpoint_description_pt endpoint, void* handler, sendToHandle callback);
-celix_status_t queueProxy_unregisterProxyService(void* proxyFactoryService, endpoint_description_pt endpoint);
+int queueProxy_put(void* queue, struct sample workSample, bool *sampleTaken);
+int queueProxy_putAll(void* queue, struct sample *samples, uint32_t size, uint32_t *samplesTaken);
+int queueProxy_take(void* queue, struct sample *sample);
+int queueProxy_takeAll(void* queue, uint32_t min, uint32_t max, struct sample **samples, uint32_t *samplesSize);
 
 #endif /* QUEUE_PROXY_IMPL_H_ */

@@ -1,3 +1,6 @@
+/**
+ * Licensed under Apache License v2. See LICENSE for more information.
+ */
 
 #include <stdlib.h>
 
@@ -7,10 +10,17 @@
 #include "data_store_proxy_impl.h"
 #include "inaetics_demonstrator_api/data_store.h"
 
+#include "remote_proxy.h"
 
 struct activator {
-	service_registration_pt proxyFactoryService;
+    bundle_context_pt context;
+    remote_proxy_factory_pt factory_ptr;
 };
+
+
+static celix_status_t dataStoreProxyFactory_create(void *handle, endpoint_description_pt endpointDescription, remote_service_admin_pt rsa, sendToHandle sendToCallback, properties_pt properties,
+        void **service);
+static celix_status_t dataStoreProxyFactory_destroy(void *handle, void *service);
 
 celix_status_t bundleActivator_create(bundle_context_pt context, void **userData) {
 	celix_status_t status = CELIX_SUCCESS;
@@ -20,7 +30,8 @@ celix_status_t bundleActivator_create(bundle_context_pt context, void **userData
 	if (!activator) {
 		status = CELIX_ENOMEM;
 	} else {
-		activator->proxyFactoryService = NULL;
+        activator->factory_ptr = NULL;
+        activator->context = context;
 
 		*userData = activator;
 	}
@@ -31,21 +42,9 @@ celix_status_t bundleActivator_create(bundle_context_pt context, void **userData
 celix_status_t bundleActivator_start(void * userData, bundle_context_pt context) {
 	celix_status_t status = CELIX_SUCCESS;
 	struct activator *activator = userData;
-	remote_proxy_factory_service_pt dataStoreProxyFactoryService;
 
-	dataStoreProxyFactoryService = calloc(1, sizeof(*dataStoreProxyFactoryService));
-	dataStoreProxyFactoryService->context = context;
-	dataStoreProxyFactoryService->proxy_registrations = hashMap_create(NULL, NULL, NULL, NULL);
-	dataStoreProxyFactoryService->registerProxyService = dataStoreProxy_registerProxyService;
-	dataStoreProxyFactoryService->unregisterProxyService = dataStoreProxy_unregisterProxyService;
-
-	properties_pt props = properties_create();
-	properties_set(props, (char *) "proxy.interface", (char *) INAETICS_DEMONSTRATOR_API__DATA_STORE_SERVICE_NAME);
-
-	if (bundleContext_registerService(context, OSGI_RSA_REMOTE_PROXY_FACTORY, dataStoreProxyFactoryService, props, &activator->proxyFactoryService) == CELIX_SUCCESS)
-	{
-		printf("DATA_STORE_PROXY: Proxy registered OSGI_RSA_REMOTE_PROXY_FACTORY (%s)\n", OSGI_RSA_REMOTE_PROXY_FACTORY);
-	}
+	remoteProxyFactory_create(context, (char *) INAETICS_DEMONSTRATOR_API__DATA_STORE_SERVICE_NAME, activator, dataStoreProxyFactory_create, dataStoreProxyFactory_destroy, &activator->factory_ptr);
+	remoteProxyFactory_register(activator->factory_ptr);
 
 	return status;
 }
@@ -54,15 +53,61 @@ celix_status_t bundleActivator_stop(void * userData, bundle_context_pt context) 
 	celix_status_t status = CELIX_SUCCESS;
 	struct activator *activator = userData;
 
-	// TODO: unregister proxy registrations
-	serviceRegistration_unregister(activator->proxyFactoryService);
-	activator->proxyFactoryService = NULL;
+    remoteProxyFactory_unregister(activator->factory_ptr);
+    remoteProxyFactory_destroy(&activator->factory_ptr);
 
 	return status;
 }
 
 celix_status_t bundleActivator_destroy(void * userData, bundle_context_pt context) {
 	celix_status_t status = CELIX_SUCCESS;
+    struct activator *activator = userData;
+
+    free(activator);
 
 	return status;
+}
+
+
+
+static celix_status_t dataStoreProxyFactory_create(void *handle, endpoint_description_pt endpointDescription, remote_service_admin_pt rsa, sendToHandle sendToCallback, properties_pt properties,
+        void **service) {
+    celix_status_t status = CELIX_SUCCESS;
+    struct activator *activator = handle;
+    struct data_store_service* storeService = NULL;
+
+    storeService = calloc(1, sizeof(*storeService));
+
+    if (storeService) {
+        data_store_type* dataStore;
+        dataStoreProxy_create(activator->context, &dataStore);
+
+        storeService->store = dataStoreProxy_store;
+        storeService->storeAll = dataStoreProxy_storeAll;
+
+        dataStore->endpoint = endpointDescription;
+        dataStore->sendToHandler = rsa;
+        dataStore->sendToCallback = sendToCallback;
+
+        storeService->dataStore = dataStore;
+        *service = storeService;
+    } else {
+        status = CELIX_ENOMEM;
+    }
+    return status;
+}
+
+static celix_status_t dataStoreProxyFactory_destroy(void *handle, void *service) {
+    celix_status_t status = CELIX_SUCCESS;
+    struct data_store_service* storeService = NULL;
+
+    if (!storeService) {
+        status = CELIX_ILLEGAL_ARGUMENT;
+    }
+    else {
+        dataStoreProxy_destroy((data_store_type**) &storeService->dataStore);
+        free(storeService);
+    }
+
+    return status;
 }

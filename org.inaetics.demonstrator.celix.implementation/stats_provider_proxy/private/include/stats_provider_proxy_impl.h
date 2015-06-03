@@ -21,12 +21,12 @@ struct stats_provider {
 	void * sendToHandler;
 };
 
-celix_status_t statsProviderProxy_getName(stats_provider_type* statsProvider, char** name);
-celix_status_t statsProviderProxy_getType(stats_provider_type* statsProvider, char** type);
-celix_status_t statsProviderProxy_getvalue(stats_provider_type* statsProvider, double* statVal);
-celix_status_t statsProviderProxy_getMeasurementUnitUnit(stats_provider_type* statsProvider, char** mUnit);
+celix_status_t statsProviderProxy_create(bundle_context_pt context, stats_provider_type **stat);
+celix_status_t statsProviderProxy_destroy(stats_provider_type **stat);
 
-celix_status_t statsProviderProxy_registerProxyService(void* proxyFactoryService, endpoint_description_pt endpoint, void* handler, sendToHandle callback);
-celix_status_t statsProviderProxy_unregisterProxyService(void* proxyFactoryService, endpoint_description_pt endpoint);
+int statsProviderProxy_getName(void* statsProvider, char** name);
+int statsProviderProxy_getType(void* statsProvider, char** type);
+int statsProviderProxy_getvalue(void* statsProvider, double* statVal);
+int statsProviderProxy_getMeasurementUnitUnit(void* statsProvider, char** mUnit);
 
 #endif /* STATS_PROVIDER_PROXY_IMPL_H_ */

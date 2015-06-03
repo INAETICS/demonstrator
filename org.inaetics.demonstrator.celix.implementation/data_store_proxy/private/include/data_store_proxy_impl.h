@@ -1,3 +1,6 @@
+/**
+ * Licensed under Apache License v2. See LICENSE for more information.
+ */
 
 
 #ifndef DATA_STORE_PROXY_IMPL_H_
@@ -13,6 +16,7 @@
 #include "endpoint_listener.h"
 #include "inaetics_demonstrator_api/data_store.h"
 
+
 typedef struct data_store data_store_type;
 
 struct data_store {
@@ -22,11 +26,10 @@ struct data_store {
 	void * sendToHandler;
 };
 
+celix_status_t dataStoreProxy_create(bundle_context_pt context, data_store_type **data_store);
+celix_status_t dataStoreProxy_destroy( data_store_type **data_store);
 
-celix_status_t dataStoreProxy_store(data_store_type* data_store, struct result workResult, bool *resultStored);
-celix_status_t dataStoreProxy_storeAll(data_store_type *store, struct result *results, uint32_t size, uint32_t *storedResults);
-
-celix_status_t dataStoreProxy_registerProxyService(void* proxyFactoryService, endpoint_description_pt endpoint, void* handler, sendToHandle callback);
-celix_status_t dataStoreProxy_unregisterProxyService(void* proxyFactoryService, endpoint_description_pt endpoint);
+int dataStoreProxy_store(void* store, struct result workResult, bool *resultStored);
+int dataStoreProxy_storeAll(void* store, struct result *results, uint32_t size, uint32_t *storedResults);
 
 #endif /* DATA_STORE_PROXY_IMPL_H_ */

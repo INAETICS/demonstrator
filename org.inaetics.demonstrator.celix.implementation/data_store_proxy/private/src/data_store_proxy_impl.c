@@ -1,3 +1,6 @@
+/**
+ * Licensed under Apache License v2. See LICENSE for more information.
+ */
 #include <jansson.h>
 
 #include <string.h>
@@ -10,9 +13,6 @@
 #include "inaetics_demonstrator_api/data_store.h"
 #include "inaetics_demonstrator_api/sample_queue.h"
 
-celix_status_t dataStoreProxy_setEndpointDescription(void *proxy, endpoint_description_pt endpoint);
-celix_status_t dataStoreProxy_setHandler(void *proxy, void *handler);
-celix_status_t dataStoreProxy_setCallback(void *proxy, sendToHandle callback);
 
 celix_status_t dataStoreProxy_create(bundle_context_pt context, data_store_type **data_store) {
 	celix_status_t status = CELIX_SUCCESS;
@@ -29,12 +29,22 @@ celix_status_t dataStoreProxy_create(bundle_context_pt context, data_store_type 
 	return status;
 }
 
-celix_status_t dataStoreProxy_store(data_store_type* data_store, struct result workResult, bool *resultStored) {
+celix_status_t dataStoreProxy_destroy(data_store_type **data_store)  {
+    celix_status_t status = CELIX_SUCCESS;
+
+    free(*data_store);
+    *data_store = NULL;
+
+    return status;
+}
+
+int dataStoreProxy_store(void* store, struct result workResult, bool *resultStored) {
 
 	celix_status_t status = CELIX_SUCCESS;
 	int result = 0;
+    data_store_type* dataStore = (data_store_type*) store;
 
-	if (data_store->endpoint != NULL) {
+	if (dataStore->endpoint != NULL) {
 
 		json_t* sample = json_pack("{s:I,s:f,s:f}", "sampleTime", workResult.sample.time, "value1", workResult.sample.value1, "value2", workResult.sample.value2);
 		json_t* result = json_pack("[{s:I,s:f,s:O}]", "processingTime", workResult.time, "result1", workResult.value1, "sample", sample);
@@ -44,7 +54,7 @@ celix_status_t dataStoreProxy_store(data_store_type* data_store, struct result w
 		char *reply = NULL;
 		int replyStatus = 0;
 
-		status = data_store->sendToCallback(data_store->sendToHandler, data_store->endpoint, data, &reply, &replyStatus);
+		status = dataStore->sendToCallback(dataStore->sendToHandler, dataStore->endpoint, data, &reply, &replyStatus);
 
 		json_decref(root);
 
@@ -58,12 +68,13 @@ celix_status_t dataStoreProxy_store(data_store_type* data_store, struct result w
 	return (status == CELIX_SUCCESS) ? result : (int) status;
 }
 
-celix_status_t dataStoreProxy_storeAll(data_store_type *store, struct result *results, uint32_t size, uint32_t *storedResults)
+int dataStoreProxy_storeAll(void* store, struct result *results, uint32_t size, uint32_t *storedResults)
 {
 	celix_status_t status = CELIX_SUCCESS;
 	int result = 0;
+	data_store_type* dataStore = (data_store_type*) store;
 
-	if (store->endpoint != NULL) {
+	if (dataStore->endpoint != NULL) {
 		uint32_t arrayCnt = 0;
 		json_t *root;
 		json_t *array = json_array();
@@ -80,7 +91,7 @@ celix_status_t dataStoreProxy_storeAll(data_store_type *store, struct result *re
 		char *reply = NULL;
 		int replyStatus = 0;
 
-		status = store->sendToCallback(store->sendToHandler, store->endpoint, data, &reply, &replyStatus);
+		status = dataStore->sendToCallback(dataStore->sendToHandler, dataStore->endpoint, data, &reply, &replyStatus);
 
 		if (status == CELIX_SUCCESS && replyStatus == 0) {
 			json_error_t error;
@@ -109,78 +120,3 @@ celix_status_t dataStoreProxy_storeAll(data_store_type *store, struct result *re
 
 	return (status == CELIX_SUCCESS) ? result : (int) status;
 }
-
-celix_status_t dataStoreProxy_registerProxyService(void* proxyFactoryService, endpoint_description_pt endpointDescription, void* rsa, sendToHandle sendToCallback) {
-	celix_status_t status = CELIX_SUCCESS;
-
-	remote_proxy_factory_service_pt queueProxyFactoryService = (remote_proxy_factory_service_pt) proxyFactoryService;
-	data_store_type* store = NULL;
-	struct data_store_service* storeService = NULL;
-
-	dataStoreProxy_create(queueProxyFactoryService->context, &store);
-	storeService = calloc(1, sizeof(*storeService));
-	storeService->dataStore = store;
-	storeService->store = (void *)dataStoreProxy_store;
-	storeService->storeAll = (void *)dataStoreProxy_storeAll;
-
-	properties_pt srvcProps = properties_create();
-	properties_set(srvcProps, (char *) "proxy.interface", (char *) INAETICS_DEMONSTRATOR_API__DATA_STORE_SERVICE_NAME);
-	properties_set(srvcProps, (char *) "endpoint.framework.uuid", (char *) endpointDescription->frameworkUUID);
-
-	service_registration_pt proxyReg = NULL;
-
-	dataStoreProxy_setEndpointDescription(store, endpointDescription);
-	dataStoreProxy_setHandler(store, rsa);
-	dataStoreProxy_setCallback(store, sendToCallback);
-
-	if (bundleContext_registerService(queueProxyFactoryService->context, INAETICS_DEMONSTRATOR_API__DATA_STORE_SERVICE_NAME, storeService, srvcProps, &proxyReg) != CELIX_SUCCESS)
-	{
-		printf("DATA_STORE_PROXY: error while registering queue service\n");
-	}
-
-	hashMap_put(queueProxyFactoryService->proxy_registrations, endpointDescription, proxyReg);
-
-	return status;
-}
-
-celix_status_t dataStoreProxy_unregisterProxyService(void* proxyFactoryService, endpoint_description_pt endpointDescription) {
-	celix_status_t status = CELIX_SUCCESS;
-
-	remote_proxy_factory_service_pt queueProxyFactoryService = (remote_proxy_factory_service_pt) proxyFactoryService;
-	service_registration_pt proxyReg = hashMap_get(queueProxyFactoryService->proxy_registrations, endpointDescription);
-
-	if (proxyReg != NULL)
-	{
-		serviceRegistration_unregister(proxyReg);
-	}
-
-	return status;
-}
-
-celix_status_t dataStoreProxy_setEndpointDescription(void *proxy, endpoint_description_pt endpoint) {
-	celix_status_t status = CELIX_SUCCESS;
-
-	data_store_type * store = proxy;
-	store->endpoint = endpoint;
-
-	return status;
-}
-
-celix_status_t dataStoreProxy_setHandler(void *proxy, void *handler) {
-	celix_status_t status = CELIX_SUCCESS;
-
-	data_store_type * store = proxy;
-	store->sendToHandler = handler;
-
-	return status;
-}
-
-celix_status_t dataStoreProxy_setCallback(void *proxy, sendToHandle callback) {
-	celix_status_t status = CELIX_SUCCESS;
-
-	data_store_type * store = proxy;
-	store->sendToCallback = callback;
-
-	return status;
-}
-
