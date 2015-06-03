@@ -1,4 +1,4 @@
-set(BUNDLE_SYMBOLICNAME "com.inaetics_demonstrator.processor")
+set(BUNDLE_SYMBOLICNAME "org.inaetics.demonstrator.processor")
 set(BUNDLE_VERSION "1.0.0")
 set(BUNDLE_NAME "processor")
 
