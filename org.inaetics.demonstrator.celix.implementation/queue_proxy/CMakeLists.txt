@@ -15,7 +15,9 @@ set(BUNDLE_NAME "org.inaetics.demonstrator.api.queue.SampleQueue_proxy")
 bundle(org.inaetics.demonstrator.api.queue.SampleQueue_proxy SOURCES 
 	private/src/queue_proxy_activator
 	private/src/queue_proxy_impl.c
-    
+	
+	${CELIX_DIR}/share/celix/remote_service_admin/remote_proxy_factory_impl.c
+
     private/include/queue_proxy_impl.h
 )
 
