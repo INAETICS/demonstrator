@@ -19,7 +19,7 @@
 #define MIN_BURST_LEN 			2
 #define MAX_BURST_LEN 			200
 
-#define VERBOSE					1
+#define VERBOSE					2
 #define WAIT_TIME_USECONDS      500000
 
 #define THROUGHPUT_NAME_POSTFIX 		" Statistics"

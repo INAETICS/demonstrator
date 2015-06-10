@@ -56,6 +56,8 @@ int dataStoreProxy_store(void* store, struct result workResult, bool *resultStor
 
 		status = dataStore->sendToCallback(dataStore->sendToHandler, dataStore->endpoint, data, &reply, &replyStatus);
 
+		*resultStored  = (status == CELIX_SUCCESS) ? true : false;
+
 		json_decref(root);
 
 		free(data);
