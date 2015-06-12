@@ -8,5 +8,18 @@ import aQute.bnd.annotation.ConsumerType;
 @ConsumerType
 public interface Producer {
 
-	// XXX
+    /**
+     * @return the maximum sample rate allowed, in samples/sec, &gt; 0.
+     */
+    int getMaxSampleRate();
+
+    /**
+     * @return the actual sample rate, in samples/sec, &gt; 0.
+     */
+    int getSampleRate();
+
+    /**
+     * @param rate the new sample rate, in samples/sec, &gt; 0.
+     */
+    void setSampleRate(int rate);
 }

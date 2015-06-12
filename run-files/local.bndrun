@@ -5,8 +5,8 @@
 
 -runbundles: \
 	osgi.cmpn;version=4.2,\
-	org.apache.felix.dependencymanager,\
-	org.apache.felix.dependencymanager.shell,\
+	org.apache.felix.dependencymanager;version='[3,4)',\
+	org.apache.felix.dependencymanager.shell;version='[3,4)',\
 	org.apache.felix.gogo.runtime,\
 	org.apache.felix.gogo.shell,\
 	org.apache.felix.gogo.command,\
@@ -17,8 +17,7 @@
 	org.apache.felix.configadmin,\
 	org.apache.felix.metatype,\
 	org.apache.felix.log,\
-	org.apache.felix.webconsole,\
-	org.amdatu.web.resourcehandler,\
+	org.amdatu.web.resourcehandler;version='[1.0,1.0.8)',\
 	com.fasterxml.jackson.core.jackson-annotations;version='[2.3,2.4)',\
 	com.fasterxml.jackson.core.jackson-core;version='[2.3,2.4)',\
 	com.fasterxml.jackson.core.jackson-databind;version='[2.3,2.4)',\
@@ -30,6 +29,6 @@
 	org.inaetics.demonstrator.api.stats;version=latest,\
 	org.inaetics.demonstrator.java_impl.datastore;version=latest,\
 	org.inaetics.demonstrator.java_impl.processor;version=latest,\
-	org.inaetics.demonstrator.java_impl.producer.burst;version=latest,\
+	org.inaetics.demonstrator.java_impl.producer.periodic;version=latest,\
 	org.inaetics.demonstrator.java_impl.queue;version=latest,\
 	org.inaetics.demonstrator.java_impl.view;version=latest

@@ -21,7 +21,7 @@ public class BurstSampleProducer extends AbstractSampleProducer {
     private volatile SampleQueue m_queue;
 
     public BurstSampleProducer() {
-        super("Burst Sample Producer", 500 /* msec */);
+        super("Burst Sample Producer", 500 /* msec */, 250 /* msec */);
         m_produced = new AtomicLong(0L);
     }
 
@@ -31,7 +31,7 @@ public class BurstSampleProducer extends AbstractSampleProducer {
     }
 
     @Override
-    protected void produceSamples() {
+    protected void produceSampleData() {
         for (int i = 0; !Thread.currentThread().isInterrupted() && i < BURST_LENGTH; i++) {
             // Sleep a little to simulate production time...
             msleep(1);

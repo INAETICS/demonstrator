@@ -5,9 +5,9 @@ package org.inaetics.demonstrator.stub.producer;
 
 import java.util.Dictionary;
 import java.util.Random;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.felix.dm.Component;
@@ -24,21 +24,36 @@ import org.osgi.service.log.LogService;
 public abstract class AbstractSampleProducer implements Producer, StatsProvider, ManagedService {
     private final Random m_rnd;
     private final String m_name;
-    private final long m_taskInterval;
+    private final int m_minTaskInterval;
 
-    private ScheduledExecutorService m_executor;
-    private ScheduledFuture<?> m_generatorFuture;
-    private ScheduledFuture<?> m_samplerFuture;
+    private ExecutorService m_executor;
+    private Future<?> m_generatorFuture;
+    private Future<?> m_samplerFuture;
 
-    private volatile double m_producedAvg = 0;
+    private volatile double m_producedAvg;
+    private volatile int m_taskInterval;
+
     // Injected by Felix DM...
     private volatile Component m_component;
     private volatile LogService m_log;
 
-    protected AbstractSampleProducer(String name, long taskInterval) {
-        m_rnd = new Random();
+    /**
+     * @param name the name of this producer;
+     * @param taskInterval the initial interval (in milliseconds) to wait between two produced samples;
+     * @param minTaskInterval the minimal interval (in milliseconds) to wait between two produced samples.
+     */
+    protected AbstractSampleProducer(String name, int taskInterval, int minTaskInterval) {
         m_name = name;
         m_taskInterval = taskInterval;
+        m_minTaskInterval = minTaskInterval;
+
+        m_rnd = new Random();
+        m_producedAvg = 0;
+    }
+
+    @Override
+    public final int getMaxSampleRate() {
+        return (1000 / m_minTaskInterval);
     }
 
     @Override
@@ -53,6 +68,11 @@ public abstract class AbstractSampleProducer implements Producer, StatsProvider,
     }
 
     @Override
+    public int getSampleRate() {
+        return 1000 / m_taskInterval;
+    }
+
+    @Override
     public String getType() {
         return "throughput";
     }
@@ -63,8 +83,20 @@ public abstract class AbstractSampleProducer implements Producer, StatsProvider,
     }
 
     @Override
+    public void setSampleRate(int rate) {
+        if (rate < m_minTaskInterval) {
+            throw new IllegalArgumentException("Invalid sample rate!");
+        }
+        m_taskInterval = 1000 / rate;
+    }
+
+    @Override
     public void updated(Dictionary<String, ?> properties) throws ConfigurationException {
         // Nothing yet...
+    }
+
+    final int getTaskInterval() {
+        return m_taskInterval;
     }
 
     /**
@@ -88,7 +120,7 @@ public abstract class AbstractSampleProducer implements Producer, StatsProvider,
     /**
      * Implement this to produce the actual sample(s).s
      */
-    protected abstract void produceSamples();
+    protected abstract void produceSampleData();
 
     protected final double randomSampleValue() {
         return (m_rnd.nextDouble() * 200.0) - 100.0;
@@ -98,34 +130,48 @@ public abstract class AbstractSampleProducer implements Producer, StatsProvider,
      * Called by Felix DM when starting this component.
      */
     protected final void start() throws Exception {
-        m_executor = Executors.newScheduledThreadPool(2);
+        m_executor = Executors.newFixedThreadPool(2);
 
-        m_generatorFuture = m_executor.scheduleAtFixedRate(new Runnable() {
+        m_generatorFuture = m_executor.submit(new Runnable() {
             @Override
             public void run() {
-                try {
-                    produceSamples();
-                } catch (Exception e) {
-                    // Ignore, not much we can do about this...
-                    info("Failed to produce sample(s)! Cause: %s",
-                        (e.getMessage() == null ? "NullPointerException" : e.getMessage()));
-                    m_log.log(LogService.LOG_DEBUG, "Failed to produce sample(s)!", e);
+                while (!Thread.currentThread().isInterrupted()) {
+                    try {
+                        produceSampleData();
+
+                        TimeUnit.MILLISECONDS.sleep(getTaskInterval());
+                    } catch (InterruptedException e) {
+                        // Break out of our loop...
+                        Thread.currentThread().interrupt();
+                    } catch (Exception e) {
+                        // Ignore, not much we can do about this...
+                        info("Failed to produce sample(s)! Cause: %s", (e.getMessage() == null ? "NullPointerException"
+                            : e.getMessage()));
+                        m_log.log(LogService.LOG_DEBUG, "Failed to produce sample(s)!", e);
+                    }
                 }
             }
-        }, 250, m_taskInterval, TimeUnit.MILLISECONDS);
+        });
 
-        m_samplerFuture = m_executor.scheduleAtFixedRate(new Runnable() {
-            private final long m_startTime = System.currentTimeMillis();
-
+        m_samplerFuture = m_executor.submit(new Runnable() {
             @Override
             public void run() {
-                try {
-                    m_producedAvg = calculateThroughput(System.currentTimeMillis() - m_startTime);
-                } catch (Exception e) {
-                    m_log.log(LogService.LOG_DEBUG, "Failed to calculate average throughput!", e);
+                long startTime = System.currentTimeMillis();
+
+                while (!Thread.currentThread().isInterrupted()) {
+                    try {
+                        TimeUnit.SECONDS.sleep(1);
+
+                        m_producedAvg = calculateThroughput(System.currentTimeMillis() - startTime);
+                    } catch (InterruptedException e) {
+                        // Break out of our loop...
+                        Thread.currentThread().interrupt();
+                    } catch (Exception e) {
+                        m_log.log(LogService.LOG_DEBUG, "Failed to calculate average throughput!", e);
+                    }
                 }
             }
-        }, 0, 1, TimeUnit.SECONDS);
+        });
     }
 
     /**

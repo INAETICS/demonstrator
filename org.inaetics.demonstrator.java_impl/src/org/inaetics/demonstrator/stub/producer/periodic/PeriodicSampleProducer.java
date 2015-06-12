@@ -19,7 +19,7 @@ public class PeriodicSampleProducer extends AbstractSampleProducer {
     private volatile SampleQueue m_queue;
 
     public PeriodicSampleProducer() {
-        super("Periodic Sample Producer", 10 /* msec */);
+        super("Periodic Sample Producer", 10 /* msec */, 1 /* msec */);
         m_produced = new AtomicLong(0L);
     }
 
@@ -29,7 +29,7 @@ public class PeriodicSampleProducer extends AbstractSampleProducer {
     }
 
     @Override
-    protected void produceSamples() {
+    protected void produceSampleData() {
         double val1 = randomSampleValue();
         double val2 = randomSampleValue();
         Sample sample = new Sample(System.currentTimeMillis(), val1, val2);
