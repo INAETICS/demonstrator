@@ -1,44 +1,63 @@
 <?xml version='1.0' encoding='utf-8'?>
-<repository increment='1417101253771' name='Local' xmlns='http://www.osgi.org/xmlns/repository/v1.0.0'>
+<repository increment='1434115995110' name='Local' xmlns='http://www.osgi.org/xmlns/repository/v1.0.0'>
   <resource>
     <capability namespace='osgi.identity'>
-      <attribute name='osgi.identity' value='org.amdatu.remote.discovery.etcd'/>
+      <attribute name='osgi.identity' value='org.inaetics.wiring.endpoint'/>
       <attribute name='type' value='osgi.bundle'/>
-      <attribute name='version' type='Version' value='0.1.1'/>
+      <attribute name='version' type='Version' value='0.1.0'/>
     </capability>
     <capability namespace='osgi.content'>
-      <attribute name='osgi.content' value='0dd3b2e3fb1bfd304d433004e298f1d7a486db593a78d71a91e17bf6b00e4862'/>
-      <attribute name='url' value='org.amdatu.remote.discovery.etcd/org.amdatu.remote.discovery.etcd-0.1.1.jar'/>
-      <attribute name='size' type='Long' value='2547207'/>
+      <attribute name='osgi.content' value='1e7aaeaf9e4465b43c35d6e141f1fbc0dcdeaf613cfdbbd1f970fa0125be097c'/>
+      <attribute name='url' value='org.inaetics.wiring.endpoint/org.inaetics.wiring.endpoint-0.1.0.jar'/>
+      <attribute name='size' type='Long' value='5126'/>
       <attribute name='mime' value='application/vnd.osgi.bundle'/>
     </capability>
     <capability namespace='osgi.wiring.bundle'>
-      <attribute name='osgi.wiring.bundle' value='org.amdatu.remote.discovery.etcd'/>
-      <attribute name='bundle-version' type='Version' value='0.1.1'/>
+      <attribute name='osgi.wiring.bundle' value='org.inaetics.wiring.endpoint'/>
+      <attribute name='bundle-version' type='Version' value='0.1.0'/>
     </capability>
     <capability namespace='osgi.wiring.host'>
-      <attribute name='osgi.wiring.host' value='org.amdatu.remote.discovery.etcd'/>
-      <attribute name='bundle-version' type='Version' value='0.1.1'/>
+      <attribute name='osgi.wiring.host' value='org.inaetics.wiring.endpoint'/>
+      <attribute name='bundle-version' type='Version' value='0.1.0'/>
     </capability>
-    <capability namespace='osgi.remoteserviceadmin.discovery'>
-      <attribute name='protocols' type='List&lt;String&gt;' value='etcd'/>
-      <attribute name='version' type='Version' value='1.1.0'/>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.inaetics.wiring.endpoint'/>
+      <attribute name='version' type='Version' value='0.1.0'/>
+      <attribute name='bundle-symbolic-name' value='org.inaetics.wiring.endpoint'/>
+      <attribute name='bundle-version' type='Version' value='0.1.0'/>
     </capability>
-    <requirement namespace='osgi.wiring.package'>
-      <directive name='filter' value='(osgi.wiring.package=javax.crypto)'/>
+    <requirement namespace='osgi.ee'>
+      <directive name='filter' value='(&amp;(osgi.ee=JavaSE)(version=1.7))'/>
     </requirement>
-    <requirement namespace='osgi.wiring.package'>
-      <directive name='filter' value='(osgi.wiring.package=javax.crypto.spec)'/>
-    </requirement>
-    <requirement namespace='osgi.wiring.package'>
-      <directive name='filter' value='(osgi.wiring.package=javax.net.ssl)'/>
-    </requirement>
-    <requirement namespace='osgi.wiring.package'>
-      <directive name='filter' value='(osgi.wiring.package=javax.security.auth.x500)'/>
-    </requirement>
-    <requirement namespace='osgi.wiring.package'>
-      <directive name='filter' value='(osgi.wiring.package=javax.security.cert)'/>
-    </requirement>
+  </resource>
+  <resource>
+    <capability namespace='osgi.identity'>
+      <attribute name='osgi.identity' value='org.inaetics.remote.admin.wiring'/>
+      <attribute name='type' value='osgi.bundle'/>
+      <attribute name='version' type='Version' value='0.1.0'/>
+    </capability>
+    <capability namespace='osgi.content'>
+      <attribute name='osgi.content' value='d8a02c673913783cad779a303b66266283c66ac8245b92441d15e194d3a650b1'/>
+      <attribute name='url' value='org.inaetics.remote.admin.wiring/org.inaetics.remote.admin.wiring-0.1.0.jar'/>
+      <attribute name='size' type='Long' value='1457173'/>
+      <attribute name='mime' value='application/vnd.osgi.bundle'/>
+    </capability>
+    <capability namespace='osgi.wiring.bundle'>
+      <attribute name='osgi.wiring.bundle' value='org.inaetics.remote.admin.wiring'/>
+      <attribute name='bundle-version' type='Version' value='0.1.0'/>
+    </capability>
+    <capability namespace='osgi.wiring.host'>
+      <attribute name='osgi.wiring.host' value='org.inaetics.remote.admin.wiring'/>
+      <attribute name='bundle-version' type='Version' value='0.1.0'/>
+    </capability>
+    <capability namespace='osgi.service'>
+      <attribute name='objectClass' type='List&lt;String&gt;' value='org.osgi.service.remoteserviceadmin.RemoteServiceAdmin'/>
+      <directive name='uses' value='org.osgi.service.remoteserviceadmin'/>
+    </capability>
+    <capability namespace='osgi.remoteserviceadmin.distribution'>
+      <attribute name='configs' type='List&lt;String&gt;' value='org.inaetics.remote.admin.wiring'/>
+      <attribute name='version' type='Version' value='1.0.0'/>
+    </capability>
     <requirement namespace='osgi.wiring.package'>
       <directive name='filter' value='(&amp;(osgi.wiring.package=javax.servlet)(version&gt;=2.5.0)(!(version&gt;=3.0.0)))'/>
     </requirement>
@@ -46,7 +65,10 @@
       <directive name='filter' value='(&amp;(osgi.wiring.package=javax.servlet.http)(version&gt;=2.5.0)(!(version&gt;=3.0.0)))'/>
     </requirement>
     <requirement namespace='osgi.wiring.package'>
-      <directive name='filter' value='(osgi.wiring.package=javax.xml.bind)'/>
+      <directive name='filter' value='(osgi.wiring.package=javax.xml.datatype)'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(osgi.wiring.package=javax.xml.namespace)'/>
     </requirement>
     <requirement namespace='osgi.wiring.package'>
       <directive name='filter' value='(osgi.wiring.package=javax.xml.parsers)'/>
@@ -55,28 +77,37 @@
       <directive name='filter' value='(&amp;(osgi.wiring.package=org.apache.felix.dm)(version&gt;=3.0.0)(!(version&gt;=4.0.0)))'/>
     </requirement>
     <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(&amp;(osgi.wiring.package=org.inaetics.wiring.endpoint)(version&gt;=0.1.0)(!(version&gt;=1.0.0)))'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
       <directive name='filter' value='(&amp;(osgi.wiring.package=org.osgi.framework)(version&gt;=1.7.0)(!(version&gt;=2.0.0)))'/>
     </requirement>
     <requirement namespace='osgi.wiring.package'>
       <directive name='filter' value='(&amp;(osgi.wiring.package=org.osgi.service.cm)(version&gt;=1.5.0)(!(version&gt;=2.0.0)))'/>
     </requirement>
     <requirement namespace='osgi.wiring.package'>
-      <directive name='filter' value='(&amp;(osgi.wiring.package=org.osgi.service.http)(version&gt;=1.2.0)(!(version&gt;=2.0.0)))'/>
+      <directive name='filter' value='(&amp;(osgi.wiring.package=org.osgi.service.event)(version&gt;=1.3.0)(!(version&gt;=2.0.0)))'/>
     </requirement>
     <requirement namespace='osgi.wiring.package'>
       <directive name='filter' value='(&amp;(osgi.wiring.package=org.osgi.service.log)(version&gt;=1.3.0)(!(version&gt;=2.0.0)))'/>
     </requirement>
     <requirement namespace='osgi.wiring.package'>
-      <directive name='filter' value='(&amp;(osgi.wiring.package=org.osgi.service.remoteserviceadmin)(version&gt;=1.1.0)(!(version&gt;=2.0.0)))'/>
+      <directive name='filter' value='(&amp;(osgi.wiring.package=org.osgi.service.remoteserviceadmin)(version&gt;=1.1.0)(!(version&gt;=1.2.0)))'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(osgi.wiring.package=org.w3c.dom)'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(osgi.wiring.package=org.w3c.dom.bootstrap)'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(osgi.wiring.package=org.w3c.dom.ls)'/>
     </requirement>
     <requirement namespace='osgi.wiring.package'>
       <directive name='filter' value='(osgi.wiring.package=org.xml.sax)'/>
     </requirement>
     <requirement namespace='osgi.wiring.package'>
       <directive name='filter' value='(osgi.wiring.package=org.xml.sax.helpers)'/>
-    </requirement>
-    <requirement namespace='osgi.wiring.package'>
-      <directive name='filter' value='(osgi.wiring.package=sun.misc)'/>
     </requirement>
     <requirement namespace='osgi.ee'>
       <directive name='filter' value='(&amp;(osgi.ee=JavaSE)(version=1.7))'/>
@@ -84,45 +115,41 @@
   </resource>
   <resource>
     <capability namespace='osgi.identity'>
-      <attribute name='osgi.identity' value='org.amdatu.remote.discovery.configured'/>
+      <attribute name='osgi.identity' value='org.apache.felix.http.whiteboard'/>
       <attribute name='type' value='osgi.bundle'/>
-      <attribute name='version' type='Version' value='0.1.2'/>
+      <attribute name='version' type='Version' value='2.3.2'/>
     </capability>
     <capability namespace='osgi.content'>
-      <attribute name='osgi.content' value='3f9c79af6eb74aefc4ae1322d752b4b0f815b00679cb76aa84776b91c9381973'/>
-      <attribute name='url' value='org.amdatu.remote.discovery.configured/org.amdatu.remote.discovery.configured-0.1.2.jar'/>
-      <attribute name='size' type='Long' value='419518'/>
+      <attribute name='osgi.content' value='4ed88e1f8fdcae6e9822428a3deda487889744ac38dbb5b5ef0fba2415a56962'/>
+      <attribute name='url' value='org.apache.felix.http.whiteboard/org.apache.felix.http.whiteboard-2.3.2.jar'/>
+      <attribute name='size' type='Long' value='39981'/>
       <attribute name='mime' value='application/vnd.osgi.bundle'/>
     </capability>
     <capability namespace='osgi.wiring.bundle'>
-      <attribute name='osgi.wiring.bundle' value='org.amdatu.remote.discovery.configured'/>
-      <attribute name='bundle-version' type='Version' value='0.1.2'/>
+      <attribute name='osgi.wiring.bundle' value='org.apache.felix.http.whiteboard'/>
+      <attribute name='bundle-version' type='Version' value='2.3.2'/>
     </capability>
     <capability namespace='osgi.wiring.host'>
-      <attribute name='osgi.wiring.host' value='org.amdatu.remote.discovery.configured'/>
-      <attribute name='bundle-version' type='Version' value='0.1.2'/>
+      <attribute name='osgi.wiring.host' value='org.apache.felix.http.whiteboard'/>
+      <attribute name='bundle-version' type='Version' value='2.3.2'/>
     </capability>
-    <capability namespace='osgi.remoteserviceadmin.discovery'>
-      <attribute name='protocols' type='List&lt;String&gt;' value='configured'/>
-      <attribute name='version' type='Version' value='1.1.0'/>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.felix.http.whiteboard'/>
+      <attribute name='version' type='Version' value='1.0.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.felix.http.whiteboard'/>
+      <attribute name='bundle-version' type='Version' value='2.3.2'/>
     </capability>
     <requirement namespace='osgi.wiring.package'>
-      <directive name='filter' value='(&amp;(osgi.wiring.package=javax.servlet)(version&gt;=2.5.0)(!(version&gt;=3.0.0)))'/>
+      <directive name='filter' value='(&amp;(osgi.wiring.package=javax.servlet)(version&gt;=3.0.0)(!(version&gt;=4.0.0)))'/>
     </requirement>
     <requirement namespace='osgi.wiring.package'>
-      <directive name='filter' value='(&amp;(osgi.wiring.package=javax.servlet.http)(version&gt;=2.5.0)(!(version&gt;=3.0.0)))'/>
+      <directive name='filter' value='(&amp;(osgi.wiring.package=javax.servlet.http)(version&gt;=3.0.0)(!(version&gt;=4.0.0)))'/>
     </requirement>
     <requirement namespace='osgi.wiring.package'>
-      <directive name='filter' value='(osgi.wiring.package=javax.xml.parsers)'/>
+      <directive name='filter' value='(&amp;(osgi.wiring.package=org.apache.felix.http.api)(version&gt;=2.0.0)(!(version&gt;=3.0.0)))'/>
     </requirement>
     <requirement namespace='osgi.wiring.package'>
-      <directive name='filter' value='(&amp;(osgi.wiring.package=org.apache.felix.dm)(version&gt;=3.0.0)(!(version&gt;=4.0.0)))'/>
-    </requirement>
-    <requirement namespace='osgi.wiring.package'>
-      <directive name='filter' value='(&amp;(osgi.wiring.package=org.osgi.framework)(version&gt;=1.7.0)(!(version&gt;=2.0.0)))'/>
-    </requirement>
-    <requirement namespace='osgi.wiring.package'>
-      <directive name='filter' value='(&amp;(osgi.wiring.package=org.osgi.service.cm)(version&gt;=1.5.0)(!(version&gt;=2.0.0)))'/>
+      <directive name='filter' value='(&amp;(osgi.wiring.package=org.osgi.framework)(version&gt;=1.5.0)(!(version&gt;=2.0.0)))'/>
     </requirement>
     <requirement namespace='osgi.wiring.package'>
       <directive name='filter' value='(&amp;(osgi.wiring.package=org.osgi.service.http)(version&gt;=1.2.0)(!(version&gt;=2.0.0)))'/>
@@ -131,16 +158,117 @@
       <directive name='filter' value='(&amp;(osgi.wiring.package=org.osgi.service.log)(version&gt;=1.3.0)(!(version&gt;=2.0.0)))'/>
     </requirement>
     <requirement namespace='osgi.wiring.package'>
-      <directive name='filter' value='(&amp;(osgi.wiring.package=org.osgi.service.remoteserviceadmin)(version&gt;=1.1.0)(!(version&gt;=2.0.0)))'/>
+      <directive name='filter' value='(&amp;(osgi.wiring.package=org.osgi.util.tracker)(version&gt;=1.4.0)(!(version&gt;=2.0.0)))'/>
+    </requirement>
+  </resource>
+  <resource>
+    <capability namespace='osgi.identity'>
+      <attribute name='osgi.identity' value='org.inaetics.wiring.base'/>
+      <attribute name='type' value='osgi.bundle'/>
+      <attribute name='version' type='Version' value='0.1.0'/>
+    </capability>
+    <capability namespace='osgi.content'>
+      <attribute name='osgi.content' value='91a4aa98b6b1b950e781d30bfc3c3de81180551180991139e7188869ee37e688'/>
+      <attribute name='url' value='org.inaetics.wiring.base/org.inaetics.wiring.base-0.1.0.jar'/>
+      <attribute name='size' type='Long' value='14606'/>
+      <attribute name='mime' value='application/vnd.osgi.bundle'/>
+    </capability>
+    <capability namespace='osgi.wiring.bundle'>
+      <attribute name='osgi.wiring.bundle' value='org.inaetics.wiring.base'/>
+      <attribute name='bundle-version' type='Version' value='0.1.0'/>
+    </capability>
+    <capability namespace='osgi.wiring.host'>
+      <attribute name='osgi.wiring.host' value='org.inaetics.wiring.base'/>
+      <attribute name='bundle-version' type='Version' value='0.1.0'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.inaetics.wiring'/>
+      <attribute name='version' type='Version' value='0.1.0'/>
+      <attribute name='bundle-symbolic-name' value='org.inaetics.wiring.base'/>
+      <attribute name='bundle-version' type='Version' value='0.1.0'/>
+      <directive name='uses' value='org.inaetics.wiring.endpoint,org.osgi.framework'/>
+    </capability>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(osgi.wiring.package=org.inaetics.wiring.endpoint)'/>
     </requirement>
     <requirement namespace='osgi.wiring.package'>
-      <directive name='filter' value='(osgi.wiring.package=org.xml.sax)'/>
-    </requirement>
-    <requirement namespace='osgi.wiring.package'>
-      <directive name='filter' value='(osgi.wiring.package=org.xml.sax.helpers)'/>
+      <directive name='filter' value='(&amp;(osgi.wiring.package=org.osgi.framework)(version&gt;=1.7.0)(!(version&gt;=2.0.0)))'/>
     </requirement>
     <requirement namespace='osgi.ee'>
       <directive name='filter' value='(&amp;(osgi.ee=JavaSE)(version=1.7))'/>
+    </requirement>
+  </resource>
+  <resource>
+    <capability namespace='osgi.identity'>
+      <attribute name='osgi.identity' value='org.inaetics.wiring.topology.promiscuous'/>
+      <attribute name='type' value='osgi.bundle'/>
+      <attribute name='version' type='Version' value='0.1.0'/>
+    </capability>
+    <capability namespace='osgi.content'>
+      <attribute name='osgi.content' value='f8eed49ba5d94244db7c3117feb9e835f83eaf28305f95f55d56834024109234'/>
+      <attribute name='url' value='org.inaetics.wiring.topology.promiscuous/org.inaetics.wiring.topology.promiscuous-0.1.0.jar'/>
+      <attribute name='size' type='Long' value='53016'/>
+      <attribute name='mime' value='application/vnd.osgi.bundle'/>
+    </capability>
+    <capability namespace='osgi.wiring.bundle'>
+      <attribute name='osgi.wiring.bundle' value='org.inaetics.wiring.topology.promiscuous'/>
+      <attribute name='bundle-version' type='Version' value='0.1.0'/>
+    </capability>
+    <capability namespace='osgi.wiring.host'>
+      <attribute name='osgi.wiring.host' value='org.inaetics.wiring.topology.promiscuous'/>
+      <attribute name='bundle-version' type='Version' value='0.1.0'/>
+    </capability>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(&amp;(osgi.wiring.package=org.apache.felix.dm)(version&gt;=3.0.0)(!(version&gt;=4.0.0)))'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(osgi.wiring.package=org.inaetics.wiring)'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(osgi.wiring.package=org.inaetics.wiring.endpoint)'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(&amp;(osgi.wiring.package=org.osgi.framework)(version&gt;=1.7.0)(!(version&gt;=2.0.0)))'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(&amp;(osgi.wiring.package=org.osgi.service.cm)(version&gt;=1.5.0)(!(version&gt;=2.0.0)))'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(&amp;(osgi.wiring.package=org.osgi.service.log)(version&gt;=1.3.0)(!(version&gt;=2.0.0)))'/>
+    </requirement>
+    <requirement namespace='osgi.ee'>
+      <directive name='filter' value='(&amp;(osgi.ee=JavaSE)(version=1.7))'/>
+    </requirement>
+  </resource>
+  <resource>
+    <capability namespace='osgi.identity'>
+      <attribute name='osgi.identity' value='org.apache.felix.dependencymanager.shell'/>
+      <attribute name='type' value='osgi.bundle'/>
+      <attribute name='version' type='Version' value='3.2.0'/>
+    </capability>
+    <capability namespace='osgi.content'>
+      <attribute name='osgi.content' value='8abdc97de5abe96aac15c2090d5544ddf7ccc06440d7a20f2daccee2efbf340d'/>
+      <attribute name='url' value='org.apache.felix.dependencymanager.shell/org.apache.felix.dependencymanager.shell-3.2.0.jar'/>
+      <attribute name='size' type='Long' value='21257'/>
+      <attribute name='mime' value='application/vnd.osgi.bundle'/>
+    </capability>
+    <capability namespace='osgi.wiring.bundle'>
+      <attribute name='osgi.wiring.bundle' value='org.apache.felix.dependencymanager.shell'/>
+      <attribute name='bundle-version' type='Version' value='3.2.0'/>
+    </capability>
+    <capability namespace='osgi.wiring.host'>
+      <attribute name='osgi.wiring.host' value='org.apache.felix.dependencymanager.shell'/>
+      <attribute name='bundle-version' type='Version' value='3.2.0'/>
+    </capability>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(&amp;(osgi.wiring.package=org.apache.felix.dm)(version&gt;=3.1.0)(!(version&gt;=4.0.0)))'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <attribute name='status' value='provisional'/>
+      <directive name='filter' value='(&amp;(osgi.wiring.package=org.apache.felix.service.command)(version&gt;=0.10.0)(!(version&gt;=1.0.0)))'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(&amp;(osgi.wiring.package=org.osgi.framework)(version&gt;=1.5.0)(!(version&gt;=2.0.0)))'/>
     </requirement>
   </resource>
   <resource>
@@ -217,146 +345,6 @@
   </resource>
   <resource>
     <capability namespace='osgi.identity'>
-      <attribute name='osgi.identity' value='org.amdatu.remote.discovery.bonjour'/>
-      <attribute name='type' value='osgi.bundle'/>
-      <attribute name='version' type='Version' value='0.1.2'/>
-    </capability>
-    <capability namespace='osgi.content'>
-      <attribute name='osgi.content' value='cca7d2268d093419f214c6875f9afd2ecf425fb570cea46613895ffba2fe47fc'/>
-      <attribute name='url' value='org.amdatu.remote.discovery.bonjour/org.amdatu.remote.discovery.bonjour-0.1.2.jar'/>
-      <attribute name='size' type='Long' value='630016'/>
-      <attribute name='mime' value='application/vnd.osgi.bundle'/>
-    </capability>
-    <capability namespace='osgi.wiring.bundle'>
-      <attribute name='osgi.wiring.bundle' value='org.amdatu.remote.discovery.bonjour'/>
-      <attribute name='bundle-version' type='Version' value='0.1.2'/>
-    </capability>
-    <capability namespace='osgi.wiring.host'>
-      <attribute name='osgi.wiring.host' value='org.amdatu.remote.discovery.bonjour'/>
-      <attribute name='bundle-version' type='Version' value='0.1.2'/>
-    </capability>
-    <capability namespace='osgi.remoteserviceadmin.discovery'>
-      <attribute name='protocols' type='List&lt;String&gt;' value='bonjour'/>
-      <attribute name='version' type='Version' value='1.1.0'/>
-    </capability>
-    <requirement namespace='osgi.wiring.package'>
-      <directive name='filter' value='(&amp;(osgi.wiring.package=javax.servlet)(version&gt;=2.5.0)(!(version&gt;=3.0.0)))'/>
-    </requirement>
-    <requirement namespace='osgi.wiring.package'>
-      <directive name='filter' value='(&amp;(osgi.wiring.package=javax.servlet.http)(version&gt;=2.5.0)(!(version&gt;=3.0.0)))'/>
-    </requirement>
-    <requirement namespace='osgi.wiring.package'>
-      <directive name='filter' value='(osgi.wiring.package=javax.xml.parsers)'/>
-    </requirement>
-    <requirement namespace='osgi.wiring.package'>
-      <directive name='filter' value='(&amp;(osgi.wiring.package=org.apache.felix.dm)(version&gt;=3.0.0)(!(version&gt;=4.0.0)))'/>
-    </requirement>
-    <requirement namespace='osgi.wiring.package'>
-      <directive name='filter' value='(&amp;(osgi.wiring.package=org.osgi.framework)(version&gt;=1.7.0)(!(version&gt;=2.0.0)))'/>
-    </requirement>
-    <requirement namespace='osgi.wiring.package'>
-      <directive name='filter' value='(&amp;(osgi.wiring.package=org.osgi.service.cm)(version&gt;=1.5.0)(!(version&gt;=2.0.0)))'/>
-    </requirement>
-    <requirement namespace='osgi.wiring.package'>
-      <directive name='filter' value='(&amp;(osgi.wiring.package=org.osgi.service.http)(version&gt;=1.2.0)(!(version&gt;=2.0.0)))'/>
-    </requirement>
-    <requirement namespace='osgi.wiring.package'>
-      <directive name='filter' value='(&amp;(osgi.wiring.package=org.osgi.service.log)(version&gt;=1.3.0)(!(version&gt;=2.0.0)))'/>
-    </requirement>
-    <requirement namespace='osgi.wiring.package'>
-      <directive name='filter' value='(&amp;(osgi.wiring.package=org.osgi.service.remoteserviceadmin)(version&gt;=1.1.0)(!(version&gt;=2.0.0)))'/>
-    </requirement>
-    <requirement namespace='osgi.wiring.package'>
-      <directive name='filter' value='(osgi.wiring.package=org.xml.sax)'/>
-    </requirement>
-    <requirement namespace='osgi.wiring.package'>
-      <directive name='filter' value='(osgi.wiring.package=org.xml.sax.helpers)'/>
-    </requirement>
-    <requirement namespace='osgi.ee'>
-      <directive name='filter' value='(&amp;(osgi.ee=JavaSE)(version=1.7))'/>
-    </requirement>
-  </resource>
-  <resource>
-    <capability namespace='osgi.identity'>
-      <attribute name='osgi.identity' value='org.apache.felix.http.whiteboard'/>
-      <attribute name='type' value='osgi.bundle'/>
-      <attribute name='version' type='Version' value='2.3.2'/>
-    </capability>
-    <capability namespace='osgi.content'>
-      <attribute name='osgi.content' value='4ed88e1f8fdcae6e9822428a3deda487889744ac38dbb5b5ef0fba2415a56962'/>
-      <attribute name='url' value='org.apache.felix.http.whiteboard/org.apache.felix.http.whiteboard-2.3.2.jar'/>
-      <attribute name='size' type='Long' value='39981'/>
-      <attribute name='mime' value='application/vnd.osgi.bundle'/>
-    </capability>
-    <capability namespace='osgi.wiring.bundle'>
-      <attribute name='osgi.wiring.bundle' value='org.apache.felix.http.whiteboard'/>
-      <attribute name='bundle-version' type='Version' value='2.3.2'/>
-    </capability>
-    <capability namespace='osgi.wiring.host'>
-      <attribute name='osgi.wiring.host' value='org.apache.felix.http.whiteboard'/>
-      <attribute name='bundle-version' type='Version' value='2.3.2'/>
-    </capability>
-    <capability namespace='osgi.wiring.package'>
-      <attribute name='osgi.wiring.package' value='org.apache.felix.http.whiteboard'/>
-      <attribute name='version' type='Version' value='1.0.0'/>
-      <attribute name='bundle-symbolic-name' value='org.apache.felix.http.whiteboard'/>
-      <attribute name='bundle-version' type='Version' value='2.3.2'/>
-    </capability>
-    <requirement namespace='osgi.wiring.package'>
-      <directive name='filter' value='(&amp;(osgi.wiring.package=javax.servlet)(version&gt;=3.0.0)(!(version&gt;=4.0.0)))'/>
-    </requirement>
-    <requirement namespace='osgi.wiring.package'>
-      <directive name='filter' value='(&amp;(osgi.wiring.package=javax.servlet.http)(version&gt;=3.0.0)(!(version&gt;=4.0.0)))'/>
-    </requirement>
-    <requirement namespace='osgi.wiring.package'>
-      <directive name='filter' value='(&amp;(osgi.wiring.package=org.apache.felix.http.api)(version&gt;=2.0.0)(!(version&gt;=3.0.0)))'/>
-    </requirement>
-    <requirement namespace='osgi.wiring.package'>
-      <directive name='filter' value='(&amp;(osgi.wiring.package=org.osgi.framework)(version&gt;=1.5.0)(!(version&gt;=2.0.0)))'/>
-    </requirement>
-    <requirement namespace='osgi.wiring.package'>
-      <directive name='filter' value='(&amp;(osgi.wiring.package=org.osgi.service.http)(version&gt;=1.2.0)(!(version&gt;=2.0.0)))'/>
-    </requirement>
-    <requirement namespace='osgi.wiring.package'>
-      <directive name='filter' value='(&amp;(osgi.wiring.package=org.osgi.service.log)(version&gt;=1.3.0)(!(version&gt;=2.0.0)))'/>
-    </requirement>
-    <requirement namespace='osgi.wiring.package'>
-      <directive name='filter' value='(&amp;(osgi.wiring.package=org.osgi.util.tracker)(version&gt;=1.4.0)(!(version&gt;=2.0.0)))'/>
-    </requirement>
-  </resource>
-  <resource>
-    <capability namespace='osgi.identity'>
-      <attribute name='osgi.identity' value='org.osgi.service.remoteserviceadmin'/>
-      <attribute name='type' value='osgi.bundle'/>
-      <attribute name='version' type='Version' value='6.0.0.201403170857'/>
-    </capability>
-    <capability namespace='osgi.content'>
-      <attribute name='osgi.content' value='ee8c1dc1b97ab89d6c220b3f55412c34f265e2e8c0b8690a1a9a238eee44c3df'/>
-      <attribute name='url' value='org.osgi.service.remoteserviceadmin/org.osgi.service.remoteserviceadmin-6.0.0.jar'/>
-      <attribute name='size' type='Long' value='55408'/>
-      <attribute name='mime' value='application/vnd.osgi.bundle'/>
-    </capability>
-    <capability namespace='osgi.wiring.bundle'>
-      <attribute name='osgi.wiring.bundle' value='org.osgi.service.remoteserviceadmin'/>
-      <attribute name='bundle-version' type='Version' value='6.0.0.201403170857'/>
-    </capability>
-    <capability namespace='osgi.wiring.host'>
-      <attribute name='osgi.wiring.host' value='org.osgi.service.remoteserviceadmin'/>
-      <attribute name='bundle-version' type='Version' value='6.0.0.201403170857'/>
-    </capability>
-    <capability namespace='osgi.wiring.package'>
-      <attribute name='osgi.wiring.package' value='org.osgi.service.remoteserviceadmin'/>
-      <attribute name='version' type='Version' value='1.1.0'/>
-      <attribute name='bundle-symbolic-name' value='org.osgi.service.remoteserviceadmin'/>
-      <attribute name='bundle-version' type='Version' value='6.0.0.201403170857'/>
-      <directive name='uses' value='org.osgi.framework'/>
-    </capability>
-    <requirement namespace='osgi.wiring.package'>
-      <directive name='filter' value='(&amp;(osgi.wiring.package=org.osgi.framework)(version&gt;=1.6.0)(!(version&gt;=2.0.0)))'/>
-    </requirement>
-  </resource>
-  <resource>
-    <capability namespace='osgi.identity'>
       <attribute name='osgi.identity' value='org.apache.felix.http.api'/>
       <attribute name='type' value='osgi.bundle'/>
       <attribute name='version' type='Version' value='2.3.2'/>
@@ -401,27 +389,23 @@
   </resource>
   <resource>
     <capability namespace='osgi.identity'>
-      <attribute name='osgi.identity' value='org.amdatu.remote.admin.http'/>
+      <attribute name='osgi.identity' value='org.inaetics.wiring.admin.http'/>
       <attribute name='type' value='osgi.bundle'/>
-      <attribute name='version' type='Version' value='0.1.2'/>
+      <attribute name='version' type='Version' value='0.1.0'/>
     </capability>
     <capability namespace='osgi.content'>
-      <attribute name='osgi.content' value='a81eb7e2c405348f8b8596eb62183a0d0c9adb773a0d9340db01106d68e86289'/>
-      <attribute name='url' value='org.amdatu.remote.admin.http/org.amdatu.remote.admin.http-0.1.2.jar'/>
-      <attribute name='size' type='Long' value='1463422'/>
+      <attribute name='osgi.content' value='4ed5359286cfea9b897f9ed1023effc71f6113548d58abcd02ecd22deb583530'/>
+      <attribute name='url' value='org.inaetics.wiring.admin.http/org.inaetics.wiring.admin.http-0.1.0.jar'/>
+      <attribute name='size' type='Long' value='398167'/>
       <attribute name='mime' value='application/vnd.osgi.bundle'/>
     </capability>
     <capability namespace='osgi.wiring.bundle'>
-      <attribute name='osgi.wiring.bundle' value='org.amdatu.remote.admin.http'/>
-      <attribute name='bundle-version' type='Version' value='0.1.2'/>
+      <attribute name='osgi.wiring.bundle' value='org.inaetics.wiring.admin.http'/>
+      <attribute name='bundle-version' type='Version' value='0.1.0'/>
     </capability>
     <capability namespace='osgi.wiring.host'>
-      <attribute name='osgi.wiring.host' value='org.amdatu.remote.admin.http'/>
-      <attribute name='bundle-version' type='Version' value='0.1.2'/>
-    </capability>
-    <capability namespace='osgi.remoteserviceadmin.distribution'>
-      <attribute name='configs' type='List&lt;String&gt;' value='org.amdatu.remote.admin.http'/>
-      <attribute name='version' type='Version' value='1.1.0'/>
+      <attribute name='osgi.wiring.host' value='org.inaetics.wiring.admin.http'/>
+      <attribute name='bundle-version' type='Version' value='0.1.0'/>
     </capability>
     <requirement namespace='osgi.wiring.package'>
       <directive name='filter' value='(&amp;(osgi.wiring.package=javax.servlet)(version&gt;=2.5.0)(!(version&gt;=3.0.0)))'/>
@@ -430,16 +414,13 @@
       <directive name='filter' value='(&amp;(osgi.wiring.package=javax.servlet.http)(version&gt;=2.5.0)(!(version&gt;=3.0.0)))'/>
     </requirement>
     <requirement namespace='osgi.wiring.package'>
-      <directive name='filter' value='(osgi.wiring.package=javax.xml.datatype)'/>
-    </requirement>
-    <requirement namespace='osgi.wiring.package'>
-      <directive name='filter' value='(osgi.wiring.package=javax.xml.namespace)'/>
-    </requirement>
-    <requirement namespace='osgi.wiring.package'>
-      <directive name='filter' value='(osgi.wiring.package=javax.xml.parsers)'/>
-    </requirement>
-    <requirement namespace='osgi.wiring.package'>
       <directive name='filter' value='(&amp;(osgi.wiring.package=org.apache.felix.dm)(version&gt;=3.0.0)(!(version&gt;=4.0.0)))'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(osgi.wiring.package=org.inaetics.wiring)'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(osgi.wiring.package=org.inaetics.wiring.endpoint)'/>
     </requirement>
     <requirement namespace='osgi.wiring.package'>
       <directive name='filter' value='(&amp;(osgi.wiring.package=org.osgi.framework)(version&gt;=1.7.0)(!(version&gt;=2.0.0)))'/>
@@ -448,31 +429,10 @@
       <directive name='filter' value='(&amp;(osgi.wiring.package=org.osgi.service.cm)(version&gt;=1.5.0)(!(version&gt;=2.0.0)))'/>
     </requirement>
     <requirement namespace='osgi.wiring.package'>
-      <directive name='filter' value='(&amp;(osgi.wiring.package=org.osgi.service.event)(version&gt;=1.3.0)(!(version&gt;=2.0.0)))'/>
-    </requirement>
-    <requirement namespace='osgi.wiring.package'>
       <directive name='filter' value='(&amp;(osgi.wiring.package=org.osgi.service.http)(version&gt;=1.2.0)(!(version&gt;=2.0.0)))'/>
     </requirement>
     <requirement namespace='osgi.wiring.package'>
       <directive name='filter' value='(&amp;(osgi.wiring.package=org.osgi.service.log)(version&gt;=1.3.0)(!(version&gt;=2.0.0)))'/>
-    </requirement>
-    <requirement namespace='osgi.wiring.package'>
-      <directive name='filter' value='(&amp;(osgi.wiring.package=org.osgi.service.remoteserviceadmin)(version&gt;=1.1.0)(!(version&gt;=1.2.0)))'/>
-    </requirement>
-    <requirement namespace='osgi.wiring.package'>
-      <directive name='filter' value='(osgi.wiring.package=org.w3c.dom)'/>
-    </requirement>
-    <requirement namespace='osgi.wiring.package'>
-      <directive name='filter' value='(osgi.wiring.package=org.w3c.dom.bootstrap)'/>
-    </requirement>
-    <requirement namespace='osgi.wiring.package'>
-      <directive name='filter' value='(osgi.wiring.package=org.w3c.dom.ls)'/>
-    </requirement>
-    <requirement namespace='osgi.wiring.package'>
-      <directive name='filter' value='(osgi.wiring.package=org.xml.sax)'/>
-    </requirement>
-    <requirement namespace='osgi.wiring.package'>
-      <directive name='filter' value='(osgi.wiring.package=org.xml.sax.helpers)'/>
     </requirement>
     <requirement namespace='osgi.ee'>
       <directive name='filter' value='(&amp;(osgi.ee=JavaSE)(version=1.7))'/>
@@ -480,33 +440,90 @@
   </resource>
   <resource>
     <capability namespace='osgi.identity'>
-      <attribute name='osgi.identity' value='org.apache.felix.dependencymanager.shell'/>
+      <attribute name='osgi.identity' value='org.inaetics.wiring.discovery.etcd'/>
       <attribute name='type' value='osgi.bundle'/>
-      <attribute name='version' type='Version' value='3.2.0'/>
+      <attribute name='version' type='Version' value='0.1.0'/>
     </capability>
     <capability namespace='osgi.content'>
-      <attribute name='osgi.content' value='8abdc97de5abe96aac15c2090d5544ddf7ccc06440d7a20f2daccee2efbf340d'/>
-      <attribute name='url' value='org.apache.felix.dependencymanager.shell/org.apache.felix.dependencymanager.shell-3.2.0.jar'/>
-      <attribute name='size' type='Long' value='21257'/>
+      <attribute name='osgi.content' value='a8fe7ec293c8602cb9e0378762e8db183e17cc35c2b4295ec8b53fd54b59a950'/>
+      <attribute name='url' value='org.inaetics.wiring.discovery.etcd/org.inaetics.wiring.discovery.etcd-0.1.0.jar'/>
+      <attribute name='size' type='Long' value='2502047'/>
       <attribute name='mime' value='application/vnd.osgi.bundle'/>
     </capability>
     <capability namespace='osgi.wiring.bundle'>
-      <attribute name='osgi.wiring.bundle' value='org.apache.felix.dependencymanager.shell'/>
-      <attribute name='bundle-version' type='Version' value='3.2.0'/>
+      <attribute name='osgi.wiring.bundle' value='org.inaetics.wiring.discovery.etcd'/>
+      <attribute name='bundle-version' type='Version' value='0.1.0'/>
     </capability>
     <capability namespace='osgi.wiring.host'>
-      <attribute name='osgi.wiring.host' value='org.apache.felix.dependencymanager.shell'/>
-      <attribute name='bundle-version' type='Version' value='3.2.0'/>
+      <attribute name='osgi.wiring.host' value='org.inaetics.wiring.discovery.etcd'/>
+      <attribute name='bundle-version' type='Version' value='0.1.0'/>
     </capability>
     <requirement namespace='osgi.wiring.package'>
-      <directive name='filter' value='(&amp;(osgi.wiring.package=org.apache.felix.dm)(version&gt;=3.1.0)(!(version&gt;=4.0.0)))'/>
+      <directive name='filter' value='(osgi.wiring.package=javax.crypto)'/>
     </requirement>
     <requirement namespace='osgi.wiring.package'>
-      <attribute name='status' value='provisional'/>
-      <directive name='filter' value='(&amp;(osgi.wiring.package=org.apache.felix.service.command)(version&gt;=0.10.0)(!(version&gt;=1.0.0)))'/>
+      <directive name='filter' value='(osgi.wiring.package=javax.crypto.spec)'/>
     </requirement>
     <requirement namespace='osgi.wiring.package'>
-      <directive name='filter' value='(&amp;(osgi.wiring.package=org.osgi.framework)(version&gt;=1.5.0)(!(version&gt;=2.0.0)))'/>
+      <directive name='filter' value='(osgi.wiring.package=javax.net.ssl)'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(osgi.wiring.package=javax.security.auth.x500)'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(osgi.wiring.package=javax.security.cert)'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(osgi.wiring.package=javax.xml.bind)'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(&amp;(osgi.wiring.package=org.apache.felix.dm)(version&gt;=3.0.0)(!(version&gt;=4.0.0)))'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(osgi.wiring.package=org.inaetics.wiring)'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(&amp;(osgi.wiring.package=org.osgi.framework)(version&gt;=1.7.0)(!(version&gt;=2.0.0)))'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(&amp;(osgi.wiring.package=org.osgi.service.cm)(version&gt;=1.5.0)(!(version&gt;=2.0.0)))'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(&amp;(osgi.wiring.package=org.osgi.service.log)(version&gt;=1.3.0)(!(version&gt;=2.0.0)))'/>
+    </requirement>
+    <requirement namespace='osgi.ee'>
+      <directive name='filter' value='(&amp;(osgi.ee=JavaSE)(version=1.7))'/>
+    </requirement>
+  </resource>
+  <resource>
+    <capability namespace='osgi.identity'>
+      <attribute name='osgi.identity' value='org.osgi.service.remoteserviceadmin'/>
+      <attribute name='type' value='osgi.bundle'/>
+      <attribute name='version' type='Version' value='6.0.0.201403170857'/>
+    </capability>
+    <capability namespace='osgi.content'>
+      <attribute name='osgi.content' value='ee8c1dc1b97ab89d6c220b3f55412c34f265e2e8c0b8690a1a9a238eee44c3df'/>
+      <attribute name='url' value='org.osgi.service.remoteserviceadmin/org.osgi.service.remoteserviceadmin-6.0.0.jar'/>
+      <attribute name='size' type='Long' value='55408'/>
+      <attribute name='mime' value='application/vnd.osgi.bundle'/>
+    </capability>
+    <capability namespace='osgi.wiring.bundle'>
+      <attribute name='osgi.wiring.bundle' value='org.osgi.service.remoteserviceadmin'/>
+      <attribute name='bundle-version' type='Version' value='6.0.0.201403170857'/>
+    </capability>
+    <capability namespace='osgi.wiring.host'>
+      <attribute name='osgi.wiring.host' value='org.osgi.service.remoteserviceadmin'/>
+      <attribute name='bundle-version' type='Version' value='6.0.0.201403170857'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.osgi.service.remoteserviceadmin'/>
+      <attribute name='version' type='Version' value='1.1.0'/>
+      <attribute name='bundle-symbolic-name' value='org.osgi.service.remoteserviceadmin'/>
+      <attribute name='bundle-version' type='Version' value='6.0.0.201403170857'/>
+      <directive name='uses' value='org.osgi.framework'/>
+    </capability>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(&amp;(osgi.wiring.package=org.osgi.framework)(version&gt;=1.6.0)(!(version&gt;=2.0.0)))'/>
     </requirement>
   </resource>
   <resource>
@@ -554,51 +571,6 @@
     </requirement>
     <requirement namespace='osgi.wiring.package'>
       <directive name='filter' value='(&amp;(osgi.wiring.package=org.osgi.service.metatype)(version&gt;=1.1.0)(!(version&gt;=2.0.0)))'/>
-    </requirement>
-  </resource>
-  <resource>
-    <capability namespace='osgi.identity'>
-      <attribute name='osgi.identity' value='org.amdatu.web.resourcehandler'/>
-      <attribute name='type' value='osgi.bundle'/>
-      <attribute name='version' type='Version' value='1.0.5'/>
-    </capability>
-    <capability namespace='osgi.content'>
-      <attribute name='osgi.content' value='9803ca218487a0f7d996fb9b327e9203dbb13fb7afbd226b2e82f08610086270'/>
-      <attribute name='url' value='org.amdatu.web.resourcehandler/org.amdatu.web.resourcehandler-1.0.5.jar'/>
-      <attribute name='size' type='Long' value='40872'/>
-      <attribute name='mime' value='application/vnd.osgi.bundle'/>
-    </capability>
-    <capability namespace='osgi.wiring.bundle'>
-      <attribute name='osgi.wiring.bundle' value='org.amdatu.web.resourcehandler'/>
-      <attribute name='bundle-version' type='Version' value='1.0.5'/>
-    </capability>
-    <capability namespace='osgi.wiring.host'>
-      <attribute name='osgi.wiring.host' value='org.amdatu.web.resourcehandler'/>
-      <attribute name='bundle-version' type='Version' value='1.0.5'/>
-    </capability>
-    <requirement namespace='osgi.wiring.package'>
-      <directive name='filter' value='(&amp;(osgi.wiring.package=javax.servlet)(version&gt;=2.5.0)(!(version&gt;=3.0.0)))'/>
-    </requirement>
-    <requirement namespace='osgi.wiring.package'>
-      <directive name='filter' value='(&amp;(osgi.wiring.package=javax.servlet.http)(version&gt;=2.5.0)(!(version&gt;=3.0.0)))'/>
-    </requirement>
-    <requirement namespace='osgi.wiring.package'>
-      <directive name='filter' value='(&amp;(osgi.wiring.package=org.apache.felix.dm)(version&gt;=3.0.0)(!(version&gt;=4.0.0)))'/>
-    </requirement>
-    <requirement namespace='osgi.wiring.package'>
-      <directive name='filter' value='(&amp;(osgi.wiring.package=org.osgi.framework)(version&gt;=1.5.0)(!(version&gt;=2.0.0)))'/>
-    </requirement>
-    <requirement namespace='osgi.wiring.package'>
-      <directive name='filter' value='(&amp;(osgi.wiring.package=org.osgi.service.cm)(version&gt;=1.3.0)(!(version&gt;=2.0.0)))'/>
-    </requirement>
-    <requirement namespace='osgi.wiring.package'>
-      <directive name='filter' value='(&amp;(osgi.wiring.package=org.osgi.service.http)(version&gt;=1.2.0)(!(version&gt;=2.0.0)))'/>
-    </requirement>
-    <requirement namespace='osgi.wiring.package'>
-      <directive name='filter' value='(&amp;(osgi.wiring.package=org.osgi.service.log)(version&gt;=1.3.0)(!(version&gt;=2.0.0)))'/>
-    </requirement>
-    <requirement namespace='osgi.ee'>
-      <directive name='filter' value='(&amp;(osgi.ee=JavaSE)(version=1.6))'/>
     </requirement>
   </resource>
   <resource>
@@ -1054,58 +1026,6 @@
     </requirement>
     <requirement namespace='osgi.wiring.package'>
       <directive name='filter' value='(osgi.wiring.package=org.xml.sax.helpers)'/>
-    </requirement>
-  </resource>
-  <resource>
-    <capability namespace='osgi.identity'>
-      <attribute name='osgi.identity' value='org.amdatu.remote.topology.promiscuous'/>
-      <attribute name='type' value='osgi.bundle'/>
-      <attribute name='version' type='Version' value='0.1.2'/>
-    </capability>
-    <capability namespace='osgi.content'>
-      <attribute name='osgi.content' value='9d5e365584021f6841af14a04516d48fb88d14426f869816e16aa22f9f386bcb'/>
-      <attribute name='url' value='org.amdatu.remote.topology.promiscuous/org.amdatu.remote.topology.promiscuous-0.1.2.jar'/>
-      <attribute name='size' type='Long' value='404008'/>
-      <attribute name='mime' value='application/vnd.osgi.bundle'/>
-    </capability>
-    <capability namespace='osgi.wiring.bundle'>
-      <attribute name='osgi.wiring.bundle' value='org.amdatu.remote.topology.promiscuous'/>
-      <attribute name='bundle-version' type='Version' value='0.1.2'/>
-    </capability>
-    <capability namespace='osgi.wiring.host'>
-      <attribute name='osgi.wiring.host' value='org.amdatu.remote.topology.promiscuous'/>
-      <attribute name='bundle-version' type='Version' value='0.1.2'/>
-    </capability>
-    <capability namespace='osgi.remoteserviceadmin.topology'>
-      <attribute name='policy' type='List&lt;String&gt;' value='promiscuous'/>
-      <attribute name='version' type='Version' value='1.1.0'/>
-    </capability>
-    <requirement namespace='osgi.wiring.package'>
-      <directive name='filter' value='(osgi.wiring.package=javax.xml.parsers)'/>
-    </requirement>
-    <requirement namespace='osgi.wiring.package'>
-      <directive name='filter' value='(&amp;(osgi.wiring.package=org.apache.felix.dm)(version&gt;=3.0.0)(!(version&gt;=4.0.0)))'/>
-    </requirement>
-    <requirement namespace='osgi.wiring.package'>
-      <directive name='filter' value='(&amp;(osgi.wiring.package=org.osgi.framework)(version&gt;=1.7.0)(!(version&gt;=2.0.0)))'/>
-    </requirement>
-    <requirement namespace='osgi.wiring.package'>
-      <directive name='filter' value='(&amp;(osgi.wiring.package=org.osgi.service.cm)(version&gt;=1.5.0)(!(version&gt;=2.0.0)))'/>
-    </requirement>
-    <requirement namespace='osgi.wiring.package'>
-      <directive name='filter' value='(&amp;(osgi.wiring.package=org.osgi.service.log)(version&gt;=1.3.0)(!(version&gt;=2.0.0)))'/>
-    </requirement>
-    <requirement namespace='osgi.wiring.package'>
-      <directive name='filter' value='(&amp;(osgi.wiring.package=org.osgi.service.remoteserviceadmin)(version&gt;=1.1.0)(!(version&gt;=2.0.0)))'/>
-    </requirement>
-    <requirement namespace='osgi.wiring.package'>
-      <directive name='filter' value='(osgi.wiring.package=org.xml.sax)'/>
-    </requirement>
-    <requirement namespace='osgi.wiring.package'>
-      <directive name='filter' value='(osgi.wiring.package=org.xml.sax.helpers)'/>
-    </requirement>
-    <requirement namespace='osgi.ee'>
-      <directive name='filter' value='(&amp;(osgi.ee=JavaSE)(version=1.7))'/>
     </requirement>
   </resource>
 </repository>
