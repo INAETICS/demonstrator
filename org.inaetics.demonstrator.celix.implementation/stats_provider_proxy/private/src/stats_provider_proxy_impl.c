@@ -57,7 +57,7 @@ int statsProviderProxy_getName(void* provider, char** name) {
 
 				char* sn = NULL;
 
-				if (json_unpack(js_reply, "s", &sn) != 0) {
+				if (json_unpack(js_reply, "{s:s}", "r", &sn) != 0) {
 					status = CELIX_BUNDLE_EXCEPTION;
 				}
 				else {
@@ -107,7 +107,7 @@ int statsProviderProxy_getType(void* provider, char** type) {
 
 				char* st = NULL;
 
-				if (json_unpack(js_reply, "s", &st) != 0) {
+				if (json_unpack(js_reply, "{s:s}", "r", &st) != 0) {
 					status = CELIX_BUNDLE_EXCEPTION;
 				}
 				else {
@@ -155,7 +155,7 @@ int statsProviderProxy_getvalue(void* provider, double* statVal) {
 			json_t *js_reply = json_loads(reply, JSON_DECODE_ANY, &error);
 			if (js_reply) {
 
-				if (json_unpack(js_reply, "f", statVal) != 0) {
+				if (json_unpack(js_reply, "{s:f}", "r", statVal) != 0) {
 					status = CELIX_BUNDLE_EXCEPTION;
 				}
 
@@ -203,7 +203,7 @@ int statsProviderProxy_getMeasurementUnitUnit(void* provider, char** mUnit) {
 
 				char* um = NULL;
 
-				if (json_unpack(js_reply, "s", &um) != 0) {
+				if (json_unpack(js_reply, "{s:s}", "r", &um) != 0) {
 					status = CELIX_BUNDLE_EXCEPTION;
 				}
 				else {

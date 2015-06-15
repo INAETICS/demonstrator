@@ -78,7 +78,7 @@ celix_status_t statsProviderEndpoint_getName(remote_endpoint_pt endpoint, char *
 		int result = service->getName(service->statsProvider, &name);
 
 		if (result == 0) {
-			resultRoot = json_pack("s", name);
+			resultRoot = json_pack("{s:s}", "r", name);
 		}
 		else
 		{
@@ -118,7 +118,7 @@ celix_status_t statsProviderEndpoint_getType(remote_endpoint_pt endpoint, char *
 		int result = service->getType(service->statsProvider, &type);
 
 		if (result == 0) {
-			resultRoot = json_pack("s", type);
+			resultRoot = json_pack("{s:s}", "r", type);
 		}
 		else
 		{
@@ -158,7 +158,7 @@ celix_status_t statsProviderEndpoint_getMeasurementUnit(remote_endpoint_pt endpo
 		int result = service->getMeasurementUnit(service->statsProvider, &unitMeasurement);
 
 		if (result == 0) {
-			resultRoot = json_pack("s", unitMeasurement);
+			resultRoot = json_pack("{s:s}", "r", unitMeasurement);
 		}
 		else
 		{
@@ -198,7 +198,7 @@ celix_status_t statsProviderEndpoint_getValue(remote_endpoint_pt endpoint, char 
 		int result = service->getValue(service->statsProvider, &stat);
 
 		if (result == 0) {
-			resultRoot = json_pack("f", stat);
+			resultRoot = json_pack("{s:f}", "r", stat);
 		}
 		else
 		{
