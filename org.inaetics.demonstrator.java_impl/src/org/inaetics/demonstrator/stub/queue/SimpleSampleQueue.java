@@ -61,12 +61,13 @@ public class SimpleSampleQueue implements SampleQueue, StatsProvider, ManagedSer
 
     @Override
     public int putAll(Collection<Sample> samples) {
-        int size = m_queue.size();
+        int size = 0;
         for (Sample sample : samples) {
-            put(sample);
+            if (put(sample)) {
+            	size++;
+            };
         }
-
-        return m_queue.size() - size;
+        return size;
     }
 
     @Override
