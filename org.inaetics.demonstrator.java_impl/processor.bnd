@@ -1,4 +1,4 @@
 Bundle-Activator: \
-	org.inaetics.demonstrator.stub.processor.Activator
+	org.inaetics.demonstrator.processor.Activator
 Private-Package:  \
-	org.inaetics.demonstrator.stub.processor
+	org.inaetics.demonstrator.processor

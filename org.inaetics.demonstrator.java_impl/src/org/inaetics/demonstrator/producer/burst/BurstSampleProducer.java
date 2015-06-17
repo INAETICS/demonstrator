@@ -1,13 +1,14 @@
 /**
  * Licensed under Apache License v2. See LICENSE for more information.
  */
-package org.inaetics.demonstrator.stub.producer.burst;
+package org.inaetics.demonstrator.producer.burst;
 
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.inaetics.demonstrator.api.data.Sample;
 import org.inaetics.demonstrator.api.queue.SampleQueue;
-import org.inaetics.demonstrator.stub.producer.AbstractSampleProducer;
+import org.inaetics.demonstrator.producer.AbstractSampleProducer;
 
 /**
  * Generates a burst of samples once every 500 ms.
@@ -31,10 +32,10 @@ public class BurstSampleProducer extends AbstractSampleProducer {
     }
 
     @Override
-    protected void produceSampleData() {
+    protected void produceSampleData() throws InterruptedException {
         for (int i = 0; !Thread.currentThread().isInterrupted() && i < BURST_LENGTH; i++) {
             // Sleep a little to simulate production time...
-            msleep(1);
+            TimeUnit.MILLISECONDS.sleep(1);
 
             double val1 = randomSampleValue();
             double val2 = randomSampleValue();

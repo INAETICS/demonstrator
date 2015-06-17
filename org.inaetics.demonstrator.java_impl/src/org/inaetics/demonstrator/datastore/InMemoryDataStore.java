@@ -1,7 +1,7 @@
 /**
  * Licensed under Apache License v2. See LICENSE for more information.
  */
-package org.inaetics.demonstrator.stub.datastore;
+package org.inaetics.demonstrator.datastore;
 
 import java.util.ArrayList;
 import java.util.Collection;

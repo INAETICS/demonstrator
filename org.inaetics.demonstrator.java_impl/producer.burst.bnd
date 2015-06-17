@@ -1,5 +1,5 @@
 Bundle-Activator: \
-	org.inaetics.demonstrator.stub.producer.burst.Activator
+	org.inaetics.demonstrator.producer.burst.Activator
 Private-Package:  \
-	org.inaetics.demonstrator.stub.producer,\
-	org.inaetics.demonstrator.stub.producer.burst
+	org.inaetics.demonstrator.producer,\
+	org.inaetics.demonstrator.producer.burst

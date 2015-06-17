@@ -24,7 +24,7 @@ public class Activator extends DependencyActivatorBase {
 		manager.add(createComponent()
 			.setInterface(ifaces, props)
 			.setImplementation(SimpleQueueProcessorCoordinator.class)
-            .add(createServiceDependency().setService(StatsProvider.class).setCallbacks("add", "remove").setRequired(false))
+            .add(createServiceDependency().setService(StatsProvider.class, "(type=queue)").setRequired(true))
 			.add(createServiceDependency().setService(LogService.class).setRequired(false))
 		);
 

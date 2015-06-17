@@ -1,7 +1,7 @@
 /**
  * Licensed under Apache License v2. See LICENSE for more information.
  */
-package org.inaetics.demonstrator.stub.queue;
+package org.inaetics.demonstrator.queue;
 
 import java.util.ArrayList;
 import java.util.Collection;

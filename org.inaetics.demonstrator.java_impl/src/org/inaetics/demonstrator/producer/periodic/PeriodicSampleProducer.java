@@ -1,13 +1,13 @@
 /**
  * Licensed under Apache License v2. See LICENSE for more information.
  */
-package org.inaetics.demonstrator.stub.producer.periodic;
+package org.inaetics.demonstrator.producer.periodic;
 
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.inaetics.demonstrator.api.data.Sample;
 import org.inaetics.demonstrator.api.queue.SampleQueue;
-import org.inaetics.demonstrator.stub.producer.AbstractSampleProducer;
+import org.inaetics.demonstrator.producer.AbstractSampleProducer;
 
 /**
  * Generates a random sample once every 10 ms.

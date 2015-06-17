@@ -1,7 +1,7 @@
 /**
  * Licensed under Apache License v2. See LICENSE for more information.
  */
-package org.inaetics.demonstrator.stub.producer;
+package org.inaetics.demonstrator.producer;
 
 import java.util.Dictionary;
 import java.util.Random;
@@ -10,10 +10,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.felix.dm.Component;
 import org.inaetics.demonstrator.api.producer.Producer;
 import org.inaetics.demonstrator.api.stats.StatsProvider;
 import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedService;
 import org.osgi.service.log.LogService;
@@ -34,7 +34,7 @@ public abstract class AbstractSampleProducer implements Producer, StatsProvider,
     private volatile int m_taskInterval;
 
     // Injected by Felix DM...
-    private volatile Component m_component;
+    private volatile ServiceRegistration<?> m_serviceReg;
     private volatile LogService m_log;
 
     /**
@@ -63,7 +63,7 @@ public abstract class AbstractSampleProducer implements Producer, StatsProvider,
 
     @Override
     public final String getName() {
-        Long id = (Long) m_component.getServiceRegistration().getReference().getProperty(Constants.SERVICE_ID);
+        Long id = (Long) m_serviceReg.getReference().getProperty(Constants.SERVICE_ID);
         return String.format("%s #%d", m_name, id);
     }
 
@@ -109,18 +109,10 @@ public abstract class AbstractSampleProducer implements Producer, StatsProvider,
         m_log.log(LogService.LOG_INFO, String.format(msg, args));
     }
 
-    protected final void msleep(long time) {
-        try {
-            TimeUnit.MILLISECONDS.sleep(time);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-    }
-
     /**
      * Implement this to produce the actual sample(s).s
      */
-    protected abstract void produceSampleData();
+    protected abstract void produceSampleData() throws InterruptedException;
 
     protected final double randomSampleValue() {
         return (m_rnd.nextDouble() * 200.0) - 100.0;
@@ -145,8 +137,7 @@ public abstract class AbstractSampleProducer implements Producer, StatsProvider,
                         Thread.currentThread().interrupt();
                     } catch (Exception e) {
                         // Ignore, not much we can do about this...
-                        info("Failed to produce sample(s)! Cause: %s", (e.getMessage() == null ? "NullPointerException"
-                            : e.getMessage()));
+                        info("Failed to produce sample(s)! Cause: %s", (e.getMessage() == null ? "NullPointerException" : e.getMessage()));
                         m_log.log(LogService.LOG_DEBUG, "Failed to produce sample(s)!", e);
                     }
                 }

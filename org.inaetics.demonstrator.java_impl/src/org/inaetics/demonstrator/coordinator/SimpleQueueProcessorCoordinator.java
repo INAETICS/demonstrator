@@ -45,7 +45,6 @@ public class SimpleQueueProcessorCoordinator implements ManagedService {
 	}
 
 	protected final void start(Component comp) {
-		
 		m_pollFuture = m_executor.scheduleAtFixedRate(new Runnable() {
 			@Override
 			public void run() {
@@ -63,19 +62,6 @@ public class SimpleQueueProcessorCoordinator implements ManagedService {
 			}
 		} finally {
 			m_executor.shutdownNow();
-		}
-	}
-
-	public void add(StatsProvider provider) {
-		if (provider.getName() != null
-				&& provider.getName().toLowerCase().contains("queue")) {
-			m_queueStatsProvider = provider;
-		}
-	}
-
-	public void remove(StatsProvider provider) {
-		if (m_queueStatsProvider == provider) {
-			m_queueStatsProvider = null;
 		}
 	}
 

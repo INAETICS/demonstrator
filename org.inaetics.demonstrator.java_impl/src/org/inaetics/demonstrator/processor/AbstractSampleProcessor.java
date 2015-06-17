@@ -1,17 +1,18 @@
 /**
  * Licensed under Apache License v2. See LICENSE for more information.
  */
-package org.inaetics.demonstrator.stub.processor;
+package org.inaetics.demonstrator.processor;
 
 import java.util.Dictionary;
 import java.util.Random;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.felix.dm.Component;
 import org.inaetics.demonstrator.api.processor.Processor;
+import org.inaetics.demonstrator.api.producer.Producer;
 import org.inaetics.demonstrator.api.stats.StatsProvider;
 import org.osgi.framework.Constants;
 import org.osgi.service.cm.ConfigurationException;
@@ -23,18 +24,18 @@ import org.osgi.service.log.LogService;
  */
 public abstract class AbstractSampleProcessor implements Processor, StatsProvider, ManagedService {
     private final Random m_rnd;
-    private final long m_taskInterval;
+    private final int m_taskInterval;
 
-    private ScheduledExecutorService m_executor;
-    private ScheduledFuture<?> m_generatorFuture;
-    private ScheduledFuture<?> m_samplerFuture;
+    private ExecutorService m_executor;
+    private Future<?> m_generatorFuture;
+    private Future<?> m_samplerFuture;
 
     private volatile double m_processedAvg = 0;
     // Injected by Felix DM...
     private volatile Component m_component;
     private volatile LogService m_log;
 
-    protected AbstractSampleProcessor(long taskInterval) {
+    protected AbstractSampleProcessor(int taskInterval) {
         m_rnd = new Random();
         m_taskInterval = taskInterval;
     }
@@ -65,6 +66,10 @@ public abstract class AbstractSampleProcessor implements Processor, StatsProvide
         // Nothing yet...
     }
 
+    final int getTaskInterval() {
+        return m_taskInterval;
+    }
+
     /**
      * @param time the time (in milliseconds) this processor is running.
      * @return the throughput of this processor.
@@ -73,14 +78,6 @@ public abstract class AbstractSampleProcessor implements Processor, StatsProvide
 
     protected final void info(String msg, Object... args) {
         m_log.log(LogService.LOG_INFO, String.format(msg, args));
-    }
-
-    protected final void msleep(long time) {
-        try {
-            TimeUnit.MILLISECONDS.sleep(time);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
     }
 
     /**
@@ -96,34 +93,47 @@ public abstract class AbstractSampleProcessor implements Processor, StatsProvide
      * Called by Felix DM when starting this component.
      */
     protected final void start() throws Exception {
-        m_executor = Executors.newScheduledThreadPool(2);
+        m_executor = Executors.newFixedThreadPool(2);
 
-        m_generatorFuture = m_executor.scheduleAtFixedRate(new Runnable() {
+        m_generatorFuture = m_executor.submit(new Runnable() {
             @Override
             public void run() {
-                try {
-                    processSamples();
-                } catch (Exception e) {
-                    // Ignore, not much we can do about this...
-                    info("Failed to process sample(s)! Cause: %s",
-                        (e.getMessage() == null ? "NullPointerException" : e.getMessage()));
-                    m_log.log(LogService.LOG_DEBUG, "Failed to process sample(s)!", e);
+                while (!Thread.currentThread().isInterrupted()) {
+                    try {
+                        processSamples();
+
+                        TimeUnit.MILLISECONDS.sleep(getTaskInterval());
+                    } catch (InterruptedException e) {
+                        // Break out of our loop...
+                        Thread.currentThread().interrupt();
+                    } catch (Exception e) {
+                        // Ignore, not much we can do about this...
+                        info("Failed to process sample(s)! Cause: %s", (e.getMessage() == null ? "NullPointerException" : e.getMessage()));
+                        m_log.log(LogService.LOG_DEBUG, "Failed to process sample(s)!", e);
+                    }
                 }
             }
-        }, 250, m_taskInterval, TimeUnit.MILLISECONDS);
+        });
 
-        m_samplerFuture = m_executor.scheduleAtFixedRate(new Runnable() {
-            private final long m_startTime = System.currentTimeMillis();
-
+        m_samplerFuture = m_executor.submit(new Runnable() {
             @Override
             public void run() {
-                try {
-                    m_processedAvg = calculateThroughput(System.currentTimeMillis() - m_startTime);
-                } catch (Exception e) {
-                    m_log.log(LogService.LOG_DEBUG, "Failed to calculate average throughput!", e);
+                long startTime = System.currentTimeMillis();
+
+                while (!Thread.currentThread().isInterrupted()) {
+                    try {
+                        TimeUnit.SECONDS.sleep(1);
+
+                        m_processedAvg = calculateThroughput(System.currentTimeMillis() - startTime);
+                    } catch (InterruptedException e) {
+                        // Break out of our loop...
+                        Thread.currentThread().interrupt();
+                    } catch (Exception e) {
+                        m_log.log(LogService.LOG_DEBUG, "Failed to calculate average throughput!", e);
+                    }
                 }
             }
-        }, 0, 1, TimeUnit.SECONDS);
+        });
     }
 
     /**

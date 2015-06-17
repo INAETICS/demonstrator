@@ -1,0 +1,4 @@
+Bundle-Activator: \
+	org.inaetics.demonstrator.utilization.Activator
+Private-Package: \
+	org.inaetics.demonstrator.utilization

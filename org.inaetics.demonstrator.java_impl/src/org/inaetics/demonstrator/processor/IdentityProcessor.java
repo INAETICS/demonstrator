@@ -1,7 +1,7 @@
 /**
  * Licensed under Apache License v2. See LICENSE for more information.
  */
-package org.inaetics.demonstrator.stub.processor;
+package org.inaetics.demonstrator.processor;
 
 import java.util.concurrent.atomic.AtomicLong;
 
