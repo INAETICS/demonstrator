@@ -32,7 +32,6 @@ public abstract class AbstractSampleProcessor implements Processor, StatsProvide
 
     private volatile double m_processedAvg = 0;
     // Injected by Felix DM...
-    private volatile Component m_component;
     private volatile LogService m_log;
 
     protected AbstractSampleProcessor(int taskInterval) {
@@ -47,8 +46,7 @@ public abstract class AbstractSampleProcessor implements Processor, StatsProvide
 
     @Override
     public final String getName() {
-        Long id = (Long) m_component.getServiceRegistration().getReference().getProperty(Constants.SERVICE_ID);
-        return String.format("Sample processor #%d", id);
+        return String.format("Sample processor (%x)", System.identityHashCode(this));
     }
 
     @Override

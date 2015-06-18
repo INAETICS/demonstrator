@@ -45,11 +45,11 @@ function getChartOpts(stats) {
 
 function getData(stats) {
 	return { 
-		labels: stats.timestamps, 
+		labels: stats.timestamps || [ 0 ], 
 		datasets: [ {
 			fillColor: "rgba(151,187,205,0.5)",
 	        strokeColor: "rgba(151,187,205,1)",
-			data: stats.values
+			data: stats.values || [ 0 ]
 		} ] 
 	}
 }
@@ -61,9 +61,6 @@ function renderStats(e) {
 	}
 
 	var total = this.response.length
-
-	// wait until we at least 2 datasets, else ChartNew.js breaks
-	if (total < 2) return;
 
 	var container = document.querySelector('#stats-container')
 	var charts = [].slice.call(container.children)

@@ -12,8 +12,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.inaetics.demonstrator.api.producer.Producer;
 import org.inaetics.demonstrator.api.stats.StatsProvider;
-import org.osgi.framework.Constants;
-import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedService;
 import org.osgi.service.log.LogService;
@@ -34,7 +32,6 @@ public abstract class AbstractSampleProducer implements Producer, StatsProvider,
     private volatile int m_taskInterval;
 
     // Injected by Felix DM...
-    private volatile ServiceRegistration<?> m_serviceReg;
     private volatile LogService m_log;
 
     /**
@@ -63,8 +60,7 @@ public abstract class AbstractSampleProducer implements Producer, StatsProvider,
 
     @Override
     public final String getName() {
-        Long id = (Long) m_serviceReg.getReference().getProperty(Constants.SERVICE_ID);
-        return String.format("%s #%d", m_name, id);
+        return String.format("%s (%x)", m_name, System.identityHashCode(this));
     }
 
     @Override
