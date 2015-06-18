@@ -305,6 +305,8 @@ celix_status_t producer_queueServiceAdded(void *handle, service_reference_pt ref
 {
 	producer_pt producer = (producer_pt) handle;
 
+	printf("PRODUCER: QueueService Added.\n");
+
 	pthread_rwlock_wrlock(&producer->queueLock);
 
 	producer_thread_data_pt th_data = calloc(1, sizeof(struct producer_thread_data));
@@ -321,6 +323,8 @@ celix_status_t producer_queueServiceRemoved(void *handle, service_reference_pt r
 {
 	celix_status_t status = CELIX_SUCCESS;
 	producer_pt producer = (producer_pt) handle;
+
+	printf("PRODUCER: QueueService Removed.\n");
 
 	pthread_rwlock_wrlock(&producer->queueLock);
 

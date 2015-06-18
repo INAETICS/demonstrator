@@ -16,8 +16,6 @@ bundle(org.inaetics.demonstrator.api.datastore.DataStore_proxy SOURCES
 	private/src/data_store_proxy_impl.c
     
     ${CELIX_DIR}/share/celix/remote_service_admin/remote_proxy_factory_impl.c
-    
-    private/include/data_store_proxy_impl.h
 )
 
 target_link_libraries(org.inaetics.demonstrator.api.datastore.DataStore_proxy ${JANSSON_LIBRARIES} ${CELIX_LIBRARIES})

@@ -13,7 +13,8 @@ set(BUNDLE_NAME "org.inaetics.demonstrator.api.stats.StatsProvider_proxy")
 bundle(org.inaetics.demonstrator.api.stats.StatsProvider_proxy SOURCES 
 	private/src/stats_provider_proxy_activator
 	private/src/stats_provider_proxy_impl
-    private/include/stats_provider_proxy_impl.h
+    
+    ${CELIX_DIR}/share/celix/remote_service_admin/remote_proxy_factory_impl.c
 )
 
 target_link_libraries(org.inaetics.demonstrator.api.stats.StatsProvider_proxy ${JANSSON_LIBRARIES} ${CELIX_LIBRARIES})

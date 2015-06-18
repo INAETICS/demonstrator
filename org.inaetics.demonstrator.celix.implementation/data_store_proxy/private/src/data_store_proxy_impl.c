@@ -47,14 +47,19 @@ int dataStoreProxy_store(void* store, struct result workResult, bool *resultStor
 	if (dataStore->endpoint != NULL) {
 
 		json_t* sample = json_pack("{s:I,s:f,s:f}", "sampleTime", workResult.sample.time, "value1", workResult.sample.value1, "value2", workResult.sample.value2);
-		json_t* result = json_pack("[{s:I,s:f,s:O}]", "processingTime", workResult.time, "result1", workResult.value1, "sample", sample);
-		json_t *root = json_pack("{s:s, s:O}", "m", "store(Lorg/inaetics/demonstrator/api/data/Result;)V", "a", result);
+		json_t* result = json_pack("[{s:I,s:f,s:o}]", "processingTime", workResult.time, "result1", workResult.value1, "sample", sample);
+		json_t *root = json_pack("{s:s, s:o}", "m", "store(Lorg/inaetics/demonstrator/api/data/Result;)V", "a", result);
 
 		char *data = json_dumps(root, 0);
 		char *reply = NULL;
 		int replyStatus = 0;
 
-		status = dataStore->sendToCallback(dataStore->sendToHandler, dataStore->endpoint, data, &reply, &replyStatus);
+		if (data != NULL) {
+			status = dataStore->sendToCallback(dataStore->sendToHandler, dataStore->endpoint, data, &reply, &replyStatus);
+		}
+		else {
+			status = CELIX_BUNDLE_EXCEPTION;
+		}
 
 		*resultStored  = (status == CELIX_SUCCESS) ? true : false;
 
@@ -70,7 +75,7 @@ int dataStoreProxy_store(void* store, struct result workResult, bool *resultStor
 	return (status == CELIX_SUCCESS) ? result : (int) status;
 }
 
-int dataStoreProxy_storeAll(void* store, struct result *results, uint32_t size, uint32_t *storedResults)
+int dataStoreProxy_storeAll(void* store, struct result *results, uint32_t size, uint32_t* storedResults)
 {
 	celix_status_t status = CELIX_SUCCESS;
 	int result = 0;
@@ -87,7 +92,7 @@ int dataStoreProxy_storeAll(void* store, struct result *results, uint32_t size, 
 			json_array_append_new(array, element);
 		}
 
-		root = json_pack("{s:s, s:[O]}", "m", "storeAll(Ljava/util/Collection;)V", "a", array);
+		root = json_pack("{s:s, s:[o]}", "m", "storeAll(Ljava/util/Collection;)V", "a", array);
 
 		char *data = json_dumps(root, 0);
 		char *reply = NULL;

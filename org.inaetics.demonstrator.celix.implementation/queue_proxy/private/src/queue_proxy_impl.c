@@ -61,7 +61,7 @@ int queueProxy_put(void* queue, struct sample workSample, bool *sampleTaken) {
 			json_t *js_reply = json_loads(reply, JSON_DECODE_ANY, &error);
 
 			if (!js_reply || json_unpack(js_reply, "{s:b}", "r", sampleTaken) != 0) {
-				printf("PROXY: got error '%s' for '%s'\n", error.text, reply);
+				printf("QUEUE_PROXY: put: got error '%s' for '%s'\n", error.text, reply);
 				status = CELIX_BUNDLE_EXCEPTION;
 			}
 			json_decref(js_reply);
@@ -110,7 +110,7 @@ int queueProxy_putAll(void *queue, struct sample *samples, uint32_t size, uint32
 
 			json_t *js_reply = json_loads(reply, JSON_DECODE_ANY, &error);
 			if (!js_reply  || json_unpack(js_reply, "{s:i}", "r",  samplesTaken) != 0) {
-				printf("PROXY: got error '%s' for '%s'\n", error.text, reply);
+				printf("QUEUE_PROXY: putAll: got error '%s' for '%s'\n", error.text, reply);
 				status = CELIX_BUNDLE_EXCEPTION;
 			}
 			json_decref(js_reply);
@@ -160,12 +160,12 @@ int queueProxy_take(void* queue, struct sample *sample) {
 					status = CELIX_BUNDLE_EXCEPTION;
 				}
 				else if (json_unpack(js_sample, "{s:i,s:f,s:f}", "sampleTime", &sample->time, "value1", &sample->value1, "value1", &sample->value2) != 0) {
-	                printf("PROXY: got error while json_unpack for '%s'\n", json_dumps(js_sample, JSON_DECODE_ANY));
+	                printf("QUEUE_PROXY: take: got error while json_unpack for '%s'\n", json_dumps(js_sample, JSON_DECODE_ANY));
 					status = CELIX_BUNDLE_EXCEPTION;
 				}
 
 			} else {
-				printf("PROXY: got error '%s' for '%s'\n", error.text, reply);
+				printf("QUEUE_PROXY: take: got error '%s' for '%s'\n", error.text, reply);
 				status = CELIX_BUNDLE_EXCEPTION;
 			}
 			json_decref(js_reply);
@@ -225,11 +225,11 @@ int queueProxy_takeAll(void* queue, uint32_t min, uint32_t max, struct sample **
 				}
 				else
 				{
-				    printf("PROXY: received value is no array!\n");
+				    printf("QUEUEPROXY: takeAll: received value is no array! (reply: %s)\n", reply);
 					*samplesSize = 0;
 				}
 			} else {
-				printf("PROXY: got error '%s' for '%s'\n", error.text, reply);
+				printf("QUEUEPROXY: takeAll: got error '%s' for '%s'\n", error.text, reply);
 				status = CELIX_BUNDLE_EXCEPTION;
 			}
 
