@@ -12,11 +12,10 @@
 #include "hash_map.h"
 #include "inaetics_demonstrator_api/sample.h"
 
-#define SINGLE_SAMPLES_PER_SEC 	1000
-#define BURST_SAMPLES_PER_SEC 	1000
+#define MAX_SAMPLES_PER_SEC 	500
 
-#define MIN_BURST_LEN 			100
-#define MAX_BURST_LEN 			500
+#define MIN_BURST_LEN 			10
+#define MAX_BURST_LEN 			50
 
 #define VERBOSE					2
 #define WAIT_TIME_USECONDS      500000
@@ -38,6 +37,9 @@ struct producer_thread_data {
 	bool running;
 
 	struct sample_queue_service* service;
+
+	pthread_rwlock_t sampleRateLock;
+	unsigned int sampleRate;
 
 	pthread_rwlock_t throughputLock;
 	unsigned long single_throughput;
@@ -105,7 +107,7 @@ celix_status_t producer_sendSamples(producer_thread_data_pt th_data, int samples
 	timespec_diff(&ts_diff,&ts_start,&ts_start);
 
 	// send single samples per second
-	for (ts_end = ts_start; (singleSampleCnt < SINGLE_SAMPLES_PER_SEC) && (ts_diff.tv_sec<=0);) {
+	for (ts_end = ts_start; (singleSampleCnt < samplesPerSec) && (ts_diff.tv_sec<=0);) {
 		bool ret = false;
 
 		memset(&smpl, 0, sizeof(struct sample));
@@ -159,7 +161,7 @@ celix_status_t producer_sendBursts(producer_thread_data_pt th_data, int samplesP
 
 	int counter=0;
 
-	for (ts_end = ts_start; (burstSampleCnt < BURST_SAMPLES_PER_SEC) && (ts_diff.tv_sec<=0);) {
+	for (ts_end = ts_start; (burstSampleCnt < samplesPerSec) && (ts_diff.tv_sec<=0);) {
 		int burst_len = producer_rand_range(MIN_BURST_LEN, MAX_BURST_LEN);
 		uint32_t burst_samples_stored = 0;
 
@@ -208,20 +210,20 @@ celix_status_t producer_sendBursts(producer_thread_data_pt th_data, int samplesP
 void *producer_generate(void *handle) {
 	producer_thread_data_pt th_data = (producer_thread_data_pt) handle;
 	celix_status_t status = CELIX_SUCCESS;
+	int sampleRate;
 
 	th_data->running = true;
 
 	while (th_data->running && status == CELIX_SUCCESS) {
 
-		
-		if (BURST_SAMPLES_PER_SEC > 0) {
-			status = producer_sendBursts(th_data, BURST_SAMPLES_PER_SEC);
-		}
+		pthread_rwlock_rdlock(&th_data->throughputLock);
+		sampleRate = th_data->sampleRate;
+		pthread_rwlock_unlock(&th_data->throughputLock);
 
-		if (SINGLE_SAMPLES_PER_SEC > 0) {
-			status = producer_sendSamples(th_data, SINGLE_SAMPLES_PER_SEC);
+		if (th_data->sampleRate  > 0) {
+			//status = producer_sendBursts(th_data, sampleRate);
+			status = producer_sendSamples(th_data, sampleRate);
 		}
-
 
 		pthread_yield();
 	}
@@ -311,6 +313,9 @@ celix_status_t producer_queueServiceAdded(void *handle, service_reference_pt ref
 
 	producer_thread_data_pt th_data = calloc(1, sizeof(struct producer_thread_data));
 	th_data->service = service;
+	th_data->sampleRate = MAX_SAMPLES_PER_SEC;
+	pthread_rwlock_init(&th_data->sampleRateLock, NULL);
+
 	pthread_create(&th_data->thread, NULL, producer_generate, th_data);
 	hashMap_put(producer->queueServices, service, th_data);
 
@@ -331,6 +336,8 @@ celix_status_t producer_queueServiceRemoved(void *handle, service_reference_pt r
 	producer_thread_data_pt th_data = (producer_thread_data_pt) hashMap_get(producer->queueServices, service);
 	th_data->running = false;
 	pthread_join(th_data->thread, NULL);
+
+	pthread_rwlock_destroy(&th_data->sampleRateLock);
 
 	hashMap_remove(producer->queueServices, service);
 	free(th_data);
@@ -381,6 +388,10 @@ int producer_getUtilizationStatsValue(producer_pt producer, double* statVal) {
 
 	hashMapIterator_destroy(iter);
 
+	if (hashMap_size(producer->queueServices) > 0) {
+		total_average /= hashMap_size(producer->queueServices);
+	}
+
 	pthread_rwlock_unlock(&producer->queueLock);
 
 	(*statVal) = total_average;
@@ -391,3 +402,61 @@ int producer_getUtilizationStatsMeasurementUnit(producer_pt producer, char **mUn
 	(*mUnit) = (char*) THROUGHPUT_MEASUREMENT_UNIT;
 	return (int) CELIX_SUCCESS;
 }
+
+
+
+
+int producer_getMaxSampleRate(producer_pt producer) {
+	return MAX_SAMPLES_PER_SEC;
+}
+
+
+int producer_getSampleRate(producer_pt producer) {
+
+	int sampleRate = 0;
+
+	pthread_rwlock_rdlock(&producer->queueLock);
+
+	hash_map_iterator_pt iter = hashMapIterator_create(producer->queueServices);
+
+	while (hashMapIterator_hasNext(iter)) {
+		producer_thread_data_pt th_data = (producer_thread_data_pt) hashMapIterator_nextValue(iter);
+
+		pthread_rwlock_rdlock(&th_data->sampleRateLock);
+		sampleRate += th_data->single_throughput; // + value->burst_throughput
+		pthread_rwlock_unlock(&th_data->sampleRateLock);
+	}
+
+	hashMapIterator_destroy(iter);
+
+	if (hashMap_size(producer->queueServices) > 0) {
+		sampleRate /= hashMap_size(producer->queueServices);
+	}
+
+	pthread_rwlock_unlock(&producer->queueLock);
+
+	return sampleRate;
+}
+
+
+
+void producer_setSampleRate(producer_pt producer, int rate) {
+
+	pthread_rwlock_rdlock(&producer->queueLock);
+
+	hash_map_iterator_pt iter = hashMapIterator_create(producer->queueServices);
+
+	while (hashMapIterator_hasNext(iter)) {
+
+		producer_thread_data_pt th_data = (producer_thread_data_pt) hashMapIterator_nextValue(iter);
+
+		pthread_rwlock_wrlock(&th_data->sampleRateLock);
+		th_data->sampleRate = rate;
+		pthread_rwlock_unlock(&th_data->sampleRateLock);
+	}
+
+	hashMapIterator_destroy(iter);
+
+	pthread_rwlock_unlock(&producer->queueLock);
+}
+

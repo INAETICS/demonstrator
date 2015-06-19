@@ -28,4 +28,9 @@ int producer_getUtilizationStatsType(producer_pt producer, char **type);
 int producer_getUtilizationStatsValue(producer_pt producer, double* statVal);
 int producer_getUtilizationStatsMeasurementUnit(producer_pt producer, char **mUnit);
 
+int producer_getMaxSampleRate(producer_pt producer);
+int producer_getSampleRate(producer_pt producer);
+void producer_setSampleRate(producer_pt producer, int rate);
+
+
 #endif

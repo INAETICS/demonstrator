@@ -1,4 +1,6 @@
 add_subdirectory(producer)
+add_subdirectory(producer_endpoint)
+add_subdirectory(producer_proxy)
 add_subdirectory(sample_queue)
 add_subdirectory(queue_endpoint)
 add_subdirectory(queue_proxy)
