@@ -3,4 +3,6 @@ Bundle-Activator: \
 	
 Private-Package: \
 	org.inaetics.demonstrator.coordinator,\
-	org.inaetics.demonstrator.coordinator.k8s
+	org.inaetics.demonstrator.coordinator.k8s,\
+	org.inaetics.demonstrator.coordinator.k8s.rc,\
+	org.inaetics.demonstrator.coordinator.k8s.rc.model

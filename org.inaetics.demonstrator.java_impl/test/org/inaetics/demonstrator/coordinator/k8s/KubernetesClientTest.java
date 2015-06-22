@@ -3,6 +3,7 @@
  */
 package org.inaetics.demonstrator.coordinator.k8s;
 
+import org.inaetics.demonstrator.coordinator.k8s.rc.ReplicationController;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -17,7 +18,7 @@ public class KubernetesClientTest {
 			return;
 		}
 		
-		KubernetesClient kc = new KubernetesClient("http://172.17.8.20:10260");
+		KubernetesClient kc = new KubernetesClient("http://172.17.8.20:10260", null);
 		ReplicationController rc = kc.getReplicationController("inaetics-processor-controller");
 		Assert.assertNotNull(rc);
 		rc.increaseReplicaCount(5);

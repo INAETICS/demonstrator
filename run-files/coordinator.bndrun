@@ -19,6 +19,12 @@
 	org.apache.felix.metatype,\
 	org.apache.felix.log,\
 	org.apache.felix.webconsole,\
+	com.fasterxml.jackson.core.jackson-core;version='[2.3,2.4)',\
+	com.fasterxml.jackson.core.jackson-databind;version='[2.3,2.4)',\
+	com.fasterxml.jackson.core.jackson-annotations;version='[2.3,2.4)',\
+	org.apache.httpcomponents.httpcore;version='[4.2,4.3)',\
+	org.apache.httpcomponents.httpclient;version='[4.2,4.3)',\
+	com.springsource.org.apache.commons.logging;version='[1.1,1.2)',\
     org.inaetics.wiring.base;version=latest,\
     org.inaetics.wiring.endpoint;version=latest,\
     org.inaetics.wiring.admin.http;version=latest,\
@@ -43,4 +49,10 @@
 	org.inaetics.wiring.discovery.etcd.connecturl=http://172.17.8.20:4001/,\
 	org.inaetics.wiring.discovery.etcd.rootpath=/inaetics/wiring,\
 	org.inaetics.wiring.admin.http.zone=zone1,\
-	org.inaetics.wiring.admin.http.node=coordinator-node
+	org.inaetics.wiring.admin.http.node=coordinator-node,\
+	org.inaetics.demonstrator.coordinator.kubernetes_master_url=http://172.17.8.20:10260,\
+	org.inaetics.demonstrator.coordinator.queue_low_barrier=40,\
+	org.inaetics.demonstrator.coordinator.queue_high_barrier=60,\
+	org.inaetics.demonstrator.coordinator.processor_controller_name=inaetics-processor-controller,\
+	org.inaetics.demonstrator.coordinator.poll_interval=20,\
+	org.inaetics.demonstrator.coordinator.max_number_processors=5
