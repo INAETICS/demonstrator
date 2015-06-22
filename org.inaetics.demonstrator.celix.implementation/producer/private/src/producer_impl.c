@@ -221,7 +221,7 @@ void *producer_generate(void *handle) {
 		pthread_rwlock_unlock(&th_data->throughputLock);
 
 		if (th_data->sampleRate  > 0) {
-			//status = producer_sendBursts(th_data, sampleRate);
+			status = producer_sendBursts(th_data, sampleRate);
 			status = producer_sendSamples(th_data, sampleRate);
 		}
 
