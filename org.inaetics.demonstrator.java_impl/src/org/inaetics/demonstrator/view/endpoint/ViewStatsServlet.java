@@ -93,7 +93,11 @@ public class ViewStatsServlet extends HttpServlet {
             // Return an array with all providers sorted on their name...
             Map<String, Container> names = new TreeMap<>();
             for (Container c : m_providerStats.values()) {
-                names.put(c.m_provider.getName(), c);
+                try {
+                	names.put(c.m_provider.getName(), c);
+                } catch (Exception e) {
+                    m_log.log(LogService.LOG_WARNING, "Failed to get provider name", e);
+                }
             }
 
             for (Container container : names.values()) {

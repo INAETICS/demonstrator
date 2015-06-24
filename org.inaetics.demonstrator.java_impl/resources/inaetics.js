@@ -49,7 +49,7 @@ function getData(stats) {
 		datasets: [ {
 			fillColor: "rgba(151,187,205,0.5)",
 	        strokeColor: "rgba(151,187,205,1)",
-			data: stats.values || [ 0 ]
+			data: stats.values && stats.values.length > 0 ? stats.values : [ 0 ]
 		} ] 
 	}
 }
