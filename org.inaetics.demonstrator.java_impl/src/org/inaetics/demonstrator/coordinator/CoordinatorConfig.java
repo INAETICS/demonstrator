@@ -18,14 +18,16 @@ public class CoordinatorConfig {
 	private static String KEY_K8S_MASTER_URI = CONFIG_PID + ".kubernetes_master_url";
 	private static String KEY_QUEUE_LOW_BARRIER = CONFIG_PID + ".queue_low_barrier";
 	private static String KEY_QUEUE_HIGH_BARRIER = CONFIG_PID + ".queue_high_barrier";
-	private static String KEY_PROCESSOR_CONTROLLER_NAME = CONFIG_PID + ".processor_controller_name";
+	private static String KEY_FELIX_PROCESSOR_CONTROLLER_NAME = CONFIG_PID + ".felix_processor_controller_name";
+	private static String KEY_CELIX_PROCESSOR_CONTROLLER_NAME = CONFIG_PID + ".celix_processor_controller_name";
 	private static String KEY_POLL_INTERVAL = CONFIG_PID + ".poll_interval";
 	private static String KEY_MAX_NR_PROCESSORS = CONFIG_PID + ".max_number_processors";
 	
 	private String m_k8sMasterUrl;
 	private int m_queueLowBarrier;
 	private int m_queueHighBarrier;
-	private String m_processorControllerName;
+	private String m_felixProcessorControllerName;
+	private String m_celixProcessorControllerName;
 	private int m_pollInterval;
 	private int m_maxNrProcessors;
 	
@@ -33,7 +35,8 @@ public class CoordinatorConfig {
     	m_k8sMasterUrl = ConfigUtils.getConfigStringValue(context, properties, KEY_K8S_MASTER_URI);
     	m_queueLowBarrier = ConfigUtils.getConfigIntValue(context, properties, KEY_QUEUE_LOW_BARRIER);
     	m_queueHighBarrier = ConfigUtils.getConfigIntValue(context, properties, KEY_QUEUE_HIGH_BARRIER);
-    	m_processorControllerName = ConfigUtils.getConfigStringValue(context, properties, KEY_PROCESSOR_CONTROLLER_NAME);
+    	m_felixProcessorControllerName = ConfigUtils.getConfigStringValue(context, properties, KEY_FELIX_PROCESSOR_CONTROLLER_NAME);
+    	m_celixProcessorControllerName = ConfigUtils.getConfigStringValue(context, properties, KEY_CELIX_PROCESSOR_CONTROLLER_NAME);
     	m_pollInterval = ConfigUtils.getConfigIntValue(context, properties, KEY_POLL_INTERVAL);
     	m_maxNrProcessors = ConfigUtils.getConfigIntValue(context, properties, KEY_MAX_NR_PROCESSORS);
     }
@@ -50,10 +53,14 @@ public class CoordinatorConfig {
 		return m_queueHighBarrier;
 	}
 
-	public String getProcessorControllerName() {
-		return m_processorControllerName;
+	public String getFelixProcessorControllerName() {
+		return m_felixProcessorControllerName;
 	}
 	
+	public String getCelixProcessorControllerName() {
+		return m_celixProcessorControllerName;
+	}
+
 	public int getPollInterval() {
 		return m_pollInterval;
 	}
@@ -67,7 +74,8 @@ public class CoordinatorConfig {
 		return "CoordinatorConfig [m_k8sMasterUrl=" + m_k8sMasterUrl
 				+ ", m_queueLowBarrier=" + m_queueLowBarrier
 				+ ", m_queueHighBarrier=" + m_queueHighBarrier
-				+ ", m_processorControllerName=" + m_processorControllerName
+				+ ", m_felixProcessorControllerName=" + m_felixProcessorControllerName
+				+ ", m_celixProcessorControllerName=" + m_celixProcessorControllerName
 				+ ", m_pollInterval=" + m_pollInterval + ", m_maxNrProcessors="
 				+ m_maxNrProcessors + "]";
 	}

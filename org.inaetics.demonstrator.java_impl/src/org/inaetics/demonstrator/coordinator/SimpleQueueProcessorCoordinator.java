@@ -71,31 +71,51 @@ public class SimpleQueueProcessorCoordinator {
 	}
 	
 	private void increaseProcessorCount() {
-		ReplicationController processorController = getProcessorController();
-		if (processorController == null) {
+		ReplicationController felixProcessorController = getFelixProcessorController();
+		ReplicationController celixProcessorController = getCelixProcessorController();
+		if (felixProcessorController == null || celixProcessorController == null) {
 			m_log.log(LogService.LOG_INFO, "didn't get rc!");
 			return;
 		}
-		processorController.increaseReplicaCount(m_config.getMaxNrProcessors());
-		m_kubernetesClient.updateReplicationController(processorController);
+		if (celixProcessorController.getReplicaCount() <= felixProcessorController.getReplicaCount()) {
+			celixProcessorController.increaseReplicaCount(m_config.getMaxNrProcessors() / 2);
+			m_kubernetesClient.updateReplicationController(celixProcessorController);
+		}
+		else {
+			felixProcessorController.increaseReplicaCount(m_config.getMaxNrProcessors() / 2);
+			m_kubernetesClient.updateReplicationController(felixProcessorController);
+		}
 	}
 
 	private void decreaseProcessorCount() {
-		ReplicationController processorController = getProcessorController();
-		if (processorController == null) {
+		ReplicationController felixProcessorController = getFelixProcessorController();
+		ReplicationController celixProcessorController = getCelixProcessorController();
+		if (felixProcessorController == null || celixProcessorController == null) {
 			m_log.log(LogService.LOG_INFO, "didn't get rc!");
 			return;
 		}
-		processorController.decreaseReplicaCount(1);
-		m_kubernetesClient.updateReplicationController(processorController);
+		if (celixProcessorController.getReplicaCount() > felixProcessorController.getReplicaCount()) {
+			celixProcessorController.decreaseReplicaCount(1);
+			m_kubernetesClient.updateReplicationController(celixProcessorController);
+		}
+		else {
+			felixProcessorController.decreaseReplicaCount(0);
+			m_kubernetesClient.updateReplicationController(felixProcessorController);
+		}
 	}
 	
-	private ReplicationController getProcessorController() {
+	private ReplicationController getFelixProcessorController() {
 		ReplicationController processorController = m_kubernetesClient.getReplicationController(
-				m_config.getProcessorControllerName());
+				m_config.getFelixProcessorControllerName());
 		return processorController;
 	}
 	
+	private ReplicationController getCelixProcessorController() {
+		ReplicationController processorController = m_kubernetesClient.getReplicationController(
+				m_config.getCelixProcessorControllerName());
+		return processorController;
+	}
+
 	public LogService getLogService() {
 		return m_log;
 	}
