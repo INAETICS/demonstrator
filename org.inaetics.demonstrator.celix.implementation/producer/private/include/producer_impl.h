@@ -17,31 +17,23 @@
 
 #include "inaetics_demonstrator_api/sample_queue.h"
 
-
-#define SINGLE_SAMPLES_PER_SEC 	1000
-#define BURST_SAMPLES_PER_SEC 	1000
-
-#define MIN_BURST_LEN 			2
-#define MAX_BURST_LEN 			10
-
-#define VERBOSE					1
-#define WAIT_TIME_SECONDS       5
-
-
 typedef struct producer* producer_pt;
 
-celix_status_t producer_create(producer_pt* producer);
+celix_status_t producer_create(char* name, producer_pt* producer);
 celix_status_t producer_stop(producer_pt producer);
 celix_status_t producer_destroy(producer_pt producer);
 
 celix_status_t producer_queueServiceAdded(void *handle, service_reference_pt reference, void *service);
 celix_status_t producer_queueServiceRemoved(void *handle, service_reference_pt reference, void *service);
 
+int producer_getUtilizationStatsName(producer_pt producer, char **name);
+int producer_getUtilizationStatsType(producer_pt producer, char **type);
+int producer_getUtilizationStatsValue(producer_pt producer, double* statVal);
+int producer_getUtilizationStatsMeasurementUnit(producer_pt producer, char **mUnit);
 
+int producer_getMaxSampleRate(producer_pt producer);
+int producer_getSampleRate(producer_pt producer);
+void producer_setSampleRate(producer_pt producer, int rate);
 
-
-
-
-void *produceSamples(void *handle);
 
 #endif

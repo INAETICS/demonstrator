@@ -29,7 +29,7 @@ celix_status_t dataStoreProxy_create(bundle_context_pt context, data_store_type 
 	return status;
 }
 
-celix_status_t dataStoreProxy_destroy( data_store_type **data_store)  {
+celix_status_t dataStoreProxy_destroy(data_store_type **data_store)  {
     celix_status_t status = CELIX_SUCCESS;
 
     free(*data_store);
@@ -38,22 +38,30 @@ celix_status_t dataStoreProxy_destroy( data_store_type **data_store)  {
     return status;
 }
 
-celix_status_t dataStoreProxy_store(data_store_type* data_store, struct result workResult, bool *resultStored) {
+int dataStoreProxy_store(void* store, struct result workResult, bool *resultStored) {
 
 	celix_status_t status = CELIX_SUCCESS;
 	int result = 0;
+    data_store_type* dataStore = (data_store_type*) store;
 
-	if (data_store->endpoint != NULL) {
+	if (dataStore->endpoint != NULL) {
 
 		json_t* sample = json_pack("{s:I,s:f,s:f}", "sampleTime", workResult.sample.time, "value1", workResult.sample.value1, "value2", workResult.sample.value2);
-		json_t* result = json_pack("[{s:I,s:f,s:O}]", "processingTime", workResult.time, "result1", workResult.value1, "sample", sample);
-		json_t *root = json_pack("{s:s, s:O}", "m", "store(Lorg/inaetics/demonstrator/api/data/Result;)V", "a", result);
+		json_t* result = json_pack("[{s:I,s:f,s:o}]", "processingTime", workResult.time, "result1", workResult.value1, "sample", sample);
+		json_t *root = json_pack("{s:s, s:o}", "m", "store(Lorg/inaetics/demonstrator/api/data/Result;)V", "a", result);
 
 		char *data = json_dumps(root, 0);
 		char *reply = NULL;
 		int replyStatus = 0;
 
-		status = data_store->sendToCallback(data_store->sendToHandler, data_store->endpoint, data, &reply, &replyStatus);
+		if (data != NULL) {
+			status = dataStore->sendToCallback(dataStore->sendToHandler, dataStore->endpoint, data, &reply, &replyStatus);
+		}
+		else {
+			status = CELIX_BUNDLE_EXCEPTION;
+		}
+
+		*resultStored  = (status == CELIX_SUCCESS) ? true : false;
 
 		json_decref(root);
 
@@ -67,12 +75,13 @@ celix_status_t dataStoreProxy_store(data_store_type* data_store, struct result w
 	return (status == CELIX_SUCCESS) ? result : (int) status;
 }
 
-celix_status_t dataStoreProxy_storeAll(data_store_type *store, struct result *results, uint32_t size, uint32_t *storedResults)
+int dataStoreProxy_storeAll(void* store, struct result *results, uint32_t size, uint32_t* storedResults)
 {
 	celix_status_t status = CELIX_SUCCESS;
 	int result = 0;
+	data_store_type* dataStore = (data_store_type*) store;
 
-	if (store->endpoint != NULL) {
+	if (dataStore->endpoint != NULL) {
 		uint32_t arrayCnt = 0;
 		json_t *root;
 		json_t *array = json_array();
@@ -83,13 +92,13 @@ celix_status_t dataStoreProxy_storeAll(data_store_type *store, struct result *re
 			json_array_append_new(array, element);
 		}
 
-		root = json_pack("{s:s, s:[O]}", "m", "storeAll(Ljava/util/Collection;)V", "a", array);
+		root = json_pack("{s:s, s:[o]}", "m", "storeAll(Ljava/util/Collection;)V", "a", array);
 
 		char *data = json_dumps(root, 0);
 		char *reply = NULL;
 		int replyStatus = 0;
 
-		status = store->sendToCallback(store->sendToHandler, store->endpoint, data, &reply, &replyStatus);
+		status = dataStore->sendToCallback(dataStore->sendToHandler, dataStore->endpoint, data, &reply, &replyStatus);
 
 		if (status == CELIX_SUCCESS && replyStatus == 0) {
 			json_error_t error;

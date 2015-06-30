@@ -1,6 +1,3 @@
-/**
- * Licensed under Apache License v2. See LICENSE for more information.
- */
 
 
 #ifndef QUEUE_PROXY_IMPL_H_
@@ -16,6 +13,8 @@
 #include "endpoint_listener.h"
 #include "inaetics_demonstrator_api/sample_queue.h"
 
+typedef struct sample_queue sample_queue_type;
+
 struct sample_queue {
 	bundle_context_pt context;
 
@@ -28,9 +27,9 @@ struct sample_queue {
 celix_status_t queueProxy_create(bundle_context_pt context, sample_queue_type** queue);
 celix_status_t queueProxy_destroy(sample_queue_type** queue);
 
-celix_status_t queueProxy_put(sample_queue_type* queue, struct sample workSample, bool *sampleTaken);
-celix_status_t queueProxy_putAll(sample_queue_type *queue, struct sample *samples, uint32_t size, uint32_t *samplesTaken);
-int queueProxy_take(sample_queue_type* queue, struct sample *sample);
-int queueProxy_takeAll(sample_queue_type* queue, uint32_t min, uint32_t max, struct sample **samples, uint32_t *samplesSize);
+int queueProxy_put(void* queue, struct sample workSample, bool *sampleTaken);
+int queueProxy_putAll(void* queue, struct sample *samples, uint32_t size, uint32_t *samplesTaken);
+int queueProxy_take(void* queue, struct sample *sample);
+int queueProxy_takeAll(void* queue, uint32_t min, uint32_t max, struct sample **samples, uint32_t *samplesSize);
 
 #endif /* QUEUE_PROXY_IMPL_H_ */

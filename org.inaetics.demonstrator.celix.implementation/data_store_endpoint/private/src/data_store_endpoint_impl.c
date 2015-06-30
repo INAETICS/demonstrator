@@ -26,6 +26,7 @@ celix_status_t dataStoreEndpoint_setService(remote_endpoint_pt endpoint, void *s
 	celix_status_t status = CELIX_SUCCESS;
 	endpoint->service = service;
 	return status;
+
 }
 
 /**

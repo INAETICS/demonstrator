@@ -9,8 +9,7 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wno-long-long")
 find_package(CELIX REQUIRED)
 include_directories(${CELIX_INCLUDE_DIRS})
 
-include_directories(org.inaetics.demonstrator.api/src/org/inaetics/demonstrator/api/data_store)
-include_directories(org.inaetics.demonstrator.api/src/org/inaetics/demonstrator/api/sample_queue)
+include_directories(org.inaetics.demonstrator.api/include)
 
 add_subdirectory(org.inaetics.demonstrator.celix.implementation demonstrator)
 deploy_targets()

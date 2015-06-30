@@ -1,17 +1,36 @@
-/**
- * Licensed under Apache License v2. See LICENSE for more information.
- */
-#include <pthread.h>
-#include <stdarg.h>
-#include <time.h>
+#define _GNU_SOURCE
 
-#include "utils.h"
-#include "celix_errno.h"
 #include "processor_impl.h"
 
+#include <stdarg.h>
+#include <stdint.h>
+#include <unistd.h>
+
+#include "celix_errno.h"
+#include "service_reference.h"
+#include "utils.h"
+#include "hash_map.h"
+#include "inaetics_demonstrator_api/result.h"
+#include "inaetics_demonstrator_api/sample.h"
+
+#define SINGLE_SAMPLES_PER_SEC  1000
+#define BURST_SAMPLES_PER_SEC 	1000
+
+#define MIN_BURST_LEN 			2
+#define MAX_BURST_LEN 			200
+
+#define VERBOSE					2
+#define WAIT_TIME_USECONDS      500000
+
+#define THROUGHPUT_NAME_POSTFIX 		" Statistics"
+#define THROUGHPUT_TYPE 				"(throughput)"
+#define THROUGHPUT_MEASUREMENT_UNIT		"result/sec"
+
 struct processor {
+	char* name;
+	char *utilizationStatsName;
+
 	hash_map_pt queueServices;
-	hash_map_pt queueServiceLocks;
 	pthread_rwlock_t queueLock;
 
 	array_list_pt dataStoreServices;
@@ -19,6 +38,20 @@ struct processor {
 
 	bool running;
 };
+
+struct processor_thread_data {
+	pthread_t thread;
+	bool running;
+
+	processor_pt processor;
+	struct sample_queue_service* service;
+
+	pthread_rwlock_t throughputLock;
+	unsigned long single_throughput;
+	unsigned long burst_throughput;
+};
+
+typedef struct processor_thread_data* processor_thread_data_pt;
 
 static void msg(int lvl, char *fmsg, ...) {
 	if (lvl <= VERBOSE) {
@@ -51,72 +84,97 @@ static void processor_sendResult(processor_pt processor, struct result result) {
 
 static void processor_processSample(struct sample* sample, struct result* result) {
 
+	int i;
+
 	result->time = sample->time;
-	result->value1 = sample->value1 + sample->value2;
+	for (i =0; i < 10000; i++)
+	{
+		result->value1 = sample->value1 + sample->value2;
+	}
 	memcpy(&(result->sample), sample, sizeof(struct sample));
+
 }
 
-celix_status_t processor_receiveSamples(processor_pt processor, int samplesPerSec) {
+static void timespec_diff(struct timespec* diff, struct timespec* start, struct timespec* end)
+{
+
+	if ((end->tv_nsec-start->tv_nsec)<0) {
+		diff->tv_sec = end->tv_sec-start->tv_sec-1;
+		diff->tv_nsec = 1000000000+end->tv_nsec-start->tv_nsec;
+	} else {
+		diff->tv_sec = end->tv_sec-start->tv_sec;
+		diff->tv_nsec = end->tv_nsec-start->tv_nsec;
+	}
+
+}
+
+
+celix_status_t processor_receiveSamples(processor_thread_data_pt th_data, int samplesPerSec) {
 	celix_status_t status = CELIX_SUCCESS;
-	struct sample_queue_service* queueService = NULL;
+	struct sample_queue_service* queueService = th_data->service;
 	struct timespec ts_start;
 	struct timespec ts_end;
+	struct timespec ts_diff;
 	int singleSampleCnt = 0;
 
 	clock_gettime(CLOCK_REALTIME, &ts_start);
+	timespec_diff(&ts_diff,&ts_start,&ts_start);
 
-	for (ts_end = ts_start; (singleSampleCnt < SINGLE_SAMPLES_PER_SEC) && (ts_start.tv_sec == ts_end.tv_sec);) {
+	for (ts_end = ts_start; (singleSampleCnt < SINGLE_SAMPLES_PER_SEC) && (ts_diff.tv_sec<=0);) {
 		struct sample *recvSample = calloc(1, sizeof(struct sample));
 
-		pthread_t self = pthread_self();
-		pthread_rwlock_rdlock(&processor->queueLock);
-		queueService = (struct sample_queue_service*) hashMap_get(processor->queueServices, &self);
+		if (recvSample) {
+			if (queueService != NULL) {
+				if (queueService->take(queueService->sampleQueue, recvSample) == 0) {
+					struct result* result_pt = calloc(1, sizeof(*result_pt));
 
-		if (queueService != NULL) {
-			if (queueService->take(queueService->sampleQueue, recvSample) == 0) {
-				struct result* result_pt = calloc(1, sizeof(*result_pt));
+					msg(3, "\tPROCESSOR: Received and Processing Sample {Time:%llu | V1=%f | V2=%f}", recvSample->time, recvSample->value1, recvSample->value2);
+					processor_processSample(recvSample, result_pt);
+					processor_sendResult(th_data->processor, *result_pt);
 
-				msg(3, "\tPROCESSOR: Received and Processing Sample {Time:%llu | V1=%f | V2=%f}", recvSample->time, recvSample->value1, recvSample->value2);
-				processor_processSample(recvSample, result_pt);
-				processor_sendResult(processor, *result_pt);
-
-				singleSampleCnt++;
+					singleSampleCnt++;
+				}
+				else {
+					msg(2, "PROCESSOR: Could not take a single sample.");
+				}
 			}
 			else {
-				msg(2, "PROCESSOR: Could not take a single sample.");
+				status = CELIX_BUNDLE_EXCEPTION;
 			}
-		}
-		else {
-			status = CELIX_BUNDLE_EXCEPTION;
-		}
 
-		pthread_rwlock_unlock(&processor->queueLock);
-
-		free(recvSample);
+			free(recvSample);
+		}
 		clock_gettime(CLOCK_REALTIME, &ts_end);
+		timespec_diff(&ts_diff,&ts_start,&ts_end);
 	}
+
+	/* Update the statistic */
+	pthread_rwlock_wrlock(&th_data->throughputLock);
+	th_data->single_throughput = singleSampleCnt;
+	pthread_rwlock_unlock(&th_data->throughputLock);
 
 	msg(1, "PROCESSOR: %d single samples received.", singleSampleCnt);
 
-	while (ts_start.tv_sec >= ts_end.tv_sec) {
-		clock_gettime(CLOCK_REALTIME, &ts_end);
-	}
+	usleep(WAIT_TIME_USECONDS);
 
 	return status;
 }
 
-celix_status_t processor_receiveBursts(processor_pt processor, int samplesPerSec) {
+
+celix_status_t processor_receiveBursts(processor_thread_data_pt th_data, int samplesPerSec) {
 	celix_status_t status = CELIX_SUCCESS;
-	struct sample_queue_service* queueService = NULL;
+	struct sample_queue_service* queueService = th_data->service;
 	struct sample *recvSamples[MAX_BURST_LEN];
 	struct timespec ts_start;
 	struct timespec ts_end;
+	struct timespec ts_diff;
 	uint32_t numOfRecvSamples;
 	int burstSampleCnt = 0;
 
 	clock_gettime(CLOCK_REALTIME, &ts_start);
+	timespec_diff(&ts_diff,&ts_start,&ts_start);
 
-	for (ts_end = ts_start; (burstSampleCnt < samplesPerSec) && (ts_start.tv_sec == ts_end.tv_sec);) {
+	for (ts_end = ts_start; (burstSampleCnt < samplesPerSec) && (ts_diff.tv_sec<=0);) {
 		int j;
 
 		for (j = 0; j < MAX_BURST_LEN; j++) {
@@ -124,11 +182,6 @@ celix_status_t processor_receiveBursts(processor_pt processor, int samplesPerSec
 		}
 
 		msg(3, "PROCESSOR: TakeAll (min: %d, max: %d)", MIN_BURST_LEN, MAX_BURST_LEN);
-
-		pthread_rwlock_rdlock(&processor->queueLock);
-		pthread_t self = pthread_self();
-
-		queueService = hashMap_get(processor->queueServices, &self);
 
 		if (queueService != NULL) {
 			if (queueService->takeAll(queueService->sampleQueue, MIN_BURST_LEN, MAX_BURST_LEN, &recvSamples[0], &numOfRecvSamples) == 0) {
@@ -138,8 +191,12 @@ celix_status_t processor_receiveBursts(processor_pt processor, int samplesPerSec
 					msg(3, "\tPROCESSOR: Processing Sample (%d/%d)  {Time:%llu | V1=%f | V2=%f}", j, numOfRecvSamples, recvSamples[j]->time, recvSamples[j]->value1, recvSamples[j]->value2);
 					struct result* result_pt = calloc(1, sizeof(*result_pt));
 
-					processor_processSample(recvSamples[j], result_pt);
-					processor_sendResult(processor, *result_pt);
+					if (result_pt) {
+						processor_processSample(recvSamples[j], result_pt);
+						processor_sendResult(th_data->processor, *result_pt);
+						free(result_pt);
+					}
+
 				}
 
 				burstSampleCnt += j;
@@ -152,46 +209,46 @@ celix_status_t processor_receiveBursts(processor_pt processor, int samplesPerSec
 			status = CELIX_BUNDLE_EXCEPTION;
 		}
 
-		pthread_rwlock_unlock(&processor->queueLock);
-
 		for (j = 0; j < MAX_BURST_LEN; j++) {
 			free(recvSamples[j]);
 		}
 
 		clock_gettime(CLOCK_REALTIME, &ts_end);
+		timespec_diff(&ts_diff,&ts_start,&ts_end);
 	}
+
+	pthread_rwlock_wrlock(&th_data->throughputLock);
+	th_data->burst_throughput = burstSampleCnt;
+	pthread_rwlock_unlock(&th_data->throughputLock);
 
 	msg(1, "PROCESSOR:  %d samples in bursts received.", burstSampleCnt);
-
-	while (ts_start.tv_sec >= ts_end.tv_sec) {
-		clock_gettime(CLOCK_REALTIME, &ts_end);
-	}
+	
+  usleep(WAIT_TIME_USECONDS);
 
 	return status;
 }
 
+
 void* processor_receive(void *handle) {
-	processor_pt processor = (processor_pt) handle;
+	processor_thread_data_pt th_data = (processor_thread_data_pt) handle;
 	celix_status_t status = CELIX_SUCCESS;
+	th_data->running = true;
 
-	processor->running = true;
-
-	while (processor->running && status == CELIX_SUCCESS) {
-
+	while (th_data->running && status == CELIX_SUCCESS) {
 		if (BURST_SAMPLES_PER_SEC > 0) {
-			status = processor_receiveBursts(processor, BURST_SAMPLES_PER_SEC);
+			status = processor_receiveBursts(th_data, BURST_SAMPLES_PER_SEC);
 		}
-
 		if (SINGLE_SAMPLES_PER_SEC > 0) {
-			status = processor_receiveSamples(processor, SINGLE_SAMPLES_PER_SEC);
+			status = processor_receiveSamples(th_data, SINGLE_SAMPLES_PER_SEC);
 		}
 
+		pthread_yield();
 	}
 
 	return NULL;
 }
 
-celix_status_t processor_create(processor_pt* processor)
+celix_status_t processor_create(char* name, processor_pt* processor)
 {
 	celix_status_t status = CELIX_SUCCESS;
 
@@ -199,15 +256,26 @@ celix_status_t processor_create(processor_pt* processor)
 
 	if (lclProcessor != NULL) {
 
-		lclProcessor->queueServices = hashMap_create(utils_stringHash, NULL, utils_stringEquals, NULL);
-		arrayList_create(&lclProcessor->dataStoreServices);
+		lclProcessor->name = strdup(name);
+		lclProcessor->utilizationStatsName = calloc(1, strlen(name) + strlen(THROUGHPUT_NAME_POSTFIX) + 1);
 
-		pthread_rwlock_init(&lclProcessor->queueLock, NULL);
-		pthread_rwlock_init(&lclProcessor->dataStoreLock, NULL);
+		if (lclProcessor->name != NULL && lclProcessor->utilizationStatsName != NULL) {
 
-		lclProcessor->running = false;
+			sprintf(lclProcessor->utilizationStatsName, "%s%s", lclProcessor->name, (char*) THROUGHPUT_NAME_POSTFIX);
 
-		(*processor) = lclProcessor;
+			lclProcessor->queueServices = hashMap_create(utils_stringHash, NULL, utils_stringEquals, NULL);
+			arrayList_create(&lclProcessor->dataStoreServices);
+
+			pthread_rwlock_init(&lclProcessor->queueLock, NULL);
+			pthread_rwlock_init(&lclProcessor->dataStoreLock, NULL);
+
+			lclProcessor->running = false;
+
+			(*processor) = lclProcessor;
+		}
+		else {
+			status = CELIX_ENOMEM;
+		}
 	} else {
 		status = CELIX_ENOMEM;
 	}
@@ -220,7 +288,6 @@ celix_status_t processor_stop(processor_pt processor)
 	celix_status_t status = CELIX_SUCCESS;
 
 	printf("PROCESSOR: Stopping Processor.\n");
-
 	processor->running = false;
 
 	return status;
@@ -231,7 +298,7 @@ celix_status_t processor_destroy(processor_pt processor)
 	celix_status_t status = CELIX_SUCCESS;
 
 	pthread_rwlock_wrlock(&processor->queueLock);
-	hashMap_destroy(processor->queueServices, false, false);
+	hashMap_destroy(processor->queueServices, false, true);
 	pthread_rwlock_unlock(&processor->queueLock);
 
 	pthread_rwlock_wrlock(&processor->dataStoreLock);
@@ -241,17 +308,31 @@ celix_status_t processor_destroy(processor_pt processor)
 	pthread_rwlock_destroy(&processor->queueLock);
 	pthread_rwlock_destroy(&processor->dataStoreLock);
 
+	if (processor->utilizationStatsName != NULL) {
+		free(processor->utilizationStatsName);
+	}
+
+	if (processor->name != NULL) {
+		free(processor->name);
+	}
+
+	free(processor);
+
 	return status;
 }
 
 celix_status_t processor_queueServiceAdded(void *handle, service_reference_pt reference, void *service)
 {
 	processor_pt processor = (processor_pt) handle;
-	pthread_t* thread_pt = calloc(1, sizeof(*thread_pt));
 
 	pthread_rwlock_wrlock(&processor->queueLock);
-	pthread_create(thread_pt, NULL, processor_receive, processor);
-	hashMap_put(processor->queueServices, thread_pt, service);
+
+	processor_thread_data_pt th_data = calloc(1, sizeof(struct processor_thread_data));
+	th_data->service = service;
+	th_data->processor = processor;
+	pthread_create(&th_data->thread, NULL, processor_receive, th_data);
+	hashMap_put(processor->queueServices, service, th_data);
+
 	pthread_rwlock_unlock(&processor->queueLock);
 
 	return CELIX_SUCCESS;
@@ -259,31 +340,20 @@ celix_status_t processor_queueServiceAdded(void *handle, service_reference_pt re
 
 celix_status_t processor_queueServiceRemoved(void *handle, service_reference_pt reference, void *service)
 {
-	celix_status_t status = CELIX_BUNDLE_EXCEPTION;
+	celix_status_t status = CELIX_SUCCESS;
 	processor_pt processor = (processor_pt) handle;
-	pthread_t* thread_pt = NULL;
 
 	pthread_rwlock_wrlock(&processor->queueLock);
-	hash_map_iterator_pt iter = hashMapIterator_create(processor->queueServices);
+	processor_thread_data_pt th_data = (processor_thread_data_pt) hashMap_get(processor->queueServices, service);
+	th_data->running = false;
+	pthread_join(th_data->thread, NULL);
 
-	while (hashMapIterator_hasNext(iter) && thread_pt == NULL) {
-		hash_map_entry_pt entry = hashMapIterator_nextEntry(iter);
-
-		if (service == hashMapEntry_getValue(entry)) {
-			thread_pt = hashMapEntry_getKey(entry);
-			hashMap_remove(processor->queueServices, thread_pt);
-		}
-	}
-
-	hashMapIterator_destroy(iter);
+	hashMap_remove(processor->queueServices, service);
+	th_data->service = NULL;
+	th_data->processor = NULL;
+	free(th_data);
 
 	pthread_rwlock_unlock(&processor->queueLock);
-
-	if (thread_pt != NULL) {
-		pthread_join(*thread_pt, NULL);
-		free(thread_pt);
-		status = CELIX_SUCCESS;
-	}
 
 	return status;
 }
@@ -312,4 +382,55 @@ celix_status_t processor_dataStoreServiceRemoved(void *handle, service_reference
 	printf("PROCESSOR: DataStore Service Removed.\n");
 
 	return CELIX_SUCCESS;
+}
+
+int processor_getUtilizationStatsName(processor_pt processor, char **name) {
+	celix_status_t status = CELIX_SUCCESS;
+
+	if (processor->utilizationStatsName != NULL) {
+		(*name) = processor->utilizationStatsName;
+	}
+	else {
+		msg(0, "PROCESSOR_STAT: getName denied because service is removed");
+		status = CELIX_ILLEGAL_STATE;
+	}
+
+	return (int) status;
+}
+
+int processor_getUtilizationStatsType(processor_pt processor, char **type) {
+	(*type) = (char*) THROUGHPUT_TYPE;
+	return (int) CELIX_SUCCESS;
+}
+
+int processor_getUtilizationStatsValue(processor_pt processor, double* statVal) {
+	double total_average = 0;
+
+	pthread_rwlock_rdlock(&processor->queueLock);
+
+	hash_map_iterator_pt iter = hashMapIterator_create(processor->queueServices);
+
+	while (hashMapIterator_hasNext(iter)) {
+
+		hash_map_entry_pt entry = hashMapIterator_nextEntry(iter);
+
+		if (entry != NULL) {
+			processor_thread_data_pt value = (processor_thread_data_pt) hashMapEntry_getValue(entry);
+			if (value != NULL) {
+				total_average += (double) (((double) (value->single_throughput + value->burst_throughput)) / ((double) 2.0f));
+			}
+		}
+	}
+
+	hashMapIterator_destroy(iter);
+
+	pthread_rwlock_unlock(&processor->queueLock);
+
+	(*statVal) = total_average;
+	return (int) CELIX_SUCCESS;
+}
+
+int processor_getUtilizationStatsMeasurementUnit(processor_pt processor, char **mUnit) {
+	(*mUnit) = (char*) THROUGHPUT_MEASUREMENT_UNIT;
+	return (int) CELIX_SUCCESS;
 }

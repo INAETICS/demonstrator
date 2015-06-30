@@ -79,15 +79,17 @@ static celix_status_t dataStoreProxyFactory_create(void *handle, endpoint_descri
     storeService = calloc(1, sizeof(*storeService));
 
     if (storeService) {
-        dataStoreProxy_create(activator->context, &storeService->dataStore);
+        data_store_type* dataStore;
+        dataStoreProxy_create(activator->context, &dataStore);
 
         storeService->store = dataStoreProxy_store;
         storeService->storeAll = dataStoreProxy_storeAll;
 
-        storeService->dataStore->endpoint = endpointDescription;
-        storeService->dataStore->sendToHandler = rsa;
-        storeService->dataStore->sendToCallback = sendToCallback;
+        dataStore->endpoint = endpointDescription;
+        dataStore->sendToHandler = rsa;
+        dataStore->sendToCallback = sendToCallback;
 
+        storeService->dataStore = dataStore;
         *service = storeService;
     } else {
         status = CELIX_ENOMEM;
@@ -103,7 +105,7 @@ static celix_status_t dataStoreProxyFactory_destroy(void *handle, void *service)
         status = CELIX_ILLEGAL_ARGUMENT;
     }
     else {
-        dataStoreProxy_destroy(&storeService->dataStore);
+        dataStoreProxy_destroy((data_store_type**) &storeService->dataStore);
         free(storeService);
     }
 

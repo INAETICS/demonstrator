@@ -13,23 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __INAETICS_DEMONSTATOR_API__DATA_STORE_H_
-#define __INAETICS_DEMONSTATOR_API__DATA_STORE_H_
+#ifndef __INAETICS_DEMONSTRATOR_API__DATA_STORE_H_
+#define __INAETICS_DEMONSTRATOR_API__DATA_STORE_H_
 
 #include <stdint.h>
 #include <stdbool.h>
 #include "inaetics_demonstrator_api/result.h"
 
-#define INAETICS_DEMONSTRATOR_API__DATA_STORE_SERVICE_NAME "org.inaetics.demonstator.api.DataStore"
-
-typedef struct data_store data_store_type; //ADT
+#define INAETICS_DEMONSTRATOR_API__DATA_STORE_SERVICE_NAME "org.inaetics.demonstrator.api.datastore.DataStore"
 
 struct data_store_service {
-	data_store_type *dataStore;
+	void *dataStore;
 
-	int (*findResultsBetween)(data_store_type *dataStore, uint64_t begin, uint64_t end, struct result **results, uint32_t *resultSize);
-	int (*store)(data_store_type *dataStore, struct result result, bool *resultStored);
-	int (*storeAll)(data_store_type *dataStore, struct result *results, uint32_t size, uint32_t *storedResult);
+	int (*store)(void *dataStore, struct result result, bool *resultStored);
+
+	int (*storeAll)(void *dataStore, struct result *results, uint32_t size, uint32_t *storedResult);
+
+	int (*findResultsBetween)(void *dataStore, uint64_t begin, uint64_t end, struct result **results, uint32_t *resultSize);
 
 };
 

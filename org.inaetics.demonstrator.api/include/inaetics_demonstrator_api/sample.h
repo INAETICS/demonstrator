@@ -13,15 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __INAETICS_DEMONSTATOR_API__SAMPLE_H_
-#define __INAETICS_DEMONSTATOR_API__SAMPLE_H_
+#ifndef __INAETICS_DEMONSTRATOR_API__SAMPLE_H_
+#define __INAETICS_DEMONSTRATOR_API__SAMPLE_H_
 
 #include <stdint.h>
 
 struct sample {
-	const uint64_t time; //milliseconds since unix epoch
-	const double value1;
-	const double value2;
+        uint64_t time; //milliseconds since unix epoch
+        double value1;
+        double value2;
 };
 
 #endif

@@ -77,16 +77,20 @@ static celix_status_t queueProxyFactory_create(void *handle, endpoint_descriptio
     queueService = calloc(1, sizeof(*queueService));
 
     if (queueService) {
-        queueProxy_create(activator->context, &queueService->sampleQueue);
+
+        sample_queue_type* sampleQueue;
+        queueProxy_create(activator->context, &sampleQueue);
 
         queueService->put = queueProxy_put;
         queueService->putAll = queueProxy_putAll;
         queueService->take = queueProxy_take;
         queueService->takeAll = queueProxy_takeAll;
 
-        queueService->sampleQueue->endpoint = endpointDescription;
-        queueService->sampleQueue->sendToHandler = rsa;
-        queueService->sampleQueue->sendToCallback = sendToCallback;
+        sampleQueue->endpoint = endpointDescription;
+        sampleQueue->sendToHandler = rsa;
+        sampleQueue->sendToCallback = sendToCallback;
+
+        queueService->sampleQueue = (void*) sampleQueue;
 
         *service = queueService;
     } else {
@@ -103,7 +107,7 @@ static celix_status_t queueProxyFactory_destroy(void *handle, void *service) {
         status = CELIX_ILLEGAL_ARGUMENT;
     }
     else {
-        queueProxy_destroy(&queueService->sampleQueue);
+        queueProxy_destroy((sample_queue_type**)&queueService->sampleQueue);
         free(queueService);
     }
 
