@@ -1,7 +1,7 @@
 /**
  * Licensed under Apache License v2. See LICENSE for more information.
  */
-package org.inaetics.demonstrator.coordinator.k8s.rc.model;
+package org.inaetics.demonstrator.k8sclient.impl.rc.model;
 
 public class Spec {
 	

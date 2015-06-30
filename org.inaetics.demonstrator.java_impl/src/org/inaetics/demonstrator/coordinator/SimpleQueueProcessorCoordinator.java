@@ -10,8 +10,8 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.felix.dm.Component;
 import org.inaetics.demonstrator.api.stats.StatsProvider;
-import org.inaetics.demonstrator.coordinator.k8s.KubernetesClient;
-import org.inaetics.demonstrator.coordinator.k8s.rc.ReplicationController;
+import org.inaetics.demonstrator.k8sclient.KubernetesClient;
+import org.inaetics.demonstrator.k8sclient.ReplicationController;
 import org.osgi.service.log.LogService;
 
 public class SimpleQueueProcessorCoordinator {
@@ -22,12 +22,11 @@ public class SimpleQueueProcessorCoordinator {
 	private volatile ScheduledExecutorService m_executor;
 	private volatile Future<?> m_pollFuture;
 
-	private KubernetesClient m_kubernetesClient;
+	private volatile KubernetesClient m_kubernetesClient;
 	private volatile CoordinatorConfig m_config;
 	
 	public SimpleQueueProcessorCoordinator(CoordinatorConfig config) {
 		m_config = config;
-		m_kubernetesClient = new KubernetesClient(m_config.getK8sMasterUrl(), this);
 		m_executor = Executors.newSingleThreadScheduledExecutor();
 	}
 
@@ -114,10 +113,6 @@ public class SimpleQueueProcessorCoordinator {
 		ReplicationController processorController = m_kubernetesClient.getReplicationController(
 				m_config.getCelixProcessorControllerName());
 		return processorController;
-	}
-
-	public LogService getLogService() {
-		return m_log;
 	}
 	
 }
