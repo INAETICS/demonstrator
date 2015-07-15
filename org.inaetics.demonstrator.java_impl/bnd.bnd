@@ -10,12 +10,12 @@
 	org.apache.felix.http.servlet-api;version='[1.0,1.1)',\
 	org.apache.felix.dependencymanager;version='[3.2,4)',\
 	org.osgi.service.remoteserviceadmin;version='[6.0,6.1)',\
-	org.apache.httpcomponents.httpcore;version='[4.2,4.3)',\
-	org.apache.httpcomponents.httpclient;version='[4.2,4.3)',\
-	com.springsource.org.apache.commons.logging;version='[1.1,1.2)',\
+	org.amdatu.kubernetes;version='[1.0,1.1)',\
+	io.reactivex.rxjava;version='[1.0,1.1)',\
 	org.inaetics.demonstrator.api.data;version=latest,\
 	org.inaetics.demonstrator.api.producer;version=latest,\
 	org.inaetics.demonstrator.api.processor;version=latest,\
 	org.inaetics.demonstrator.api.datastore;version=latest,\
 	org.inaetics.demonstrator.api.queue;version=latest,\
 	org.inaetics.demonstrator.api.stats;version=latest
+	

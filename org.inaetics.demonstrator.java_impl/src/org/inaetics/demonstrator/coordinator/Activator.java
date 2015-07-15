@@ -6,11 +6,11 @@ package org.inaetics.demonstrator.coordinator;
 import java.util.Dictionary;
 import java.util.Properties;
 
+import org.amdatu.kubernetes.Kubernetes;
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.DependencyActivatorBase;
 import org.apache.felix.dm.DependencyManager;
 import org.inaetics.demonstrator.api.stats.StatsProvider;
-import org.inaetics.demonstrator.k8sclient.KubernetesClient;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.service.cm.ConfigurationException;
@@ -88,7 +88,7 @@ public class Activator extends DependencyActivatorBase implements ManagedService
 			.setInterface(ifaces, props)
 			.setImplementation(simpleCoordinator)
             .add(createServiceDependency().setService(StatsProvider.class, "(type=queue)").setRequired(true))
-            .add(createServiceDependency().setService(KubernetesClient.class).setRequired(true))
+            .add(createServiceDependency().setService(Kubernetes.class).setRequired(true))
 			.add(createServiceDependency().setService(LogService.class).setRequired(false));
 		
 		m_coordinator = coordinator;

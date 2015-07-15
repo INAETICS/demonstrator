@@ -2,13 +2,17 @@
 -runee: JavaSE-1.7
 -runsystemcapabilities: ${native_capability}
 -runstorage: generated/controller
--runsystempackages: sun.misc
+-runsystempackages: \
+sun.misc,\
+javax.validation,\
+javax.validation.constraints
 
--runbundles: \
+-runbundles:  \
 	osgi.cmpn;version=4.2,\
 	org.osgi.service.remoteserviceadmin,\
 	org.apache.felix.dependencymanager;version='[3.2,4)',\
 	org.apache.felix.dependencymanager.shell;version='[3.2,4)',\
+	org.apache.felix.dependencymanager.runtime;version='[3.1,4)',\
 	org.apache.felix.gogo.runtime,\
 	org.apache.felix.gogo.shell,\
 	org.apache.felix.gogo.command,\
@@ -22,23 +26,31 @@
 	com.fasterxml.jackson.core.jackson-core;version='[2.3,2.4)',\
 	com.fasterxml.jackson.core.jackson-databind;version='[2.3,2.4)',\
 	com.fasterxml.jackson.core.jackson-annotations;version='[2.3,2.4)',\
-	org.apache.httpcomponents.httpcore;version='[4.2,4.3)',\
-	org.apache.httpcomponents.httpclient;version='[4.2,4.3)',\
-	com.springsource.org.apache.commons.logging;version='[1.1,1.2)',\
-    org.inaetics.wiring.base;version=latest,\
-    org.inaetics.wiring.endpoint;version=latest,\
-    org.inaetics.wiring.admin.http;version=latest,\
-    org.inaetics.wiring.topology.promiscuous;version=latest,\
-    org.inaetics.wiring.discovery.etcd;version=latest,\
-    org.amdatu.remote.topology.promiscuous;version=latest,\
-    org.amdatu.remote.discovery.etcd;version=latest,\
-    org.inaetics.remote.admin.wiring,\
+	org.inaetics.wiring.base;version=latest,\
+	org.inaetics.wiring.endpoint;version=latest,\
+	org.inaetics.wiring.admin.http;version=latest,\
+	org.inaetics.wiring.topology.promiscuous;version=latest,\
+	org.inaetics.wiring.discovery.etcd;version=latest,\
+	org.amdatu.remote.topology.promiscuous;version=latest,\
+	org.amdatu.remote.discovery.etcd;version=latest,\
+	org.inaetics.remote.admin.wiring,\
 	org.inaetics.demonstrator.api.data;version=latest,\
 	org.inaetics.demonstrator.api.datastore;version=latest,\
 	org.inaetics.demonstrator.api.processor;version=latest,\
 	org.inaetics.demonstrator.api.queue;version=latest,\
 	org.inaetics.demonstrator.api.stats;version=latest,\
-	org.inaetics.demonstrator.java_impl.coordinator;version=latest
+	org.inaetics.demonstrator.java_impl.coordinator;version=latest,\
+	org.amdatu.configurator.api;version='[1.0.0,1.0.1)',\
+	org.amdatu.configurator.properties;version='[1.0.0,1.0.1)',\
+	org.amdatu.configurator.shell;version='[1.0.0,1.0.1)',\
+	org.apache.commons.lang;version=2.6.0,\
+	org.apache.httpcomponents.httpclient,\
+	org.apache.httpcomponents.httpcore,\
+	com.springsource.org.apache.commons.logging,\
+	slf4j.api;version=1.7.7,\
+	slf4j.simple;version=1.7.7,\
+	io.reactivex.rxjava,\
+	org.amdatu.kubernetes
 
 -runproperties: \
 	org.osgi.service.http.port=9030,\
@@ -50,9 +62,9 @@
 	org.inaetics.wiring.discovery.etcd.rootpath=/inaetics/wiring,\
 	org.inaetics.wiring.admin.http.zone=zone1,\
 	org.inaetics.wiring.admin.http.node=coordinator-node,\
-	org.inaetics.demonstrator.coordinator.kubernetes_master_url=http://172.17.8.20:10260,\
 	org.inaetics.demonstrator.coordinator.queue_low_barrier=40,\
 	org.inaetics.demonstrator.coordinator.queue_high_barrier=60,\
-	org.inaetics.demonstrator.coordinator.processor_controller_name=inaetics-processor-controller,\
+	org.inaetics.demonstrator.coordinator.felix_processor_controller_name=inaetics-processor-controller,\
+	org.inaetics.demonstrator.coordinator.celix_processor_controller_name=inaetics-processor-celix-controller,\
 	org.inaetics.demonstrator.coordinator.poll_interval=20,\
 	org.inaetics.demonstrator.coordinator.max_number_processors=5

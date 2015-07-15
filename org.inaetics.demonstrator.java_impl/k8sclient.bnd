@@ -1,8 +1,0 @@
-Bundle-Activator: org.inaetics.demonstrator.k8sclient.impl.Activator
-	
-Private-Package:  \
-	org.inaetics.demonstrator.k8sclient.impl,\
-	org.inaetics.demonstrator.k8sclient.impl.rc,\
-	org.inaetics.demonstrator.k8sclient.impl.rc.model
-Export-Package:  \
-	org.inaetics.demonstrator.k8sclient

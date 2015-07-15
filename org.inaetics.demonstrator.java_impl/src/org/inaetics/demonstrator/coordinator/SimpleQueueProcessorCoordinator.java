@@ -3,16 +3,20 @@
  */
 package org.inaetics.demonstrator.coordinator;
 
+import io.fabric8.kubernetes.api.model.ReplicationController;
+
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import org.amdatu.kubernetes.Kubernetes;
 import org.apache.felix.dm.Component;
 import org.inaetics.demonstrator.api.stats.StatsProvider;
-import org.inaetics.demonstrator.k8sclient.KubernetesClient;
-import org.inaetics.demonstrator.k8sclient.ReplicationController;
 import org.osgi.service.log.LogService;
+
+import rx.Observable;
+import rx.Observer;
 
 public class SimpleQueueProcessorCoordinator {
 
@@ -22,7 +26,9 @@ public class SimpleQueueProcessorCoordinator {
 	private volatile ScheduledExecutorService m_executor;
 	private volatile Future<?> m_pollFuture;
 
-	private volatile KubernetesClient m_kubernetesClient;
+	private volatile Kubernetes m_kubernetesClient;
+	private static final String K8S_NAMESPACE = "default";
+	
 	private volatile CoordinatorConfig m_config;
 	
 	public SimpleQueueProcessorCoordinator(CoordinatorConfig config) {
@@ -70,49 +76,88 @@ public class SimpleQueueProcessorCoordinator {
 	}
 	
 	private void increaseProcessorCount() {
-		ReplicationController felixProcessorController = getFelixProcessorController();
-		ReplicationController celixProcessorController = getCelixProcessorController();
-		if (felixProcessorController == null || celixProcessorController == null) {
-			m_log.log(LogService.LOG_INFO, "didn't get rc!");
-			return;
-		}
-		if (celixProcessorController.getReplicaCount() <= felixProcessorController.getReplicaCount()) {
-			celixProcessorController.increaseReplicaCount(m_config.getMaxNrProcessors() / 2);
-			m_kubernetesClient.updateReplicationController(celixProcessorController);
-		}
-		else {
-			felixProcessorController.increaseReplicaCount(m_config.getMaxNrProcessors() / 2);
-			m_kubernetesClient.updateReplicationController(felixProcessorController);
-		}
+		
+		Observer<ReplicationController> rcObserver = new ReplicationControllerObserver() {
+
+			@Override
+			public void onCompleted() {
+				if (celixReplicas <= felixReplicas) {
+					celixReplicas = Math.min(++celixReplicas, m_config.getMaxNrProcessors() / 2);
+					m_log.log(LogService.LOG_INFO, "scaling celix processors to " + celixReplicas);
+					m_kubernetesClient.scale(K8S_NAMESPACE, m_config.getCelixProcessorControllerName(), celixReplicas).subscribe();
+				}
+				else {
+					felixReplicas = Math.min(++felixReplicas, m_config.getMaxNrProcessors() / 2);
+					m_log.log(LogService.LOG_INFO, "scaling felix processors to " + felixReplicas);
+					m_kubernetesClient.scale(K8S_NAMESPACE, m_config.getFelixProcessorControllerName(), felixReplicas).subscribe();
+				}
+			}
+			
+		};
+		
+		modifyReplicationControllers(rcObserver);
+		
 	}
 
 	private void decreaseProcessorCount() {
-		ReplicationController felixProcessorController = getFelixProcessorController();
-		ReplicationController celixProcessorController = getCelixProcessorController();
-		if (felixProcessorController == null || celixProcessorController == null) {
-			m_log.log(LogService.LOG_INFO, "didn't get rc!");
-			return;
-		}
-		if (celixProcessorController.getReplicaCount() > felixProcessorController.getReplicaCount()) {
-			celixProcessorController.decreaseReplicaCount(1);
-			m_kubernetesClient.updateReplicationController(celixProcessorController);
-		}
-		else {
-			felixProcessorController.decreaseReplicaCount(0);
-			m_kubernetesClient.updateReplicationController(felixProcessorController);
-		}
+		
+		Observer<ReplicationController> rcObserver = new ReplicationControllerObserver() {
+
+			@Override
+			public void onCompleted() {
+				m_log.log(LogService.LOG_DEBUG, "onCompleted");
+				if (celixReplicas > felixReplicas) {
+					celixReplicas = Math.max(--celixReplicas, 1);
+					m_log.log(LogService.LOG_INFO, "scaling celix processors to " + celixReplicas);
+					m_kubernetesClient.scale(K8S_NAMESPACE, m_config.getCelixProcessorControllerName(), celixReplicas).subscribe();
+				}
+				else {
+					felixReplicas = Math.max(--felixReplicas, 0);
+					m_log.log(LogService.LOG_INFO, "scaling felix processors to " + felixReplicas);
+					m_kubernetesClient.scale(K8S_NAMESPACE, m_config.getFelixProcessorControllerName(), felixReplicas).subscribe();
+				}
+			}
+			
+		};
+		
+		modifyReplicationControllers(rcObserver);
+		
+	}
+
+	private void modifyReplicationControllers(Observer<ReplicationController> replicationControllerObserver) {
+		
+		Observable<ReplicationController> celixObservable = m_kubernetesClient.getReplicationController(
+				K8S_NAMESPACE, m_config.getCelixProcessorControllerName());
+		Observable<ReplicationController> felixObservable = m_kubernetesClient.getReplicationController(
+				K8S_NAMESPACE, m_config.getFelixProcessorControllerName());
+		
+		Observable<ReplicationController> rcObservable = celixObservable.concatWith(felixObservable);
+		rcObservable.subscribe(replicationControllerObserver);
+		
 	}
 	
-	private ReplicationController getFelixProcessorController() {
-		ReplicationController processorController = m_kubernetesClient.getReplicationController(
-				m_config.getFelixProcessorControllerName());
-		return processorController;
-	}
-	
-	private ReplicationController getCelixProcessorController() {
-		ReplicationController processorController = m_kubernetesClient.getReplicationController(
-				m_config.getCelixProcessorControllerName());
-		return processorController;
+	abstract class ReplicationControllerObserver implements Observer<ReplicationController> {
+
+		protected Integer celixReplicas = null;
+		protected Integer felixReplicas = null;
+		
+		@Override
+		public void onError(Throwable e) {
+			m_log.log(LogService.LOG_ERROR, "error updating replication controllers", e);
+		}
+
+		@Override
+		public void onNext(ReplicationController rc) {
+			//m_log.log(LogService.LOG_DEBUG, "onNext:" + rc);
+			Integer replicas = rc.getStatus().getReplicas();
+			if (rc.getMetadata().getName().equals(m_config.getCelixProcessorControllerName())) {
+				celixReplicas = replicas;
+			}
+			else if (rc.getMetadata().getName().equals(m_config.getFelixProcessorControllerName())) {
+				felixReplicas = replicas;
+			}
+		}
+
 	}
 	
 }
