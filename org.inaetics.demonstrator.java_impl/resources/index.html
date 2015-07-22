@@ -1,23 +1,45 @@
 <!DOCTYPE html>
-<head>
+<!-- Copyright (C) 2015 - INAETICS -->
+<head lang="en">
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="description" content="">
 <meta name="author" content="INAETICS team">
 <title>INAETICS Demonstrator</title>
-<link rel="stylesheet" href="/bootstrap.min.css">
-<link rel="stylesheet" href="/bootstrap-theme.min.css">
+<link rel="stylesheet" href="bootstrap.min.css">
+<link rel="stylesheet" href="bootstrap-theme.min.css">
+<link rel="stylesheet" href="inaetics-base.css">
 <!--[if lte IE 8]><script src="excanvas.js"></script><![endif]-->
 </head>
 <body>
-	<div class="container">
+	<div class="container-fluid">
+		<div class="breakout colors">
+			<div class="c1"></div>
+			<div class="c2"></div>
+			<div class="c3"></div>
+			<div class="c4"></div>
+			<div class="c5"></div>
+			<div class="c6"></div>
+			<div class="c7"></div>
+			<div class="c8"></div>
+			<div class="c9"></div>
+			<div class="c10"></div>
+			<div class="c11"></div>
+			<div class="c12"></div>
+			<div class="c13"></div>
+		</div>
+
 		<div class="page-header">
-			<h1>Statistics</h1>
-			<div id="stats-container" class="lead">
-			</div>
+			<h1>
+				<img src="logo.png" alt="INAETICS" width="231" height="75"> <small>Statistics</small>
+			</h1>
+		</div>
+		<div class="row">
+			<div id="stats-container" class="lead"></div>
 		</div>
 	</div>
-	<script src="/ChartNew.js" charset="utf-8"></script>
-	<script src="/inaetics.js" charset="utf-8"></script>
+	<script src="ChartNew.js" charset="utf-8"></script>
+	<script src="inaeticsCommon.js" charset="utf-8"></script>
+	<script src="inaeticsStats.js" charset="utf-8"></script>
 </body>
 </html>

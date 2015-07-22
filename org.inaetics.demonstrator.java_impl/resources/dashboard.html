@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<!-- Copyright (C) 2015 - INAETICS -->
+<head lang="en">
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="description" content="">
+<meta name="author" content="INAETICS team">
+<title>INAETICS Dashboard</title>
+<link rel="stylesheet" href="bootstrap.min.css">
+<link rel="stylesheet" href="bootstrap-theme.min.css">
+<link rel="stylesheet" href="inaetics-base.css">
+<style type="text/css">
+output#slider-val {
+	width: 100%;
+	font-size: 1.1em;
+	padding: 0.1em 0.3em;
+	margin: 8px 0px;
+	display: inline-block;
+	text-align: center;
+	vertical-align: baseline;
+	display: inline-block;
+}
+
+input[type="range"].vertical {
+	-webkit-appearance: slider-vertical;
+	writing-mode: bt-lr;
+}
+</style>
+</head>
+<body>
+	<div class="container-fluid">
+		<div class="breakout colors">
+			<div class="c1"></div>
+			<div class="c2"></div>
+			<div class="c3"></div>
+			<div class="c4"></div>
+			<div class="c5"></div>
+			<div class="c6"></div>
+			<div class="c7"></div>
+			<div class="c8"></div>
+			<div class="c9"></div>
+			<div class="c10"></div>
+			<div class="c11"></div>
+			<div class="c12"></div>
+			<div class="c13"></div>
+		</div>
+
+		<div class="page-header">
+			<h1>
+				<img src="logo.png" alt="INAETICS" width="231" height="75"> <small>Dashboard</small>
+			</h1>
+		</div>
+		<div class="row">
+			<div class="col-md-4">
+				<h2>Preferred utilization</h2>
+				<output id="slider-val" name="val" for="slider">20</output>
+				<input id="slider" type="range" min="0" max="100" step="5"
+					value="20" orient="vertical" class="vertical" list="ticks"
+					oninput="postAndUpdateUtilisation(this.value)">
+				<datalist id="ticks">
+					<option>0</option>
+					<option>20</option>
+					<option>40</option>
+					<option>60</option>
+					<option>80</option>
+					<option>100</option>
+				</datalist>
+			</div>
+			<div class="col-md-4">
+				<h2>Actual utilization</h2>
+				<div id="utilisation"></div>
+			</div>
+			<div class="col-md-4">
+				<h2>System information</h2>
+				<table class="table table-striped table-condensed">
+					<tbody id="sysStats">
+						<tr>
+							<th>Processors</th>
+							<td>0</td>
+						</tr>
+						<tr>
+							<th>Producers</th>
+							<td>0</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+	<script src="ChartNew.js" charset="utf-8"></script>
+	<script src="inaeticsCommon.js" charset="utf-8"></script>
+	<script src="inaeticsDashboard.js" charset="utf-8"></script>
+</body>
+</html>

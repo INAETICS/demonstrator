@@ -1,4 +1,4 @@
-/*! ineatics.js - INAETICS specific stuff */
+/*! ineaticsStats.js - functions for rendering statistics - Copyright (C) 2015 - INAETICS */
 "use strict";
 
 var interval = 1000; // ms
@@ -54,21 +54,16 @@ function getData(stats) {
 	}
 }
 
-function renderStats(e) {
-	if (this.status != 200) {
-		console.log("failed to obtain statistics!");
-		return;
-	}
-
-	var total = this.response.length
+function renderStats(stats) {
+	var total = stats.length
 
 	var container = document.querySelector('#stats-container')
 	var charts = [].slice.call(container.children)
 
 	for (var i = 0; i < total; i++) {
-		var name = this.response[i].name
-		var data = getData(this.response[i])
-		var opts = getChartOpts(this.response[i])
+		var name = stats[i].name
+		var data = getData(stats[i])
+		var opts = getChartOpts(stats[i])
 
 		var statCanvas = null
 		for (var j = 0, len = charts.length; j < len; j++) {
@@ -105,17 +100,10 @@ function renderStats(e) {
 	for (var i = 0, len = charts.length; i < len; i++) {
 		container.removeChild(charts[i])
 	}
-	
-	// Reschedule a recurrent call...
-	setTimeout(getAndRenderStats, interval);
 }
 
 function getAndRenderStats() {
-	var xhr = new XMLHttpRequest();
-	xhr.open('GET', '/stats', true);
-	xhr.responseType = 'json';
-	xhr.onload = renderStats;
-	xhr.send();
+	getJSON('/stats', renderStats, interval)
 }
 
 window.onload = function() {

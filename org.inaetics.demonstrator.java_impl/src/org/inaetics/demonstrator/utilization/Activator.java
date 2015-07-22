@@ -28,6 +28,7 @@ public class Activator extends DependencyActivatorBase {
          */
         props = new Properties();
         props.put(RemoteConstants.SERVICE_EXPORTED_INTERFACES, StatsProvider.class.getName());
+        props.put("aggregator", "true");
         props.put("type", "other");
 
         dm.add(createComponent()
