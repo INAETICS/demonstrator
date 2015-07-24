@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<repository increment='1436892167740' name='Local' xmlns='http://www.osgi.org/xmlns/repository/v1.0.0'>
+<repository increment='1437741320738' name='Local' xmlns='http://www.osgi.org/xmlns/repository/v1.0.0'>
   <resource>
     <capability namespace='osgi.identity'>
       <attribute name='osgi.identity' value='org.inaetics.wiring.endpoint'/>
@@ -37,9 +37,9 @@
       <attribute name='version' type='Version' value='0.1.0'/>
     </capability>
     <capability namespace='osgi.content'>
-      <attribute name='osgi.content' value='d8a02c673913783cad779a303b66266283c66ac8245b92441d15e194d3a650b1'/>
+      <attribute name='osgi.content' value='72caf16abdc1f6c56e86adee58c5e68f6eb2a292938a9607189a7c967032be1e'/>
       <attribute name='url' value='org.inaetics.remote.admin.wiring/org.inaetics.remote.admin.wiring-0.1.0.jar'/>
-      <attribute name='size' type='Long' value='1457173'/>
+      <attribute name='size' type='Long' value='1457235'/>
       <attribute name='mime' value='application/vnd.osgi.bundle'/>
     </capability>
     <capability namespace='osgi.wiring.bundle'>
