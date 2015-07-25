@@ -1,5 +1,5 @@
 -runfw: org.apache.felix.framework;version='[4,5)'
--runee: JavaSE-1.7
+-runee: JavaSE-1.8
 -runsystemcapabilities: ${native_capability}
 -runstorage: generated/producer4
 -runsystempackages: sun.misc
@@ -35,11 +35,11 @@
 
 -runproperties: \
 	org.osgi.service.http.port=9013,\
-    org.amdatu.remote.discovery.etcd.connecturl=http://172.17.8.20:4001/,\
+    org.amdatu.remote.discovery.etcd.connecturl=http://${etcd_host}/,\
     org.amdatu.remote.discovery.etcd.rootpath=/inaetics/discovery,\
 	org.inaetics.wiring.discovery.etcd.zone=zone1,\
 	org.inaetics.wiring.discovery.etcd.node=prod4-node,\
-	org.inaetics.wiring.discovery.etcd.connecturl=http://172.17.8.20:4001/,\
+	org.inaetics.wiring.discovery.etcd.connecturl=http://${etcd_host}/,\
 	org.inaetics.wiring.discovery.etcd.rootpath=/inaetics/wiring,\
 	org.inaetics.wiring.admin.http.zone=zone1,\
 	org.inaetics.wiring.admin.http.node=prod4-node

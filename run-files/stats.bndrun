@@ -1,5 +1,5 @@
 -runfw: org.apache.felix.framework;version='[4,5)'
--runee: JavaSE-1.7
+-runee: JavaSE-1.8
 -runsystemcapabilities: ${native_capability}
 -runstorage: generated/stats
 -runsystempackages: sun.misc
@@ -25,6 +25,8 @@
 	com.fasterxml.jackson.core.jackson-core;version='[2.3,2.4)',\
 	com.fasterxml.jackson.core.jackson-databind;version='[2.3,2.4)',\
 	org.inaetics.demonstrator.api.stats;version=latest,\
+	org.inaetics.demonstrator.api.processor;version=latest,\
+	org.inaetics.demonstrator.api.producer;version=latest,\
 	org.inaetics.demonstrator.java_impl.view;version=latest,\
 	org.amdatu.web.resourcehandler;version='[1.0.7,1.0.8)',\
     org.inaetics.wiring.base;version=latest,\
@@ -39,11 +41,11 @@
 -runproperties: \
 	org.apache.felix.http.host=localhost,\
 	org.osgi.service.http.port=9000,\
-    org.amdatu.remote.discovery.etcd.connecturl=http://172.17.8.20:4001/,\
+    org.amdatu.remote.discovery.etcd.connecturl=http://${etcd_host}/,\
     org.amdatu.remote.discovery.etcd.rootpath=/inaetics/discovery,\
 	org.inaetics.wiring.discovery.etcd.zone=zone1,\
 	org.inaetics.wiring.discovery.etcd.node=viewer-node,\
-	org.inaetics.wiring.discovery.etcd.connecturl=http://172.17.8.20:4001/,\
+	org.inaetics.wiring.discovery.etcd.connecturl=http://${etcd_host}/,\
 	org.inaetics.wiring.discovery.etcd.rootpath=/inaetics/wiring,\
 	org.inaetics.wiring.admin.http.zone=zone1,\
 	org.inaetics.wiring.admin.http.node=viewer-node

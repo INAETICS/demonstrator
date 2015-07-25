@@ -1,11 +1,11 @@
 -runfw: org.apache.felix.framework;version='[4,5)'
--runee: JavaSE-1.7
+-runee: JavaSE-1.8
 -runsystemcapabilities: ${native_capability}
 -runstorage: generated/controller
 -runsystempackages: \
-sun.misc,\
-javax.validation,\
-javax.validation.constraints
+	sun.misc,\
+	javax.validation,\
+	javax.validation.constraints
 
 -runbundles:  \
 	osgi.cmpn;version=4.2,\
@@ -34,37 +34,27 @@ javax.validation.constraints
 	org.amdatu.remote.topology.promiscuous;version=latest,\
 	org.amdatu.remote.discovery.etcd;version=latest,\
 	org.inaetics.remote.admin.wiring,\
+	org.inaetics.demonstrator.api.coordinator;version=latest,\
 	org.inaetics.demonstrator.api.data;version=latest,\
 	org.inaetics.demonstrator.api.datastore;version=latest,\
 	org.inaetics.demonstrator.api.processor;version=latest,\
 	org.inaetics.demonstrator.api.queue;version=latest,\
 	org.inaetics.demonstrator.api.stats;version=latest,\
-	org.inaetics.demonstrator.java_impl.coordinator;version=latest,\
+	org.inaetics.demonstrator.java_impl.coordinator.k8s;version=latest,\
 	org.amdatu.configurator.api;version='[1.0.0,1.0.1)',\
 	org.amdatu.configurator.properties;version='[1.0.0,1.0.1)',\
 	org.amdatu.configurator.shell;version='[1.0.0,1.0.1)',\
-	org.apache.commons.lang;version=2.6.0,\
-	org.apache.httpcomponents.httpclient,\
-	org.apache.httpcomponents.httpcore,\
-	com.springsource.org.apache.commons.logging,\
-	slf4j.api;version=1.7.7,\
-	slf4j.simple;version=1.7.7,\
 	io.reactivex.rxjava,\
-	org.amdatu.kubernetes
+	org.amdatu.kubernetes;version='[1.0.2,1.1)'
 
 -runproperties: \
-	org.osgi.service.http.port=9030,\
-    org.amdatu.remote.discovery.etcd.connecturl=http://172.17.8.20:4001/,\
+	k8s_url=${k8s_host},\
+	org.osgi.service.http.port=9031,\
+    org.amdatu.remote.discovery.etcd.connecturl=http://${etcd_host}/,\
     org.amdatu.remote.discovery.etcd.rootpath=/inaetics/discovery,\
 	org.inaetics.wiring.discovery.etcd.zone=zone1,\
 	org.inaetics.wiring.discovery.etcd.node=coordinator-node,\
-	org.inaetics.wiring.discovery.etcd.connecturl=http://172.17.8.20:4001/,\
+	org.inaetics.wiring.discovery.etcd.connecturl=http://${etcd_host}/,\
 	org.inaetics.wiring.discovery.etcd.rootpath=/inaetics/wiring,\
 	org.inaetics.wiring.admin.http.zone=zone1,\
-	org.inaetics.wiring.admin.http.node=coordinator-node,\
-	org.inaetics.demonstrator.coordinator.queue_low_barrier=40,\
-	org.inaetics.demonstrator.coordinator.queue_high_barrier=60,\
-	org.inaetics.demonstrator.coordinator.felix_processor_controller_name=inaetics-processor-controller,\
-	org.inaetics.demonstrator.coordinator.celix_processor_controller_name=inaetics-processor-celix-controller,\
-	org.inaetics.demonstrator.coordinator.poll_interval=20,\
-	org.inaetics.demonstrator.coordinator.max_number_processors=5
+	org.inaetics.wiring.admin.http.node=coordinator-node
