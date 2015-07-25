@@ -8,7 +8,7 @@ function renderUtilisation(utilisation) {
 }
 
 function getAndRenderUtilisation() {
-	getJSON('/utilisation', renderUtilisation, interval)
+	getJSON('/coordinator/utilisation', renderUtilisation, interval)
 }
 
 function renderSystemStats(stats) {
@@ -35,16 +35,13 @@ function renderSystemStats(stats) {
 }
 
 function getAndRenderSystemStats() {
-	getJSON('/systemStats', renderSystemStats, interval)
+	getJSON('/coordinator/systemStats', renderSystemStats, interval)
 }
 
 function postAndUpdateUtilisation(val) {
 	document.getElementById('slider-val').value = val
 	
-	var data = new FormData()
-	data.append('value', val)
-
-	postJSON('/utilisation', data)
+	postJSON('/coordinator/utilisation', 'value=' + val)
 }
 
 function getJSON(url, callback, ival) {
@@ -70,10 +67,13 @@ function getJSON(url, callback, ival) {
 function postJSON(url, data) {
 	var xhr = new XMLHttpRequest()
 	xhr.open('POST', url, true)
+	xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
 	xhr.send(data)
 }
 
 window.onload = function() {
+	postAndUpdateUtilisation(5)
+
 	setTimeout(getAndRenderUtilisation, interval)
 	setTimeout(getAndRenderSystemStats, interval)
 }

@@ -1,0 +1,10 @@
+Bundle-Activator: \
+	org.inaetics.demonstrator.coordinator.stub.Activator
+	
+Private-Package: \
+	org.inaetics.demonstrator.coordinator.stub,\
+	org.inaetics.demonstrator.coordinator.util,\
+	org.inaetics.demonstrator.processor,\
+	org.inaetics.demonstrator.producer,\
+	org.inaetics.demonstrator.producer.burst,\
+	org.inaetics.demonstrator.producer.periodic

@@ -11,27 +11,20 @@ import org.inaetics.demonstrator.api.producer.Producer;
 import org.inaetics.demonstrator.api.queue.SampleQueue;
 import org.inaetics.demonstrator.api.stats.StatsProvider;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
-import org.osgi.service.cm.ManagedService;
 import org.osgi.service.log.LogService;
 import org.osgi.service.remoteserviceadmin.RemoteConstants;
 
 public class Activator extends DependencyActivatorBase {
-	private static final String PID = "BurstSampleProducer";
-
 	@Override
 	public void init(BundleContext context, DependencyManager manager) throws Exception {
-		String[] ifaces = { Producer.class.getName(), ManagedService.class.getName() };
-		
 		Properties props = new Properties();
-		props.put(Constants.SERVICE_PID, PID);
-		props.put(RemoteConstants.SERVICE_EXPORTED_INTERFACES, ifaces[0]);
+		props.put(RemoteConstants.SERVICE_EXPORTED_INTERFACES, Producer.class.getName());
         props.put("type", "burst");
 
 		Producer service = new BurstSampleProducer();
 
 		manager.add(createComponent()
-			.setInterface(ifaces, props)
+			.setInterface(Producer.class.getName(), props)
 			.setImplementation(service)
 			.add(createServiceDependency().setService(SampleQueue.class).setRequired(true))
 			.add(createServiceDependency().setService(LogService.class).setRequired(false))

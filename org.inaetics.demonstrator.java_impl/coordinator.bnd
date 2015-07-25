@@ -1,5 +1,0 @@
-Bundle-Activator: \
-	org.inaetics.demonstrator.coordinator.Activator
-	
-Private-Package: \
-	org.inaetics.demonstrator.coordinator

@@ -12,27 +12,20 @@ import org.inaetics.demonstrator.api.processor.Processor;
 import org.inaetics.demonstrator.api.queue.SampleQueue;
 import org.inaetics.demonstrator.api.stats.StatsProvider;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
-import org.osgi.service.cm.ManagedService;
 import org.osgi.service.log.LogService;
 import org.osgi.service.remoteserviceadmin.RemoteConstants;
 
 public class Activator extends DependencyActivatorBase {
-	private static final String PID = "IdentityProcessor";
-
 	@Override
 	public void init(BundleContext context, DependencyManager manager) throws Exception {
-		String[] ifaces = { Processor.class.getName(), ManagedService.class.getName() };
-		
 		Properties props = new Properties();
-		props.put(Constants.SERVICE_PID, PID);
-		props.put(RemoteConstants.SERVICE_EXPORTED_INTERFACES, ifaces[0]);
+		props.put(RemoteConstants.SERVICE_EXPORTED_INTERFACES, Processor.class.getName());
 	    props.put("type", "identity");
 
 		Processor service = new IdentityProcessor();
 
 		manager.add(createComponent()
-			.setInterface(ifaces, props)
+			.setInterface(Processor.class.getName(), props)
 			.setImplementation(service)
 			.add(createServiceDependency().setService(DataStore.class).setRequired(true))
 			.add(createServiceDependency().setService(SampleQueue.class).setRequired(true))

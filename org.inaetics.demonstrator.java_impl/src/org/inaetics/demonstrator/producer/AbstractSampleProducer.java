@@ -3,7 +3,6 @@
  */
 package org.inaetics.demonstrator.producer;
 
-import java.util.Dictionary;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -12,14 +11,12 @@ import java.util.concurrent.TimeUnit;
 
 import org.inaetics.demonstrator.api.producer.Producer;
 import org.inaetics.demonstrator.api.stats.StatsProvider;
-import org.osgi.service.cm.ConfigurationException;
-import org.osgi.service.cm.ManagedService;
 import org.osgi.service.log.LogService;
 
 /**
  * Abstract base implementation of a sample {@link Producer}.
  */
-public abstract class AbstractSampleProducer implements Producer, StatsProvider, ManagedService {
+public abstract class AbstractSampleProducer implements Producer, StatsProvider {
     private final Random m_rnd;
     private final String m_name;
     private final int m_minTaskInterval;
@@ -40,7 +37,7 @@ public abstract class AbstractSampleProducer implements Producer, StatsProvider,
      * @param minTaskInterval the minimal interval (in milliseconds) to wait between two produced samples.
      */
     protected AbstractSampleProducer(String name, int taskInterval, int minTaskInterval) {
-        m_name = name;
+        m_name = String.format("%s (%x)", name, System.identityHashCode(this));
         m_taskInterval = taskInterval;
         m_minTaskInterval = minTaskInterval;
 
@@ -60,7 +57,7 @@ public abstract class AbstractSampleProducer implements Producer, StatsProvider,
 
     @Override
     public final String getName() {
-        return String.format("%s (%x)", m_name, System.identityHashCode(this));
+        return m_name;
     }
 
     @Override
@@ -81,14 +78,9 @@ public abstract class AbstractSampleProducer implements Producer, StatsProvider,
     @Override
     public void setSampleRate(int rate) {
         if (rate < m_minTaskInterval) {
-            throw new IllegalArgumentException("Invalid sample rate!");
+            throw new IllegalArgumentException("Invalid sample rate: " + rate + " (" + m_minTaskInterval + ")!");
         }
         m_taskInterval = 1000 / rate;
-    }
-
-    @Override
-    public void updated(Dictionary<String, ?> properties) throws ConfigurationException {
-        // Nothing yet...
     }
 
     final int getTaskInterval() {
@@ -159,6 +151,8 @@ public abstract class AbstractSampleProducer implements Producer, StatsProvider,
                 }
             }
         });
+        
+        info("Producer %s started...", getName());
     }
 
     /**
@@ -175,5 +169,7 @@ public abstract class AbstractSampleProducer implements Producer, StatsProvider,
         }
         m_executor.shutdown();
         m_executor.awaitTermination(10, TimeUnit.SECONDS);
+        
+        info("Producer %s stopped...", getName());
     }
 }

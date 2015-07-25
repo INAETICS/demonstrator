@@ -36,7 +36,5 @@ public class PeriodicSampleProducer extends AbstractSampleProducer {
 
         m_queue.put(sample);
         m_produced.addAndGet(1L);
-
-        info("Produced sample: %s", sample);
     }
 }

@@ -1,0 +1,6 @@
+Bundle-Activator: \
+	org.inaetics.demonstrator.coordinator.k8s.Activator
+	
+Private-Package: \
+	org.inaetics.demonstrator.coordinator.k8s,\
+	org.inaetics.demonstrator.coordinator.util

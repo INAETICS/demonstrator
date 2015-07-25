@@ -12,6 +12,7 @@
 	org.osgi.service.remoteserviceadmin;version='[6.0,6.1)',\
 	org.amdatu.kubernetes;version='[1.0,1.1)',\
 	io.reactivex.rxjava;version='[1.0,1.1)',\
+	org.inaetics.demonstrator.api.coordinator;version=latest,\
 	org.inaetics.demonstrator.api.data;version=latest,\
 	org.inaetics.demonstrator.api.producer;version=latest,\
 	org.inaetics.demonstrator.api.processor;version=latest,\

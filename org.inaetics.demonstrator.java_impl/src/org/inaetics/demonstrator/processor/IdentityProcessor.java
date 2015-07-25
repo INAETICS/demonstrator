@@ -23,7 +23,7 @@ public class IdentityProcessor extends AbstractSampleProcessor {
     private volatile DataStore m_store;
 
     public IdentityProcessor() {
-        super(20 /* msec */);
+        super("Identity processor", 20 /* msec */);
         m_processed = new AtomicLong(0L);
     }
 

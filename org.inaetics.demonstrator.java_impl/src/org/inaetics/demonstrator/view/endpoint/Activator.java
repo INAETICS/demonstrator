@@ -33,21 +33,15 @@ public class Activator extends DependencyActivatorBase {
             .add(createServiceDependency().setService(StatsProvider.class).setCallbacks("add", "remove").setRequired(false))
             .add(createServiceDependency().setService(LogService.class).setRequired(false)));
 
-        props.put("alias", "/systemStats");
+        props = new Properties();
+        props.put("alias", "/coordinator");
 
         manager.add(createComponent()
             .setInterface(Servlet.class.getName(), props)
-            .setImplementation(SystemStatsServlet.class)
+            .setImplementation(CoordinatorServlet.class)
             .add(createServiceDependency().setService(Producer.class).setCallbacks("addProducer", "removeProducer").setRequired(false))
             .add(createServiceDependency().setService(Processor.class).setCallbacks("addProcessor", "removeProcessor").setRequired(false))
-            .add(createServiceDependency().setService(LogService.class).setRequired(false)));
-
-        props.put("alias", "/utilisation");
-
-        manager.add(createComponent()
-            .setInterface(Servlet.class.getName(), props)
-            .setImplementation(UtilisationServlet.class)
-            .add(createServiceDependency().setService(StatsProvider.class, "(aggregator=true)"))
+            .add(createServiceDependency().setService(StatsProvider.class, "(aggregator=true)").setRequired(true))
             .add(createServiceDependency().setService(LogService.class).setRequired(false)));
     }
 }

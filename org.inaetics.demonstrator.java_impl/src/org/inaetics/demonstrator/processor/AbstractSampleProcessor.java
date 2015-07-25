@@ -3,26 +3,22 @@
  */
 package org.inaetics.demonstrator.processor;
 
-import java.util.Dictionary;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.felix.dm.Component;
 import org.inaetics.demonstrator.api.processor.Processor;
 import org.inaetics.demonstrator.api.producer.Producer;
 import org.inaetics.demonstrator.api.stats.StatsProvider;
-import org.osgi.framework.Constants;
-import org.osgi.service.cm.ConfigurationException;
-import org.osgi.service.cm.ManagedService;
 import org.osgi.service.log.LogService;
 
 /**
  * Abstract base implementation of a sample {@link Producer}.
  */
-public abstract class AbstractSampleProcessor implements Processor, StatsProvider, ManagedService {
+public abstract class AbstractSampleProcessor implements Processor, StatsProvider {
+    private final String m_name;
     private final Random m_rnd;
     private final int m_taskInterval;
 
@@ -34,7 +30,8 @@ public abstract class AbstractSampleProcessor implements Processor, StatsProvide
     // Injected by Felix DM...
     private volatile LogService m_log;
 
-    protected AbstractSampleProcessor(int taskInterval) {
+    protected AbstractSampleProcessor(String name, int taskInterval) {
+        m_name = String.format("%s (%x)", name, System.identityHashCode(this));
         m_rnd = new Random();
         m_taskInterval = taskInterval;
     }
@@ -46,7 +43,7 @@ public abstract class AbstractSampleProcessor implements Processor, StatsProvide
 
     @Override
     public final String getName() {
-        return String.format("Sample processor (%x)", System.identityHashCode(this));
+        return m_name;
     }
 
     @Override
@@ -57,11 +54,6 @@ public abstract class AbstractSampleProcessor implements Processor, StatsProvide
     @Override
     public double getValue() {
         return m_processedAvg;
-    }
-
-    @Override
-    public void updated(Dictionary<String, ?> properties) throws ConfigurationException {
-        // Nothing yet...
     }
 
     final int getTaskInterval() {
@@ -93,32 +85,32 @@ public abstract class AbstractSampleProcessor implements Processor, StatsProvide
     protected final void start() throws Exception {
         m_executor = Executors.newFixedThreadPool(2);
 
-        m_generatorFuture = m_executor.submit(new Runnable() {
-            @Override
-            public void run() {
-                while (!Thread.currentThread().isInterrupted()) {
-                    try {
-                        processSamples();
+        m_generatorFuture =
+            m_executor.submit(() -> //
+                {
+                    while (!Thread.currentThread().isInterrupted() && !m_executor.isShutdown()) {
+                        try {
+                            processSamples();
 
-                        TimeUnit.MILLISECONDS.sleep(getTaskInterval());
-                    } catch (InterruptedException e) {
-                        // Break out of our loop...
-                        Thread.currentThread().interrupt();
-                    } catch (Exception e) {
-                        // Ignore, not much we can do about this...
-                        info("Failed to process sample(s)! Cause: %s", (e.getMessage() == null ? "NullPointerException" : e.getMessage()));
-                        m_log.log(LogService.LOG_DEBUG, "Failed to process sample(s)!", e);
+                            TimeUnit.MILLISECONDS.sleep(getTaskInterval());
+                        } catch (InterruptedException e) {
+                            // Break out of our loop...
+                            Thread.currentThread().interrupt();
+                        } catch (Exception e) {
+                            // Ignore, not much we can do about this...
+                            info("Failed to process sample(s)! Cause: %s",
+                                (e.getMessage() == null ? "NullPointerException" : e.getMessage()));
+                            m_log.log(LogService.LOG_DEBUG, "Failed to process sample(s)!", e);
+                        }
                     }
-                }
-            }
-        });
+                    ;
+                });
 
-        m_samplerFuture = m_executor.submit(new Runnable() {
-            @Override
-            public void run() {
+        m_samplerFuture = m_executor.submit(() -> //
+            {
                 long startTime = System.currentTimeMillis();
 
-                while (!Thread.currentThread().isInterrupted()) {
+                while (!Thread.currentThread().isInterrupted() && !m_executor.isShutdown()) {
                     try {
                         TimeUnit.SECONDS.sleep(1);
 
@@ -130,8 +122,9 @@ public abstract class AbstractSampleProcessor implements Processor, StatsProvide
                         m_log.log(LogService.LOG_DEBUG, "Failed to calculate average throughput!", e);
                     }
                 }
-            }
-        });
+            });
+        
+        info("Processor %s started...", getName());
     }
 
     /**
@@ -148,5 +141,7 @@ public abstract class AbstractSampleProcessor implements Processor, StatsProvide
         }
         m_executor.shutdown();
         m_executor.awaitTermination(10, TimeUnit.SECONDS);
+        
+        info("Processor %s stopped...", getName());
     }
 }

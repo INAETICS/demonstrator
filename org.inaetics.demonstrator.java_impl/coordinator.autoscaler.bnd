@@ -1,0 +1,6 @@
+Bundle-Activator: \
+	org.inaetics.demonstrator.coordinator.autoscaler.Activator
+	
+Private-Package: \
+	org.inaetics.demonstrator.coordinator.autoscaler,\
+	org.inaetics.demonstrator.coordinator.util
