@@ -38,6 +38,6 @@ public class IdentityProcessor extends AbstractSampleProcessor {
 
     @Override
     protected double calculateThroughput(long time) {
-        return time == 0 ? 0 : (1000 * m_processed.get()) / time;
+        return time == 0 ? 0 : (1000 * m_processed.getAndSet(0)) / time;
     }
 }

@@ -151,13 +151,12 @@ public abstract class AbstractSampleProducer implements Producer, StatsProvider 
         m_samplerFuture = m_executor.submit(new Runnable() {
             @Override
             public void run() {
-                long startTime = System.currentTimeMillis();
-
                 while (!Thread.currentThread().isInterrupted()) {
                     try {
-                        TimeUnit.SECONDS.sleep(1);
+                    	int sleepDuration = 1;
+                        TimeUnit.SECONDS.sleep(sleepDuration);
 
-                        m_producedAvg = calculateThroughput(System.currentTimeMillis() - startTime);
+                        m_producedAvg = calculateThroughput(sleepDuration * 1000);
                     } catch (InterruptedException e) {
                         // Break out of our loop...
                         Thread.currentThread().interrupt();

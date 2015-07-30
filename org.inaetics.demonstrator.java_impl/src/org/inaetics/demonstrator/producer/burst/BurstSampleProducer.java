@@ -28,7 +28,7 @@ public class BurstSampleProducer extends AbstractSampleProducer {
 
     @Override
     protected double calculateThroughput(long time) {
-        return (1000 * m_produced.get()) / time;
+        return (1000 * m_produced.getAndSet(0)) / time;
     }
 
     @Override

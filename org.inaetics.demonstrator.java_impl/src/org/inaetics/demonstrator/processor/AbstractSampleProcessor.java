@@ -108,13 +108,12 @@ public abstract class AbstractSampleProcessor implements Processor, StatsProvide
 
         m_samplerFuture = m_executor.submit(() -> //
             {
-                long startTime = System.currentTimeMillis();
-
                 while (!Thread.currentThread().isInterrupted() && !m_executor.isShutdown()) {
                     try {
-                        TimeUnit.SECONDS.sleep(1);
+                    	int sleepDuration = 1;
+                        TimeUnit.SECONDS.sleep(sleepDuration);
 
-                        m_processedAvg = calculateThroughput(System.currentTimeMillis() - startTime);
+                        m_processedAvg = calculateThroughput(sleepDuration * 1000);
                     } catch (InterruptedException e) {
                         // Break out of our loop...
                         Thread.currentThread().interrupt();
