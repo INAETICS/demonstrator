@@ -23,7 +23,6 @@ public abstract class AbstractSampleProducer implements Producer, StatsProvider 
 
     private ExecutorService m_executor;
     private Future<?> m_generatorFuture;
-    private Future<?> m_samplerFuture;
 
     private volatile double m_producedAvg;
     private volatile int m_taskInterval;
@@ -77,21 +76,21 @@ public abstract class AbstractSampleProducer implements Producer, StatsProvider 
 
     @Override
     public void setSampleRate(int rate) {
-        if (rate < m_minTaskInterval) {
-            throw new IllegalArgumentException("Invalid sample rate: " + rate + " (" + m_minTaskInterval + ")!");
-        }
         m_taskInterval = 1000 / rate;
     }
 
-    final int getTaskInterval() {
+    /**
+     * @return how many items up to now were produced.
+     */
+    protected abstract long getProductionCount();
+
+    protected final int getTaskInterval() {
         return m_taskInterval;
     }
-
-    /**
-     * @param time the time (in milliseconds) this producer is running.
-     * @return the throughput of this producer.
-     */
-    protected abstract double calculateThroughput(long time);
+    
+    protected final int getMinTaskInterval() {
+        return m_minTaskInterval;
+    }
 
     protected final void info(String msg, Object... args) {
         m_log.log(LogService.LOG_INFO, String.format(msg, args));
@@ -110,48 +109,35 @@ public abstract class AbstractSampleProducer implements Producer, StatsProvider 
      * Called by Felix DM when starting this component.
      */
     protected final void start() throws Exception {
-        m_executor = Executors.newFixedThreadPool(2);
+        m_executor = Executors.newSingleThreadExecutor();
 
-        m_generatorFuture = m_executor.submit(new Runnable() {
-            @Override
-            public void run() {
-                while (!Thread.currentThread().isInterrupted()) {
-                    try {
+        m_generatorFuture = m_executor.submit(() -> {
+            long oldProductionCount = 0L;
+
+            while (!Thread.currentThread().isInterrupted()) {
+                try {
+                    int taskInterval = getTaskInterval();
+                    if (taskInterval >= m_minTaskInterval) {
                         produceSampleData();
-
-                        TimeUnit.MILLISECONDS.sleep(getTaskInterval());
-                    } catch (InterruptedException e) {
-                        // Break out of our loop...
-                        Thread.currentThread().interrupt();
-                    } catch (Exception e) {
-                        // Ignore, not much we can do about this...
-                        info("Failed to produce sample(s)! Cause: %s", (e.getMessage() == null ? "NullPointerException" : e.getMessage()));
-                        m_log.log(LogService.LOG_DEBUG, "Failed to produce sample(s)!", e);
                     }
+
+                    long produced = getProductionCount();
+                    m_producedAvg = (1000.0 * (produced - oldProductionCount)) / taskInterval;
+                    oldProductionCount = produced;
+
+                    TimeUnit.MILLISECONDS.sleep(taskInterval);
+                } catch (InterruptedException e) {
+                    // Break out of our loop...
+                    Thread.currentThread().interrupt();
+                } catch (Exception e) {
+                    // Ignore, not much we can do about this...
+                    info("Failed to produce sample(s)! Cause: %s",
+                        (e.getMessage() == null ? "NullPointerException" : e.getMessage()));
+                    m_log.log(LogService.LOG_DEBUG, "Failed to produce sample(s)!", e);
                 }
             }
         });
 
-        m_samplerFuture = m_executor.submit(new Runnable() {
-            @Override
-            public void run() {
-                long startTime = System.currentTimeMillis();
-
-                while (!Thread.currentThread().isInterrupted()) {
-                    try {
-                        TimeUnit.SECONDS.sleep(1);
-
-                        m_producedAvg = calculateThroughput(System.currentTimeMillis() - startTime);
-                    } catch (InterruptedException e) {
-                        // Break out of our loop...
-                        Thread.currentThread().interrupt();
-                    } catch (Exception e) {
-                        m_log.log(LogService.LOG_DEBUG, "Failed to calculate average throughput!", e);
-                    }
-                }
-            }
-        });
-        
         info("Producer %s started...", getName());
     }
 
@@ -163,13 +149,9 @@ public abstract class AbstractSampleProducer implements Producer, StatsProvider 
             m_generatorFuture.cancel(true);
             m_generatorFuture = null;
         }
-        if (m_samplerFuture != null) {
-            m_samplerFuture.cancel(true);
-            m_samplerFuture = null;
-        }
         m_executor.shutdown();
         m_executor.awaitTermination(10, TimeUnit.SECONDS);
-        
+
         info("Producer %s stopped...", getName());
     }
 }

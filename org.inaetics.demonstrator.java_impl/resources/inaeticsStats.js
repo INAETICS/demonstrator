@@ -3,57 +3,6 @@
 
 var interval = 1000; // ms
 
-var chartWidth = 450;
-var chartHeight = 350;
-
-function fmtChartJSPerso(config, value, fmt) {
-	if (fmt == "DateTime") {
-		return new Date(value).toLocaleTimeString('nl-NL', { hour12: false })
-	}
-	return value;
-}
-
-function getChartOpts(stats) {
-	var opts = { 
-		canvasBorders: false,
-		inGraphDataShow: false,
-		responsive: true,
-		animation: false,
-		responsiveMinWidth: chartWidth,
-		responsiveMaxWidth: chartWidth,
-		responsiveMinHeight: chartHeight,
-		responsiveMaxHeight: chartHeight,
-	    graphTitleFontSize: 16,
-		pointDot: false, 
-		bezierCurve: false,
-		rotateLabels: 60,
-		datasetFill: true,
-		yAxisUnitFontSize: 14,
-		yAxisLabel: stats.type,
-		yAxisUnit: stats.unit,
-		fmtXLabel: "DateTime",
-		graphTitle: stats.displayName
-	};
-	if (stats.type == "utilization") {
-		opts.scaleOverride = true
-		opts.scaleStartValue = 0
-		opts.scaleSteps = 10
-		opts.scaleStepWidth = 10
-	}
-	return opts;
-}
-
-function getData(stats) {
-	return { 
-		labels: stats.timestamps || [ 0 ], 
-		datasets: [ {
-			fillColor: "rgba(151,187,205,0.5)",
-	        strokeColor: "rgba(151,187,205,1)",
-			data: stats.values && stats.values.length > 0 ? stats.values : [ 0 ]
-		} ] 
-	}
-}
-
 function renderStats(stats) {
 	var total = stats.length
 
@@ -103,7 +52,7 @@ function renderStats(stats) {
 }
 
 function getAndRenderStats() {
-	getJSON('/stats', renderStats, interval)
+	getJSON('/coordinator/statistics', renderStats, interval)
 }
 
 window.onload = function() {

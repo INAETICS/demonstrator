@@ -3,29 +3,32 @@
  */
 package org.inaetics.demonstrator.utilization;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.inaetics.demonstrator.api.producer.Producer;
 import org.inaetics.demonstrator.api.stats.StatsProvider;
+import org.osgi.service.log.LogService;
 
 /**
  * Aggregates the utilization of other {@link StatsProvider}s.
  */
 public class UtilitizationAggegrator implements StatsProvider {
     private final List<Producer> m_producers;
+    // Injected by Felix DM...
+    private volatile LogService m_log;
 
     /**
      * Creates a new {@link UtilitizationAggegrator} instance.
      */
     public UtilitizationAggegrator() {
-        m_producers = new ArrayList<>();
+        m_producers = new CopyOnWriteArrayList<>();
     }
-    
+
     public void addProducer(Producer producer) {
         m_producers.add(producer);
     }
-    
+
     public void removeProducer(Producer producer) {
         m_producers.remove(producer);
     }
@@ -50,8 +53,12 @@ public class UtilitizationAggegrator implements StatsProvider {
         double actual = 0, max = 0;
 
         for (Producer producer : m_producers) {
-            actual += producer.getSampleRate();
-            max += producer.getMaxSampleRate();
+            try {
+                actual += producer.getSampleRate();
+                max += producer.getMaxSampleRate();
+            } catch (Exception e) {
+                m_log.log(LogService.LOG_WARNING, "Failed to get utilization from producer!", e);
+            }
         }
 
         return (100.0 * actual) / max;

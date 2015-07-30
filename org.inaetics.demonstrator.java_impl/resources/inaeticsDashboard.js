@@ -7,8 +7,33 @@ function renderUtilisation(utilisation) {
 	document.getElementById('utilisation').textContent = utilisation.name + " = " + utilisation.value + " " + utilisation.unit
 }
 
+function renderGraph(canvasId, stats) {
+	var data = getData(stats)
+	var opts = getChartOpts(stats)
+
+	var statCanvas = document.getElementById(canvasId)
+	var chartCtx = statCanvas.getContext('2d');
+
+	if (statCanvas.hasAttribute("hasData")) {
+		updateChart(chartCtx, data, opts, false /* animation */, false /* runanimationcompletefunction */);
+	} else {
+		var chart = new Chart(chartCtx);
+		chart.Line(data, opts);
+		// Mark the canvas as having data...
+		statCanvas.setAttribute("hasData", "true")
+	}
+}
+
+function renderUtilisationGraph(stats) {
+	var queueIdx = stats[0].name == 'queue' ? 0 : 1
+
+	renderGraph('queue-utilisation', stats[queueIdx])
+	renderGraph('datastore-utilisation', stats[1 - queueIdx])
+}
+
 function getAndRenderUtilisation() {
 	getJSON('/coordinator/utilisation', renderUtilisation, interval)
+	getJSON('/coordinator/statistics?queue,data-store', renderUtilisationGraph, interval)
 }
 
 function renderSystemStats(stats) {
@@ -19,6 +44,11 @@ function renderSystemStats(stats) {
 	}
 
 	for (var key in stats) {
+		if (key === 'productionRate') {
+			var val = stats[key]
+			document.getElementById('slider-val').value = val
+			document.getElementById('slider').value = val
+		}
 		if (stats.hasOwnProperty(key)) {
 			var tr = tbody.insertRow(0);
 
@@ -44,36 +74,7 @@ function postAndUpdateUtilisation(val) {
 	postJSON('/coordinator/utilisation', 'value=' + val)
 }
 
-function getJSON(url, callback, ival) {
-	var xhr = new XMLHttpRequest()
-	xhr.open('GET', url, true)
-	xhr.responseType = 'json'
-	xhr.onload = function(e) {
-		try {
-			if (this.status != 200) {
-				console.log("failed to obtain " + url)
-			} else {
-				callback(this.response)
-			}
-		} finally {
-			if (ival > 0) {
-				setTimeout(function() { getJSON(url, callback, ival) }, ival)
-			}
-		}
-	}
-	xhr.send();
-}
-
-function postJSON(url, data) {
-	var xhr = new XMLHttpRequest()
-	xhr.open('POST', url, true)
-	xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-	xhr.send(data)
-}
-
 window.onload = function() {
-	postAndUpdateUtilisation(5)
-
 	setTimeout(getAndRenderUtilisation, interval)
 	setTimeout(getAndRenderSystemStats, interval)
 }

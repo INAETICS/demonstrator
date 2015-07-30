@@ -14,7 +14,7 @@ import org.inaetics.demonstrator.producer.AbstractSampleProducer;
  * Generates a burst of samples once every 500 ms.
  */
 public class BurstSampleProducer extends AbstractSampleProducer {
-    private static final int BURST_LENGTH = 100; // samples
+    private static final int BURST_LENGTH = 10; // samples
 
     private final AtomicLong m_produced;
 
@@ -22,20 +22,18 @@ public class BurstSampleProducer extends AbstractSampleProducer {
     private volatile SampleQueue m_queue;
 
     public BurstSampleProducer() {
-        super("Burst Sample Producer", 500 /* msec */, 250 /* msec */);
+        super("Burst Sample Producer", 500 /* msec */, 1 /* msec */);
         m_produced = new AtomicLong(0L);
     }
 
     @Override
-    protected double calculateThroughput(long time) {
-        return (1000 * m_produced.get()) / time;
+    protected long getProductionCount() {
+        return m_produced.get();
     }
 
     @Override
     protected void produceSampleData() throws InterruptedException {
         for (int i = 0; !Thread.currentThread().isInterrupted() && i < BURST_LENGTH; i++) {
-            // Sleep a little to simulate production time...
-            TimeUnit.MILLISECONDS.sleep(1);
 
             double val1 = randomSampleValue();
             double val2 = randomSampleValue();
@@ -44,5 +42,7 @@ public class BurstSampleProducer extends AbstractSampleProducer {
             m_queue.put(sample);
             m_produced.addAndGet(1l);
         }
+
+        TimeUnit.MILLISECONDS.sleep(150); // simulate dead-time...
     }
 }

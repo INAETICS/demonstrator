@@ -9,6 +9,7 @@
 <link rel="stylesheet" href="bootstrap.min.css">
 <link rel="stylesheet" href="bootstrap-theme.min.css">
 <link rel="stylesheet" href="inaetics-base.css">
+<!--[if lte IE 8]><script src="excanvas.js"></script><![endif]-->
 </head>
 <body>
 	<div class="container-fluid">
@@ -30,16 +31,15 @@
 
 		<div class="page-header">
 			<h1>
-				<img src="logo.png" alt="INAETICS" width="231" height="75"> <small>demonstrator</small>
+				<img src="logo.png" alt="INAETICS" width="231" height="75"> <small>Statistics</small>
 			</h1>
 		</div>
 		<div class="row">
-			<p>This is the landing page for the INAETICS demonstrator. You can go to the following subpages:</p>
-			<ol>
-			<li>An overview with <a href="/stats.html">all statistics</a> of the running system;</li>
-			<li>the <a href="/dashboard.html">dashboard</a> provding a high-level view of the system.</li>
-			</ol>
+			<div id="stats-container" class="lead"></div>
 		</div>
 	</div>
+	<script src="ChartNew.js" charset="utf-8"></script>
+	<script src="inaeticsCommon.js" charset="utf-8"></script>
+	<script src="inaeticsStats.js" charset="utf-8"></script>
 </body>
 </html>

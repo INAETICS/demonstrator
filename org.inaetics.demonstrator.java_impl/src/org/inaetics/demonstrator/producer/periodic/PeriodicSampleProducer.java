@@ -24,8 +24,8 @@ public class PeriodicSampleProducer extends AbstractSampleProducer {
     }
 
     @Override
-    protected double calculateThroughput(long time) {
-        return (1000 * m_produced.get()) / time;
+    protected long getProductionCount() {
+        return m_produced.get();
     }
 
     @Override
@@ -35,6 +35,6 @@ public class PeriodicSampleProducer extends AbstractSampleProducer {
         Sample sample = new Sample(System.currentTimeMillis(), val1, val2);
 
         m_queue.put(sample);
-        m_produced.addAndGet(1L);
+        m_produced.incrementAndGet();
     }
 }

@@ -24,7 +24,6 @@ public abstract class AbstractSampleProcessor implements Processor, StatsProvide
 
     private ExecutorService m_executor;
     private Future<?> m_generatorFuture;
-    private Future<?> m_samplerFuture;
 
     private volatile double m_processedAvg = 0;
     // Injected by Felix DM...
@@ -61,10 +60,9 @@ public abstract class AbstractSampleProcessor implements Processor, StatsProvide
     }
 
     /**
-     * @param time the time (in milliseconds) this processor is running.
-     * @return the throughput of this processor.
+     * @return how many items up to now were produced.
      */
-    protected abstract double calculateThroughput(long time);
+    protected abstract long getProcessedCount();
 
     protected final void info(String msg, Object... args) {
         m_log.log(LogService.LOG_INFO, String.format(msg, args));
@@ -73,7 +71,7 @@ public abstract class AbstractSampleProcessor implements Processor, StatsProvide
     /**
      * Implement this to process the actual sample(s).s
      */
-    protected abstract void processSamples();
+    protected abstract void processSampleData();
 
     protected final double randomSampleValue() {
         return (m_rnd.nextDouble() * 200.0) - 100.0;
@@ -83,47 +81,32 @@ public abstract class AbstractSampleProcessor implements Processor, StatsProvide
      * Called by Felix DM when starting this component.
      */
     protected final void start() throws Exception {
-        m_executor = Executors.newFixedThreadPool(2);
+        m_executor = Executors.newSingleThreadExecutor();
 
-        m_generatorFuture =
-            m_executor.submit(() -> //
-                {
-                    while (!Thread.currentThread().isInterrupted() && !m_executor.isShutdown()) {
-                        try {
-                            processSamples();
+        m_generatorFuture = m_executor.submit(() -> {
+            long oldProcessedCount = 0L;
+            while (!Thread.currentThread().isInterrupted() && !m_executor.isShutdown()) {
+                try {
+                    processSampleData();
 
-                            TimeUnit.MILLISECONDS.sleep(getTaskInterval());
-                        } catch (InterruptedException e) {
-                            // Break out of our loop...
-                            Thread.currentThread().interrupt();
-                        } catch (Exception e) {
-                            // Ignore, not much we can do about this...
-                            info("Failed to process sample(s)! Cause: %s",
-                                (e.getMessage() == null ? "NullPointerException" : e.getMessage()));
-                            m_log.log(LogService.LOG_DEBUG, "Failed to process sample(s)!", e);
-                        }
-                    }
-                    ;
-                });
+                    long processedCount = getProcessedCount();
+                    m_processedAvg = (1000.0 * (processedCount - oldProcessedCount)) / getTaskInterval();
+                    oldProcessedCount = processedCount;
 
-        m_samplerFuture = m_executor.submit(() -> //
-            {
-                long startTime = System.currentTimeMillis();
-
-                while (!Thread.currentThread().isInterrupted() && !m_executor.isShutdown()) {
-                    try {
-                        TimeUnit.SECONDS.sleep(1);
-
-                        m_processedAvg = calculateThroughput(System.currentTimeMillis() - startTime);
-                    } catch (InterruptedException e) {
-                        // Break out of our loop...
-                        Thread.currentThread().interrupt();
-                    } catch (Exception e) {
-                        m_log.log(LogService.LOG_DEBUG, "Failed to calculate average throughput!", e);
-                    }
+                    TimeUnit.MILLISECONDS.sleep(getTaskInterval());
+                } catch (InterruptedException e) {
+                    // Break out of our loop...
+                    Thread.currentThread().interrupt();
+                } catch (Exception e) {
+                    // Ignore, not much we can do about this...
+                    info("Failed to process sample(s)! Cause: %s",
+                        (e.getMessage() == null ? "NullPointerException" : e.getMessage()));
+                    m_log.log(LogService.LOG_DEBUG, "Failed to process sample(s)!", e);
                 }
-            });
-        
+            }
+            ;
+        });
+
         info("Processor %s started...", getName());
     }
 
@@ -134,10 +117,6 @@ public abstract class AbstractSampleProcessor implements Processor, StatsProvide
         if (m_generatorFuture != null) {
             m_generatorFuture.cancel(true);
             m_generatorFuture = null;
-        }
-        if (m_samplerFuture != null) {
-            m_samplerFuture.cancel(true);
-            m_samplerFuture = null;
         }
         m_executor.shutdown();
         m_executor.awaitTermination(10, TimeUnit.SECONDS);

@@ -17,7 +17,13 @@ package org.inaetics.demonstrator.view.endpoint;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.servlet.ServletException;
@@ -28,6 +34,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.inaetics.demonstrator.api.processor.Processor;
 import org.inaetics.demonstrator.api.producer.Producer;
 import org.inaetics.demonstrator.api.stats.StatsProvider;
+import org.osgi.framework.ServiceReference;
 import org.osgi.service.log.LogService;
 
 import com.fasterxml.jackson.core.JsonFactory;
@@ -37,11 +44,36 @@ import com.fasterxml.jackson.core.JsonGenerator;
  * Provides read-only access to some of the (low-level) system statistics.
  */
 public class CoordinatorServlet extends HttpServlet {
-    private volatile StatsProvider m_aggregator;
-    private volatile LogService m_log;
 
-    private final List<Producer> m_producers = new ArrayList<>();
-    private final AtomicInteger m_processorCount = new AtomicInteger(0);
+    static class StatsContainer {
+        final StatsProvider m_provider;
+        final TimestampMap<Double> m_stats;
+
+        public StatsContainer(StatsProvider provider, TimestampMap<Double> stats) {
+            m_provider = provider;
+            m_stats = stats;
+        }
+
+        public void updateStats(Long time) {
+            m_stats.put(time, m_provider.getValue());
+        }
+    }
+
+    // Injected by Felix DM...
+    private volatile LogService m_log;
+    private volatile StatsProvider m_aggregator;
+
+    private final ConcurrentMap<ServiceReference<StatsProvider>, StatsContainer> m_providerStats;
+    private final List<Producer> m_producers;
+    private final AtomicInteger m_processorCount;
+    private final AtomicInteger m_productionRate;
+
+    public CoordinatorServlet() {
+        m_providerStats = new ConcurrentHashMap<>();
+        m_producers = new CopyOnWriteArrayList<>();
+        m_processorCount = new AtomicInteger(0);
+        m_productionRate = new AtomicInteger(5);
+    }
 
     /* Called by Felix DM. */
     public final void addProcessor(Processor p) {
@@ -51,6 +83,7 @@ public class CoordinatorServlet extends HttpServlet {
     /* Called by Felix DM. */
     public final void addProducer(Producer p) {
         m_producers.add(p);
+        setSampleRate(p, m_productionRate.get());
     }
 
     /* Called by Felix DM. */
@@ -63,38 +96,99 @@ public class CoordinatorServlet extends HttpServlet {
         m_producers.remove(p);
     }
 
+    /* Called by Felix DM. */
+    public void addStatsProvider(ServiceReference<StatsProvider> serviceRef, StatsProvider provider) {
+        if ("true".equals(serviceRef.getProperty("aggregator"))) {
+            m_aggregator = provider;
+        }
+        m_providerStats.putIfAbsent(serviceRef, new StatsContainer(provider, new TimestampMap<Double>()));
+    }
+
+    /* Called by Felix DM. */
+    public void removeStatsProvider(ServiceReference<StatsProvider> serviceRef, StatsProvider provider) {
+        if ("true".equals(serviceRef.getProperty("aggregator"))) {
+            m_aggregator = null;
+        }
+        m_providerStats.remove(serviceRef);
+    }
+
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String pathInfo = req.getPathInfo();
-        if ("/systemStats".equals(pathInfo)) {
-            JsonFactory factory = new JsonFactory();
+        resp.setContentType("application/json");
 
-            try (JsonGenerator generator = factory.createGenerator(resp.getOutputStream())) {
+        JsonFactory factory = new JsonFactory();
+        try (JsonGenerator generator = factory.createGenerator(resp.getOutputStream())) {
+            String pathInfo = req.getPathInfo();
+
+            List<String> wantedNames = new ArrayList<>();
+            String queryInfo = req.getQueryString();
+            if (queryInfo != null && !"".equals(queryInfo.trim())) {
+                for (String name : queryInfo.split(",")) {
+                    wantedNames.add(name);
+                }
+            }
+
+            if ("/statistics".equals(pathInfo)) {
+                resp.setStatus(HttpServletResponse.SC_OK);
+
+                // Return an array with all providers sorted on their name...
+                Map<String, StatsContainer> names = new TreeMap<>();
+                for (StatsContainer c : m_providerStats.values()) {
+                    c.updateStats(System.currentTimeMillis());
+
+                    try {
+                        String name = getName(c.m_provider);
+                        if (wantedNames.isEmpty() || wantedNames.contains(name)) {
+                            names.put(name, c);
+                        }
+                    } catch (Exception e) {
+                        warn("Failed to get name for provider %s: %s", c.m_provider, e.getMessage());
+                    }
+                }
+
+                generator.writeStartArray();
+
+                for (StatsContainer container : names.values()) {
+                    try {
+                        StatsProvider provider = container.m_provider;
+                        TimestampMap<Double> stats = container.m_stats;
+
+                        if (provider != null) {
+                            writeAsJSON(generator, provider, stats);
+                        }
+                    } catch (Exception e) {
+                        warn("Failed to write provider %s to JSON: %s", container.m_provider, e.getMessage());
+                    }
+                }
+
+                generator.writeEndArray();
+            } else if ("/systemStats".equals(pathInfo)) {
+                resp.setStatus(HttpServletResponse.SC_OK);
+
                 generator.writeStartObject();
+                generator.writeNumberField("productionRate", m_productionRate.get());
                 generator.writeNumberField("processors", m_processorCount.get());
                 generator.writeNumberField("producers", m_producers.size());
                 generator.writeEndObject();
-            }
+            } else if ("/utilisation".equals(pathInfo)) {
+                resp.setStatus(HttpServletResponse.SC_OK);
 
-            resp.setStatus(HttpServletResponse.SC_OK);
-            resp.flushBuffer();
-        } else if ("/utilisation".equals(pathInfo)) {
-            JsonFactory factory = new JsonFactory();
-
-            try (JsonGenerator generator = factory.createGenerator(resp.getOutputStream())) {
                 generator.writeStartObject();
                 generator.writeStringField("name", m_aggregator.getName());
                 generator.writeStringField("type", m_aggregator.getType());
                 generator.writeStringField("unit", m_aggregator.getMeasurementUnit());
                 generator.writeNumberField("value", m_aggregator.getValue());
                 generator.writeEndObject();
-            }
+            } else {
+                resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
 
-            resp.setStatus(HttpServletResponse.SC_OK);
+                generator.writeStartObject();
+                generator.writeEndObject();
+            }
+        } finally {
             resp.flushBuffer();
-        } else {
-            resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
         }
+
     }
 
     @Override
@@ -105,19 +199,60 @@ public class CoordinatorServlet extends HttpServlet {
             return;
         }
 
+        // Keep for later use: when new producers are added...
+        m_productionRate.set(value);
+
         for (Producer p : m_producers) {
-            try {
-                int newRate = (int) ((p.getMaxSampleRate() / 100.0) * value);
-
-                m_log.log(LogService.LOG_INFO, String.format("Setting sample rate to %d (%d %%)", newRate, value));
-
-                p.setSampleRate(newRate);
-            } catch (Exception e) {
-                m_log.log(LogService.LOG_WARNING, "Failed to set sample rate!", e);
-            }
+            setSampleRate(p, value);
         }
 
         resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
+    }
+
+    private void writeAsJSON(JsonGenerator generator, StatsProvider provider, TimestampMap<Double> stats)
+        throws IOException {
+        String name = getName(provider);
+        String displayName = provider.getName();
+        String type = provider.getType();
+        String unit = provider.getMeasurementUnit();
+
+        List<Long> timestamps = new ArrayList<Long>(stats.keySet());
+        Collections.sort(timestamps);
+
+        generator.writeStartObject();
+        generator.writeStringField("name", name);
+        generator.writeStringField("displayName", displayName);
+        generator.writeStringField("type", type);
+        generator.writeStringField("unit", unit);
+        generator.writeArrayFieldStart("timestamps");
+        for (Long timestamp : timestamps) {
+            generator.writeNumber(timestamp);
+        }
+        generator.writeEndArray();
+        generator.writeArrayFieldStart("values");
+        for (Long timestamp : timestamps) {
+            generator.writeNumber(stats.get(timestamp));
+        }
+        generator.writeEndArray();
+
+        generator.writeEndObject();
+    }
+
+    private String getName(StatsProvider sp) {
+        String name = sp.getName();
+        return name.toLowerCase().replaceAll("\\W+", "-");
+    }
+
+    private void setSampleRate(Producer p, int newRate) {
+        try {
+            int rate = (int) ((p.getMaxSampleRate() / 100.0) * newRate);
+
+            info("Setting sample rate for producer to %d (%d %%)", rate, newRate);
+
+            p.setSampleRate(rate);
+        } catch (Exception e) {
+            warn("Failed to set sample rate!", e);
+        }
     }
 
     private Integer getIntParameter(HttpServletRequest req, String paramName) {
@@ -130,5 +265,13 @@ public class CoordinatorServlet extends HttpServlet {
             }
         }
         return null;
+    }
+
+    protected final void info(String msg, Object... args) {
+        m_log.log(LogService.LOG_INFO, String.format(msg, args));
+    }
+
+    protected final void warn(String msg, Object... args) {
+        m_log.log(LogService.LOG_WARNING, String.format(msg, args));
     }
 }

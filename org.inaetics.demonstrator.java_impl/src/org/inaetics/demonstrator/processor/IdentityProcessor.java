@@ -28,7 +28,7 @@ public class IdentityProcessor extends AbstractSampleProcessor {
     }
 
     @Override
-    public void processSamples() {
+    public void processSampleData() {
         Sample sample = m_queue.take();
         Result result = new Result(10, 1.0, sample);
 
@@ -37,7 +37,7 @@ public class IdentityProcessor extends AbstractSampleProcessor {
     }
 
     @Override
-    protected double calculateThroughput(long time) {
-        return time == 0 ? 0 : (1000 * m_processed.get()) / time;
+    protected long getProcessedCount() {
+        return m_processed.get();
     }
 }
