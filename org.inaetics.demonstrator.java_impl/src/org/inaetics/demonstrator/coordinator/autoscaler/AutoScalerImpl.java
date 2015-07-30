@@ -81,16 +81,16 @@ public class AutoScalerImpl implements ManagedService {
             if (scale(Type.PROCESSOR, +2)) {
                 info("Producing too many items than is processed, added 2 new processors...");
             } else if (scale(Type.PRODUCER, -1)) {
-                info("Producing too many items than is processed, removed 1 new producer...");
+                info("Producing too many items than is processed, removed 1 producer...");
             } else {
                 warn("System is overloaded, but no resources are available to compensate!");
             }
         } else if (m_slope > 0.5) {
             // If our slope is > 0.5 && <= 1.0, then our producers are producing more items than we can process, add 1 new processor;
-            if (scale(Type.PROCESSOR, +2)) {
+            if (scale(Type.PROCESSOR, +1)) {
                 info("Producing more items than is processed, added 1 new processor...");
             } else if (scale(Type.PRODUCER, -1)) {
-                info("Producing more items than is processed, removed 1 new producer...");
+                info("Producing more items than is processed, removed 1 producer...");
             } else {
                 warn("System is overloaded, but no resources are available to compensate!");
             }
