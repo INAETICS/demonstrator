@@ -27,6 +27,7 @@ public abstract class AbstractSampleProducer implements Producer, StatsProvider 
 
     private volatile double m_producedAvg;
     private volatile int m_taskInterval;
+    private volatile boolean m_stopProduction;
 
     // Injected by Felix DM...
     private volatile LogService m_log;
@@ -43,6 +44,7 @@ public abstract class AbstractSampleProducer implements Producer, StatsProvider 
 
         m_rnd = new Random();
         m_producedAvg = 0;
+        m_stopProduction = false;
     }
 
     @Override
@@ -77,10 +79,22 @@ public abstract class AbstractSampleProducer implements Producer, StatsProvider 
 
     @Override
     public void setSampleRate(int rate) {
-        if (rate < m_minTaskInterval) {
+    	int newTaskInterval;
+    	if (rate == 0) {
+    		// this means no producing anymore
+    		// but we can't sleep for a long time, because then we wouldn't pick up a new interval
+    		// so use a boolean for production stop
+    		newTaskInterval = 1000;
+    		m_stopProduction = true;
+    	}
+    	else {
+    		newTaskInterval = 1000 / rate;
+    		m_stopProduction = false;
+    	}
+        if (newTaskInterval < m_minTaskInterval) {
             throw new IllegalArgumentException("Invalid sample rate: " + rate + " (" + m_minTaskInterval + ")!");
         }
-        m_taskInterval = 1000 / rate;
+        m_taskInterval = newTaskInterval;
     }
 
     final int getTaskInterval() {
@@ -117,7 +131,9 @@ public abstract class AbstractSampleProducer implements Producer, StatsProvider 
             public void run() {
                 while (!Thread.currentThread().isInterrupted()) {
                     try {
-                        produceSampleData();
+                    	if (!m_stopProduction) {
+                    		produceSampleData();
+                    	}
 
                         TimeUnit.MILLISECONDS.sleep(getTaskInterval());
                     } catch (InterruptedException e) {
