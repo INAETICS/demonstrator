@@ -61,6 +61,9 @@ public abstract class AbstractSampleProducer implements Producer, StatsProvider 
 
     @Override
     public int getSampleRate() {
+        if (m_taskInterval < m_minTaskInterval) {
+            return 0;
+        }
         return 1000 / m_taskInterval;
     }
 
@@ -76,7 +79,9 @@ public abstract class AbstractSampleProducer implements Producer, StatsProvider 
 
     @Override
     public void setSampleRate(int rate) {
-        m_taskInterval = 1000 / rate;
+        // In case we should stop producing samples (rate = 0), use a 
+        // taskInterval outside the valid range to detect this...
+        m_taskInterval = (rate == 0) ? (m_minTaskInterval - 1) : (1000 / rate);
     }
 
     /**
@@ -113,6 +118,7 @@ public abstract class AbstractSampleProducer implements Producer, StatsProvider 
 
         m_generatorFuture = m_executor.submit(() -> {
             long oldProductionCount = 0L;
+            long oldTime = System.currentTimeMillis();
 
             while (!Thread.currentThread().isInterrupted()) {
                 try {
@@ -122,10 +128,13 @@ public abstract class AbstractSampleProducer implements Producer, StatsProvider 
                     }
 
                     long produced = getProductionCount();
-                    m_producedAvg = (1000.0 * (produced - oldProductionCount)) / taskInterval;
+                    long time = System.currentTimeMillis();
+                    m_producedAvg = (1000.0 * (produced - oldProductionCount)) / (time - oldTime);
                     oldProductionCount = produced;
+                    oldTime = time;
 
-                    TimeUnit.MILLISECONDS.sleep(taskInterval);
+                    // Make sure we sleep at least 1 millisecond, even when our taskInterval is zero or negative... 
+                    TimeUnit.MILLISECONDS.sleep(Math.max(1, taskInterval));
                 } catch (InterruptedException e) {
                     // Break out of our loop...
                     Thread.currentThread().interrupt();

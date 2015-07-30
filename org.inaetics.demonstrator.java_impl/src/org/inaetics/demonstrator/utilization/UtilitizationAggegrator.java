@@ -50,7 +50,7 @@ public class UtilitizationAggegrator implements StatsProvider {
 
     @Override
     public double getValue() {
-        double actual = 0, max = 0;
+        long actual = 0, max = 0;
 
         for (Producer producer : m_producers) {
             try {
@@ -61,6 +61,11 @@ public class UtilitizationAggegrator implements StatsProvider {
             }
         }
 
+        if (max == 0) {
+            // 
+            return 0.0;
+        }
+        
         return (100.0 * actual) / max;
     }
 }
