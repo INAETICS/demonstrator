@@ -24,6 +24,7 @@ import java.util.Random;
 import java.util.function.Supplier;
 
 import org.inaetics.demonstrator.api.coordinator.CoordinatorService;
+import org.inaetics.demonstrator.coordinator.util.CoordinatorConfig;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.cm.ConfigurationException;

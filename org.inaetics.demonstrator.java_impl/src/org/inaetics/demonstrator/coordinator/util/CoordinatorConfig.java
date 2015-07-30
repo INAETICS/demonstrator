@@ -1,7 +1,7 @@
 /**
  * Licensed under Apache License v2. See LICENSE for more information.
  */
-package org.inaetics.demonstrator.coordinator.stub;
+package org.inaetics.demonstrator.coordinator.util;
 
 import static org.inaetics.demonstrator.coordinator.util.ConfigUtils.*;
 

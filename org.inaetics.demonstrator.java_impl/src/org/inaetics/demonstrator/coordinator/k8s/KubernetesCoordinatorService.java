@@ -7,6 +7,7 @@ import java.util.Dictionary;
 
 import org.amdatu.kubernetes.Kubernetes;
 import org.inaetics.demonstrator.api.coordinator.CoordinatorService;
+import org.inaetics.demonstrator.coordinator.util.CoordinatorConfig;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedService;
 import org.osgi.service.log.LogService;
@@ -17,45 +18,37 @@ import rx.Observable;
  * Provides a coordinator service that is using Kubernetes to scale up/down replicas of services.
  */
 public class KubernetesCoordinatorService implements ManagedService, CoordinatorService {
-    private static final boolean CURRENT_REPLICA_COUNT = true;
-    private static final boolean MAX_REPLICA_COUNT = false;
 
-    // Managed by Felix DM...
+	// Managed by Felix DM...
     private volatile LogService m_log;
     private volatile Kubernetes m_k8s;
     // Locally managed...
-    private volatile CoordinatorConfig m_config;
+    private volatile KubernetesCoordinatorConfig m_config;
 
     public KubernetesCoordinatorService() {
-        this(new CoordinatorConfig());
+        this(new KubernetesCoordinatorConfig());
     }
 
-    public KubernetesCoordinatorService(CoordinatorConfig config) {
+    public KubernetesCoordinatorService(KubernetesCoordinatorConfig config) {
         m_config = config;
     }
 
     @Override
     public int getMaxReplicaCount(Type type) {
         CoordinatorConfig config = m_config;
-
-        String[] names;
         switch (type) {
             case PROCESSOR:
-                names = config.getProcessorControllerNames();
-                break;
+                return config.getMaxNrProcessors();
             case PRODUCER:
-                names = config.getProducerControllerNames();
-                break;
+                return config.getMaxNrProducers();
             default:
                 throw new IllegalArgumentException("Invalid type: " + type);
         }
-
-        return getReplicaCount(config.getKubernetesNamespace(), names, MAX_REPLICA_COUNT);
     }
 
     @Override
     public int getReplicaCount(Type type) {
-        CoordinatorConfig config = m_config;
+        KubernetesCoordinatorConfig config = m_config;
 
         String[] names;
         switch (type) {
@@ -69,7 +62,7 @@ public class KubernetesCoordinatorService implements ManagedService, Coordinator
                 throw new IllegalArgumentException("Invalid type: " + type);
         }
 
-        return getReplicaCount(config.getKubernetesNamespace(), names, CURRENT_REPLICA_COUNT);
+        return getReplicaCount(config.getKubernetesNamespace(), names);
     }
 
     @Override
@@ -79,31 +72,37 @@ public class KubernetesCoordinatorService implements ManagedService, Coordinator
             return false;
         }
 
-        CoordinatorConfig config = m_config;
+        KubernetesCoordinatorConfig config = m_config;
 
         String[] names;
+        int newNumber;
+        boolean isNumberSet;
         switch (type) {
             case PROCESSOR:
                 names = config.getProcessorControllerNames();
+                newNumber = Math.min(number, m_config.getMaxNrProcessors());
+                isNumberSet = newNumber == number;
                 break;
             case PRODUCER:
                 names = config.getProducerControllerNames();
+                newNumber = Math.min(number, m_config.getMaxNrProducers());
+                isNumberSet = newNumber == number;
                 break;
             default:
                 throw new IllegalArgumentException("Invalid type: " + type);
         }
 
-        setReplicaCount(config.getKubernetesNamespace(), names, number);
-        // TODO
-        return true;
+        setReplicaCount(config.getKubernetesNamespace(), names, newNumber);
+
+        return isNumberSet;
     }
 
     @Override
     public void updated(Dictionary<String, ?> properties) throws ConfigurationException {
         if (properties != null) {
-            m_config = new CoordinatorConfig(properties);
+            m_config = new KubernetesCoordinatorConfig(properties);
         } else {
-            m_config = new CoordinatorConfig();
+            m_config = new KubernetesCoordinatorConfig();
         }
     }
 
@@ -127,9 +126,9 @@ public class KubernetesCoordinatorService implements ManagedService, Coordinator
                 t -> m_log.log(LogService.LOG_ERROR, "Setting replica count failed...", t));
     }
 
-    private int getReplicaCount(String ns, String[] rcNames, boolean currentOrMax) {
+    private int getReplicaCount(String ns, String[] rcNames) {
         return Observable.from(rcNames).flatMap(rcName -> m_k8s.getReplicationController(ns, rcName))
-            .<Integer> map(rc -> currentOrMax ? rc.getStatus().getReplicas() : rc.getSpec().getReplicas()) //
+            .<Integer> map(rc -> rc.getSpec().getReplicas()) //
             .reduce(0, (a, b) -> a + b) //
             .toBlocking() //
             .last();
