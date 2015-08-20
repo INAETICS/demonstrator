@@ -406,13 +406,13 @@ int producer_getUtilizationStatsMeasurementUnit(producer_pt producer, char **mUn
 
 
 
-int producer_getMaxSampleRate(producer_pt producer) {
+int producer_getMaxSampleRate(void* handle) {
 	return MAX_SAMPLES_PER_SEC;
 }
 
 
-int producer_getSampleRate(producer_pt producer) {
-
+int producer_getSampleRate(void* handle) {
+	producer_pt producer = (producer_pt) handle;
 	int sampleRate = 0;
 
 	pthread_rwlock_rdlock(&producer->queueLock);
@@ -440,7 +440,8 @@ int producer_getSampleRate(producer_pt producer) {
 
 
 
-void producer_setSampleRate(producer_pt producer, int rate) {
+void producer_setSampleRate(void* handle, int rate) {
+	producer_pt producer = (producer_pt) handle;
 
 	pthread_rwlock_rdlock(&producer->queueLock);
 
