@@ -351,7 +351,7 @@ int producer_getUtilizationStatsName(producer_pt producer, char **name) {
 	celix_status_t status = CELIX_SUCCESS;
 
 	if (producer->utilizationStatsName != NULL) {
-		(*name) = producer->utilizationStatsName;
+		(*name) = strdup(producer->utilizationStatsName);
 	}
 	else {
 		msg(0, "PRODUCER_STAT: getName denied because service is removed");
@@ -362,7 +362,7 @@ int producer_getUtilizationStatsName(producer_pt producer, char **name) {
 }
 
 int producer_getUtilizationStatsType(producer_pt producer, char **type) {
-	(*type) = (char*) THROUGHPUT_TYPE;
+	(*type) = strdup((char*) THROUGHPUT_TYPE);
 	return (int) CELIX_SUCCESS;
 }
 
@@ -399,7 +399,7 @@ int producer_getUtilizationStatsValue(producer_pt producer, double* statVal) {
 }
 
 int producer_getUtilizationStatsMeasurementUnit(producer_pt producer, char **mUnit) {
-	(*mUnit) = (char*) THROUGHPUT_MEASUREMENT_UNIT;
+	(*mUnit) = strdup((char*) THROUGHPUT_MEASUREMENT_UNIT);
 	return (int) CELIX_SUCCESS;
 }
 
