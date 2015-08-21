@@ -127,14 +127,19 @@ celix_status_t statistic_tracker_statServiceAdded(void *handle, service_referenc
 	pthread_t* thread_pt = calloc(1, sizeof(*thread_pt));
 	char* name = NULL;
 
-	pthread_rwlock_wrlock(&statTracker->statLock);
-	pthread_create(thread_pt, NULL, statPoller, statTracker);
-	hashMap_put(statTracker->statServices, thread_pt, service);
-	pthread_rwlock_unlock(&statTracker->statLock);
+	// check whether we can send/receive
+	if (statService->getName(statService->statsProvider, &name) == 0) {
+			pthread_rwlock_wrlock(&statTracker->statLock);
+			pthread_create(thread_pt, NULL, statPoller, statTracker);
+        	hashMap_put(statTracker->statServices, thread_pt, service);
+			pthread_rwlock_unlock(&statTracker->statLock);
 
-	statService->getName(statService->statsProvider, &name);
+        	msg(1, "STAT_TRACKER: Service %s Added (handled by thread %lu)", name, (unsigned long) *thread_pt);
+	}
+	else {
+    	msg(1, "STAT_TRACKER: Could not receive name - Wire set up correctly?");
+	}
 
-	msg(1, "STAT_TRACKER: Service %s Added (handled by thread %lu)", name, (unsigned long) *thread_pt);
 
 	free(name);
 
@@ -164,9 +169,9 @@ celix_status_t statistic_tracker_statServiceRemoved(void *handle, service_refere
 			thread_pt = hashMapEntry_getKey(entry);
 
 			msg(1, "STAT_TRACKER: Service %s Removed. ", name);
+
 			hashMap_remove(statTracker->statServices, thread_pt);
 			free(name);
-
 		}
 	}
 

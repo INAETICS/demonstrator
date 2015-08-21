@@ -69,7 +69,7 @@ int statsProviderProxy_getName(void* provider, char** name) {
 			}
 			json_decref(js_reply);
 		}
-		else {
+		else if (replyStatus != 0) {
 			status = replyStatus;
 		}
 		json_decref(root);
@@ -119,7 +119,7 @@ int statsProviderProxy_getType(void* provider, char** type) {
 			}
 			json_decref(js_reply);
 		}
-		else {
+		else if (replyStatus != 0) {
 			status = replyStatus;
 		}
 		json_decref(root);
@@ -165,7 +165,7 @@ int statsProviderProxy_getvalue(void* provider, double* statVal) {
 			}
 			json_decref(js_reply);
 		}
-		else {
+		else if (replyStatus != 0) {
 			status = replyStatus;
 		}
 		json_decref(root);
@@ -215,7 +215,7 @@ int statsProviderProxy_getMeasurementUnitUnit(void* provider, char** mUnit) {
 			}
 			json_decref(js_reply);
 		}
-		else {
+		else if (replyStatus != 0) {
 			status = replyStatus;
 		}
 		json_decref(root);
