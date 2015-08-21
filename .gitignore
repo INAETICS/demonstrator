@@ -1,4 +1,5 @@
 /.gradle/
+/.recommenders/
 /reports/
 /generated/
 .metadata/
