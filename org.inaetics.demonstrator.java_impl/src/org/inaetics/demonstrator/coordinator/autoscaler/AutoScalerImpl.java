@@ -80,8 +80,6 @@ public class AutoScalerImpl implements ManagedService {
             // If our slope is > 1.0, then our producers are producing far more items than we can process, so let's counter this by adding 2 new processors;
             if (scale(Type.PROCESSOR, +2)) {
                 info("Producing too many items than is processed, added 2 new processors...");
-            } else if (scale(Type.PRODUCER, -1)) {
-                info("Producing too many items than is processed, removed 1 new producer...");
             } else {
                 warn("System is overloaded, but no resources are available to compensate!");
             }
@@ -89,8 +87,6 @@ public class AutoScalerImpl implements ManagedService {
             // If our slope is > 0.5 && <= 1.0, then our producers are producing more items than we can process, add 1 new processor;
             if (scale(Type.PROCESSOR, +1)) {
                 info("Producing more items than is processed, added 1 new processor...");
-            } else if (scale(Type.PRODUCER, -1)) {
-                info("Producing more items than is processed, removed 1 producer...");
             } else {
                 warn("System is overloaded, but no resources are available to compensate!");
             }
@@ -110,17 +106,21 @@ public class AutoScalerImpl implements ManagedService {
             }
         } else if (m_slope > -1.0) {
             // If our slope is > -1.0 && <= -0.5, then our processors are processing more than produces, add 1 new producer;
-            info("Producing too little items than processed, adding 1 new producer...");
-
-            scale(Type.PRODUCER, +1);
+            if (scale(Type.PROCESSOR, -1)) {
+                info("Producing too little items than processed, removing 1 processor...");
+            } else {
+                warn("System is overloaded, but no resources are available to compensate!");
+            }
         } else {
             // If our slope is <= -1.0, then we need to produce far more items...
-            info("Producing far too little items than processed, adding 2 new producers...");
-
-            scale(Type.PRODUCER, +2);
+            if (scale(Type.PROCESSOR, -2)) {
+                info("Producing far too little items than processed, removing 2 processors...");
+            } else {
+                warn("System is overloaded, but no resources are available to compensate!");
+            }
         }
     }
-    
+
     private boolean scale(Type type, int relReplicas) {
         int current = m_coordinator.getReplicaCount(type);
         return m_coordinator.setReplicaCount(type, current + relReplicas);
