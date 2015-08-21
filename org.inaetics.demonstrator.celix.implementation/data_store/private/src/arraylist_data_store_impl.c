@@ -211,7 +211,7 @@ int dataStore_getUtilizationStatsName(data_store_type *dataStore, char **name){
 	celix_status_t status = CELIX_SUCCESS;
 
 	if (dataStore->utilizationStatsName != NULL) {
-		(*name)=dataStore->utilizationStatsName;
+		(*name) = strdup(dataStore->utilizationStatsName);
 	}
 	else {
 		msg(0, "DATASTORE_STAT: getName denied because service is removed");
@@ -222,7 +222,7 @@ int dataStore_getUtilizationStatsName(data_store_type *dataStore, char **name){
 }
 
 int dataStore_getUtilizationStatsType(data_store_type *dataStore, char **type){
-	(*type)=(char*)UTILIZATION_TYPE;
+	(*type) = strdup((char*)UTILIZATION_TYPE);
 	return (int)CELIX_SUCCESS;
 }
 
@@ -233,6 +233,6 @@ int dataStore_getUtilizationStatsValue(data_store_type *dataStore, double* statV
 }
 
 int dataStore_getUtilizationStatsMeasurementUnit(data_store_type *dataStore, char **mUnit){
-	(*mUnit)=(char*)UTILIZATION_MEASUREMENT_UNIT;
+	(*mUnit) = strdup((char*) UTILIZATION_MEASUREMENT_UNIT);
 	return (int)CELIX_SUCCESS;
 }

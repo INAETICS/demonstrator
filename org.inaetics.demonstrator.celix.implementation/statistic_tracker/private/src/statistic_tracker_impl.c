@@ -136,6 +136,8 @@ celix_status_t statistic_tracker_statServiceAdded(void *handle, service_referenc
 
 	msg(1, "STAT_TRACKER: Service %s Added (handled by thread %lu)", name, (unsigned long) *thread_pt);
 
+	free(name);
+
 	return CELIX_SUCCESS;
 }
 
@@ -163,6 +165,8 @@ celix_status_t statistic_tracker_statServiceRemoved(void *handle, service_refere
 
 			msg(1, "STAT_TRACKER: Service %s Removed. ", name);
 			hashMap_remove(statTracker->statServices, thread_pt);
+			free(name);
+
 		}
 	}
 

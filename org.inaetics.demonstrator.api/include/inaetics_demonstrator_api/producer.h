@@ -9,9 +9,9 @@
 struct producer_service {
 	void *producer;
 
-	int (*getMaxSampleRate)(void *producer);
-	int (*getSampleRate)(void *producer);
-	int (*setSampleRate)(void *producer, int rate);
+	int (*getMaxSampleRate)(void* producer);
+	int (*getSampleRate)(void* producer);
+	void (*setSampleRate)(void* producer, int rate);
 };
 
 typedef struct producer_service* producer_service_pt;

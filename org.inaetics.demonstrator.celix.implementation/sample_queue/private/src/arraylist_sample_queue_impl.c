@@ -290,12 +290,12 @@ int sampleQueue_takeAll(sample_queue_type *sampleQueue, uint32_t min, uint32_t m
 }
 
 int sampleQueue_getUtilizationStatsName(sample_queue_type *sampleQueue, char **name) {
-	(*name) = sampleQueue->utilizationStatsName;
+	(*name) = strdup(sampleQueue->utilizationStatsName);
 	return 0;
 }
 
 int sampleQueue_getUtilizationStatsType(sample_queue_type *sampleQueue, char **type) {
-	(*type) = (char *)UTILIZATION_TYPE;
+	(*type) = strdup((char *) UTILIZATION_TYPE);
 	return 0;
 }
 
@@ -306,7 +306,7 @@ int sampleQueue_getUtilizationStatsValue(sample_queue_type *sampleQueue, double*
 }
 
 int sampleQueue_getUtilizationStatsMeasurementUnit(sample_queue_type *sampleQueue, char **mUnit) {
-	(*mUnit) = (char *)UTILIZATION_MEASUREMENT_UNIT;
+	(*mUnit) = strdup((char *) UTILIZATION_MEASUREMENT_UNIT);
 	return 0;
 }
 

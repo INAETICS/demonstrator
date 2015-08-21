@@ -89,6 +89,9 @@ celix_status_t statsProviderEndpoint_getName(remote_endpoint_pt endpoint, char *
 		*reply = c;
 		json_decref(resultRoot);
 
+		if (result == 0) {
+			free(name);
+		}
 	} else {
 		printf("STATS_PROVIDER_ENDPOINT: No service available");
 		status = CELIX_BUNDLE_EXCEPTION;
@@ -128,7 +131,9 @@ celix_status_t statsProviderEndpoint_getType(remote_endpoint_pt endpoint, char *
 		char *c = json_dumps(resultRoot, JSON_ENCODE_ANY);
 		*reply = c;
 		json_decref(resultRoot);
-
+		if (result == 0) {
+			free(type);
+		}
 	} else {
 		printf("STATS_PROVIDER_ENDPOINT: No service available");
 		status = CELIX_BUNDLE_EXCEPTION;
@@ -168,7 +173,9 @@ celix_status_t statsProviderEndpoint_getMeasurementUnit(remote_endpoint_pt endpo
 		char *c = json_dumps(resultRoot, JSON_ENCODE_ANY);
 		*reply = c;
 		json_decref(resultRoot);
-
+		if (result == 0) {
+			free(unitMeasurement);
+		}
 	} else {
 		printf("STATS_PROVIDER_ENDPOINT: No service available");
 		status = CELIX_BUNDLE_EXCEPTION;

@@ -388,7 +388,7 @@ int processor_getUtilizationStatsName(processor_pt processor, char **name) {
 	celix_status_t status = CELIX_SUCCESS;
 
 	if (processor->utilizationStatsName != NULL) {
-		(*name) = processor->utilizationStatsName;
+		(*name) = strdup(processor->utilizationStatsName);
 	}
 	else {
 		msg(0, "PROCESSOR_STAT: getName denied because service is removed");
@@ -399,7 +399,7 @@ int processor_getUtilizationStatsName(processor_pt processor, char **name) {
 }
 
 int processor_getUtilizationStatsType(processor_pt processor, char **type) {
-	(*type) = (char*) THROUGHPUT_TYPE;
+	(*type) = strdup((char*) THROUGHPUT_TYPE);
 	return (int) CELIX_SUCCESS;
 }
 
@@ -431,6 +431,6 @@ int processor_getUtilizationStatsValue(processor_pt processor, double* statVal) 
 }
 
 int processor_getUtilizationStatsMeasurementUnit(processor_pt processor, char **mUnit) {
-	(*mUnit) = (char*) THROUGHPUT_MEASUREMENT_UNIT;
+	(*mUnit) = strdup((char*) THROUGHPUT_MEASUREMENT_UNIT);
 	return (int) CELIX_SUCCESS;
 }

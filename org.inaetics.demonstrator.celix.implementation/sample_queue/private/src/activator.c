@@ -20,6 +20,7 @@
 
 #include <array_list.h>
 #include <pthread.h>
+#include <string.h>
 
 #include "inaetics_demonstrator_api/sample_queue.h"
 #include "inaetics_demonstrator_api/stats_provider.h"
