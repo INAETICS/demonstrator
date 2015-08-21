@@ -9,6 +9,7 @@ deploy("inaetics-demonstrator-all" BUNDLES
         org.inaetics.demonstrator.api.datastore.DataStore_endpoint
         org.inaetics.demonstrator.api.datastore.DataStore_proxy
         org.inaetics.demonstrator.api.producer.Producer
+	org.inaetics.demonstrator.api.producer.Producer_endpoint
         org.inaetics.demonstrator.api.processor.Processor
       )
 
@@ -44,6 +45,7 @@ deploy("inaetics-demonstrator-all" BUNDLES
         ENDPOINTS
         org.inaetics.demonstrator.api.queue.SampleQueue_proxy
         org.inaetics.demonstrator.api.stats.StatsProvider_endpoint
+	org.inaetics.demonstrator.api.producer.Producer_endpoint
       )
 
   deploy("inaetics-demonstrator-processor" BUNDLES
