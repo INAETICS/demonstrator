@@ -97,7 +97,7 @@ celix_status_t bundleActivator_start(void * userData, bundle_context_pt context)
 		if (activator->producerStatsService == NULL || activator->producerStatsRegistration == NULL) {
 			printf("PRODUCER: Error creating/registering statService\n");
 		} else {
-			printf("PRODUCER: Created processor with name %s\n", uuidName);
+			printf("PRODUCER: Created producer with name %s\n", uuidName);
 		}
 
 	}
