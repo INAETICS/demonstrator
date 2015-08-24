@@ -454,6 +454,7 @@ void producer_setSampleRate(void* handle, int rate) {
 		pthread_rwlock_wrlock(&th_data->sampleRateLock);
 		th_data->sampleRate = rate;
 		pthread_rwlock_unlock(&th_data->sampleRateLock);
+		msg(0, "PRODUCER: SampleRate set to %d", rate);
 	}
 
 	hashMapIterator_destroy(iter);
