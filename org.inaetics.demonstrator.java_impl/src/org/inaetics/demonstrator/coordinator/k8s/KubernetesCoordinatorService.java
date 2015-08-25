@@ -3,6 +3,7 @@
  */
 package org.inaetics.demonstrator.coordinator.k8s;
 
+import java.util.Arrays;
 import java.util.Dictionary;
 
 import org.amdatu.kubernetes.Kubernetes;
@@ -106,15 +107,15 @@ public class KubernetesCoordinatorService implements ManagedService, Coordinator
         }
     }
 
-    private void setReplicaCount(String ns, String[] rcNames, int newReplicaCount) {
+    private void setReplicaCount(String ns, String[] rcNames, int newReplicaCountSum) {
         Observable
             .from(rcNames)
             .flatMap(rcName -> m_k8s.getReplicationController(ns, rcName))
-            .reduce((a, b) -> a.getStatus().getReplicas() < b.getStatus().getReplicas() ? a : b)
             .subscribe(
                 rc -> {
                     String rcName = rc.getMetadata().getName();
                     int curReplicaCount = rc.getStatus().getReplicas();
+                    int newReplicaCount = getNewReplicaCount(rcNames, rcName, newReplicaCountSum);
                     if (curReplicaCount != newReplicaCount) {
                         m_log.log(LogService.LOG_INFO,
                             String.format("Scaling %s to %d replicas...", rcName, newReplicaCount));
@@ -124,6 +125,13 @@ public class KubernetesCoordinatorService implements ManagedService, Coordinator
                     }
                 }, //
                 t -> m_log.log(LogService.LOG_ERROR, "Setting replica count failed...", t));
+    }
+    
+    private int getNewReplicaCount(String[] allNames, String currentName, int replicaSum) {
+    	// calculate the replica count so that all replication controllers sum up to replicaSum
+        int index = Arrays.asList(allNames).indexOf(currentName);
+        int remaining = replicaSum % allNames.length;
+        return (replicaSum / allNames.length) + Math.min(1, Math.max(0, remaining - index));
     }
 
     private int getReplicaCount(String ns, String[] rcNames) {
