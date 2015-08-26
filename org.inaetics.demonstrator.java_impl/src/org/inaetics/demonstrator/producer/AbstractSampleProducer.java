@@ -46,7 +46,7 @@ public abstract class AbstractSampleProducer implements Producer, StatsProvider 
 
     @Override
     public final int getMaxSampleRate() {
-        return (1000 / m_minTaskInterval);
+        return (1000000 / m_minTaskInterval);
     }
 
     @Override
@@ -64,7 +64,7 @@ public abstract class AbstractSampleProducer implements Producer, StatsProvider 
         if (m_taskInterval < m_minTaskInterval) {
             return 0;
         }
-        return 1000 / m_taskInterval;
+        return 1000000 / m_taskInterval;
     }
 
     @Override
@@ -81,7 +81,8 @@ public abstract class AbstractSampleProducer implements Producer, StatsProvider 
     public void setSampleRate(int rate) {
         // In case we should stop producing samples (rate = 0), use a 
         // taskInterval outside the valid range to detect this...
-        m_taskInterval = (rate == 0) ? (m_minTaskInterval - 1) : (1000 / rate);
+        m_taskInterval = (rate == 0) ? (m_minTaskInterval - 1) : (1000000 / rate);
+    	info("setSampleRate: " + rate + ", m_taskInterval: " + m_taskInterval);
     }
 
     /**
@@ -134,7 +135,9 @@ public abstract class AbstractSampleProducer implements Producer, StatsProvider 
                     oldTime = time;
 
                     // Make sure we sleep at least 1 millisecond, even when our taskInterval is zero or negative... 
-                    TimeUnit.MILLISECONDS.sleep(Math.max(1, taskInterval));
+                    int millis = Math.max(1, getTaskInterval() / 1000);
+                    int nanos = getTaskInterval() - millis * 1000;
+                    Thread.sleep(millis, nanos);
                 } catch (InterruptedException e) {
                     // Break out of our loop...
                     Thread.currentThread().interrupt();

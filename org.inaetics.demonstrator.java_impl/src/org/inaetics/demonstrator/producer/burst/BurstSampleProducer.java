@@ -22,7 +22,7 @@ public class BurstSampleProducer extends AbstractSampleProducer {
     private volatile SampleQueue m_queue;
 
     public BurstSampleProducer() {
-        super("Burst Sample Producer", 500 /* msec */, 1 /* msec */);
+        super("Burst Sample Producer", 500000 /* msec */, 1000 /* msec */);
         m_produced = new AtomicLong(0L);
     }
 
