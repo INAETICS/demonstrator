@@ -9,6 +9,7 @@ import javax.servlet.Servlet;
 
 import org.apache.felix.dm.DependencyActivatorBase;
 import org.apache.felix.dm.DependencyManager;
+import org.inaetics.demonstrator.api.coordinator.CoordinatorService;
 import org.inaetics.demonstrator.api.processor.Processor;
 import org.inaetics.demonstrator.api.producer.Producer;
 import org.inaetics.demonstrator.api.stats.StatsProvider;
@@ -33,6 +34,7 @@ public class Activator extends DependencyActivatorBase {
             .add(createServiceDependency().setService(StatsProvider.class).setCallbacks("addStatsProvider", "removeStatsProvider").setRequired(false))
             .add(createServiceDependency().setService(Producer.class).setCallbacks("addProducer", "removeProducer").setRequired(false))
             .add(createServiceDependency().setService(Processor.class).setCallbacks("addProcessor", "removeProcessor").setRequired(false))
+            .add(createServiceDependency().setService(CoordinatorService.class).setRequired(true))
             .add(createServiceDependency().setService(LogService.class).setRequired(false)));
     }
 }

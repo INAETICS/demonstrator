@@ -31,6 +31,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.inaetics.demonstrator.api.coordinator.CoordinatorService;
+import org.inaetics.demonstrator.api.coordinator.CoordinatorService.Type;
 import org.inaetics.demonstrator.api.processor.Processor;
 import org.inaetics.demonstrator.api.producer.Producer;
 import org.inaetics.demonstrator.api.stats.StatsProvider;
@@ -62,6 +64,7 @@ public class CoordinatorServlet extends HttpServlet {
     // Injected by Felix DM...
     private volatile LogService m_log;
     private volatile StatsProvider m_aggregator;
+    private volatile CoordinatorService m_coordinator;
 
     private final ConcurrentMap<ServiceReference<StatsProvider>, StatsContainer> m_providerStats;
     private final List<Producer> m_producers;
@@ -193,18 +196,27 @@ public class CoordinatorServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        Integer value = getIntParameter(req, "value");
-        if (value == null || value < 0 || value > 100) {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            return;
-        }
+    	
+    	String pathInfo = req.getPathInfo();
+    	
+    	if ("/utilisation".equals(pathInfo)) {
+            Integer value = getIntParameter(req, "value");
+            if (value == null || value < 0 || value > 100) {
+                resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                return;
+            }
 
-        // Keep for later use: when new producers are added...
-        m_productionRate.set(value);
+            // Keep for later use: when new producers are added...
+            m_productionRate.set(value);
 
-        for (Producer p : m_producers) {
-            setSampleRate(p, value);
-        }
+            for (Producer p : m_producers) {
+                setSampleRate(p, value);
+            }
+    	} else if ("/scaleProducer".equals(pathInfo)) {
+            Integer relReplicaCount = getIntParameter(req, "value");
+            int currentReplicaCount = m_coordinator.getReplicaCount(Type.PRODUCER);
+            m_coordinator.setReplicaCount(Type.PRODUCER, currentReplicaCount + relReplicaCount);
+    	}
 
         resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
     }

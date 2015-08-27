@@ -70,8 +70,11 @@ function getAndRenderSystemStats() {
 
 function postAndUpdateUtilisation(val) {
 	document.getElementById('slider-val').value = val
-	
 	postJSON('/coordinator/utilisation', 'value=' + val)
+}
+
+function scaleProducer(val) {
+	postJSON('/coordinator/scaleProducer', 'value=' + val)
 }
 
 window.onload = function() {

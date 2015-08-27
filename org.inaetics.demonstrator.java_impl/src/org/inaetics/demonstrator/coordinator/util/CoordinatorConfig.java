@@ -21,7 +21,7 @@ public class CoordinatorConfig {
 
     public CoordinatorConfig() {
         m_maxNrProcessors = 8;
-        m_maxNrProducers = 1;
+        m_maxNrProducers = 4;
     }
 
     public CoordinatorConfig(Dictionary<String, ?> properties) throws ConfigurationException {

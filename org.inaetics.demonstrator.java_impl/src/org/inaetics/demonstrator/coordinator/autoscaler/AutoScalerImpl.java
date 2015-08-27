@@ -154,7 +154,7 @@ public class AutoScalerImpl implements ManagedService {
 
         // TODO
         m_coordinator.setReplicaCount(Type.PRODUCER, 1);
-        m_coordinator.setReplicaCount(Type.PROCESSOR, 1);
+//        m_coordinator.setReplicaCount(Type.PROCESSOR, 1);
     }
 
     /**
