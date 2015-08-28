@@ -73,8 +73,9 @@ function postAndUpdateUtilisation(val) {
 	postJSON('/coordinator/utilisation', 'value=' + val)
 }
 
-function scaleProducer(val) {
+function scaleProducer(el, val) {
 	postJSON('/coordinator/scaleProducer', 'value=' + val)
+	el.blur();
 }
 
 window.onload = function() {
