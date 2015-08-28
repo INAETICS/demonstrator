@@ -168,10 +168,13 @@ public class CoordinatorServlet extends HttpServlet {
             } else if ("/systemStats".equals(pathInfo)) {
                 resp.setStatus(HttpServletResponse.SC_OK);
 
+                int currentProcessorReplicaCount = m_coordinator.getReplicaCount(Type.PROCESSOR);
+                int currentProducerReplicaCount = m_coordinator.getReplicaCount(Type.PRODUCER);
+
                 generator.writeStartObject();
                 generator.writeNumberField("productionRate", m_productionRate.get());
-                generator.writeNumberField("processors", m_processorCount.get());
-                generator.writeNumberField("producers", m_producers.size());
+                generator.writeStringField("processors", m_processorCount.get() + " / " + currentProcessorReplicaCount);
+                generator.writeStringField("producers", m_producers.size() + " / " + currentProducerReplicaCount);
                 generator.writeEndObject();
             } else if ("/utilisation".equals(pathInfo)) {
                 resp.setStatus(HttpServletResponse.SC_OK);
