@@ -4,6 +4,8 @@
 var interval = 1000; // ms
 
 function renderStats(stats) {
+	if (!stats) return
+	
 	var total = stats.length
 
 	var container = document.querySelector('#stats-container')

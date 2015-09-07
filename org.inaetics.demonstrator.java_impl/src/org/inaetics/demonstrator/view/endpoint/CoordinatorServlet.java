@@ -137,7 +137,12 @@ public class CoordinatorServlet extends HttpServlet {
                 // Return an array with all providers sorted on their name...
                 Map<String, StatsContainer> names = new TreeMap<>();
                 for (StatsContainer c : m_providerStats.values()) {
-                    c.updateStats(System.currentTimeMillis());
+                	try {
+                		c.updateStats(System.currentTimeMillis());
+                	}
+                	catch (Exception e) {
+                        warn("Failed to update stats for provider %s: %s", c.m_provider, e.getMessage());
+                	}
 
                     try {
                         String name = getName(c.m_provider);
