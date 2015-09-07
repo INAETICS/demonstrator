@@ -25,6 +25,9 @@ function renderGraph(canvasId, stats) {
 }
 
 function renderUtilisationGraph(stats) {
+	
+	if (!stats) return
+	
 	var queueIdx = stats[0].name == 'queue' ? 0 : 1
 
 	renderGraph('queue-utilisation', stats[queueIdx])
