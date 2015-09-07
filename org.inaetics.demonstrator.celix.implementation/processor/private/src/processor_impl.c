@@ -13,14 +13,14 @@
 #include "inaetics_demonstrator_api/result.h"
 #include "inaetics_demonstrator_api/sample.h"
 
-#define SINGLE_SAMPLES_PER_SEC  1000
-#define BURST_SAMPLES_PER_SEC 	1000
+#define SINGLE_SAMPLES_PER_SEC  10    /* 10 samples every 20 msec */
+#define BURST_SAMPLES_PER_SEC 	0
 
 #define MIN_BURST_LEN 			2
 #define MAX_BURST_LEN 			200
 
 #define VERBOSE					2
-#define WAIT_TIME_USECONDS      500000
+#define WAIT_TIME_USECONDS      20000
 
 #define THROUGHPUT_NAME_POSTFIX 		" Statistics"
 #define THROUGHPUT_TYPE 				"(throughput)"
@@ -388,7 +388,7 @@ int processor_getUtilizationStatsName(processor_pt processor, char **name) {
 	celix_status_t status = CELIX_SUCCESS;
 
 	if (processor->utilizationStatsName != NULL) {
-		(*name) = strdup(processor->utilizationStatsName);
+		(*name) = processor->utilizationStatsName;
 	}
 	else {
 		msg(0, "PROCESSOR_STAT: getName denied because service is removed");
@@ -399,7 +399,7 @@ int processor_getUtilizationStatsName(processor_pt processor, char **name) {
 }
 
 int processor_getUtilizationStatsType(processor_pt processor, char **type) {
-	(*type) = strdup((char*) THROUGHPUT_TYPE);
+	(*type) = (char*) THROUGHPUT_TYPE;
 	return (int) CELIX_SUCCESS;
 }
 
@@ -431,6 +431,6 @@ int processor_getUtilizationStatsValue(processor_pt processor, double* statVal) 
 }
 
 int processor_getUtilizationStatsMeasurementUnit(processor_pt processor, char **mUnit) {
-	(*mUnit) = strdup((char*) THROUGHPUT_MEASUREMENT_UNIT);
+	(*mUnit) = (char*) THROUGHPUT_MEASUREMENT_UNIT;
 	return (int) CELIX_SUCCESS;
 }
