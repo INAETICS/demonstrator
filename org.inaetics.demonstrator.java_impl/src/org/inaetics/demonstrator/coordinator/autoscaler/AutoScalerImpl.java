@@ -104,14 +104,14 @@ public class AutoScalerImpl implements ManagedService {
             } else {
                 info("Producing roughly the same number of items as processed, nothing needs to be done...");
             }
-        } else if (m_slope > -1.0) {
-            // If our slope is > -1.0 && <= -0.5, then our processors are processing more than produces, add 1 new producer;
+        } else if (m_slope > -1.0 && value < config.getQueueHighBarrier()) {
+            // If our slope is > -1.0 && <= -0.5, then our processors are processing more than produces, remove 1 processor;
             if (scale(Type.PROCESSOR, -1)) {
                 info("Producing too little items than processed, removing 1 processor...");
             } else {
                 warn("System is overloaded, but no resources are available to compensate!");
             }
-        } else {
+        } else if (value < config.getQueueHighBarrier()) {
             // If our slope is <= -1.0, then we need to produce far more items...
             if (scale(Type.PROCESSOR, -2)) {
                 info("Producing far too little items than processed, removing 2 processors...");
@@ -123,7 +123,12 @@ public class AutoScalerImpl implements ManagedService {
 
     private boolean scale(Type type, int relReplicas) {
         int current = m_coordinator.getReplicaCount(type);
-        return m_coordinator.setReplicaCount(type, current + relReplicas);
+        int newReplicas = current + relReplicas;
+        if (type == Type.PROCESSOR) {
+        	// keep 1 processor running
+        	newReplicas = Math.max(1, newReplicas);
+        }
+        return m_coordinator.setReplicaCount(type, newReplicas);
     }
 
     /**
