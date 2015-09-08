@@ -76,21 +76,21 @@ public class AutoScalerImpl implements ManagedService {
         info("Current queue utilization: %.3f %%, configured boundaries: [%d..%d], slope = %f.", value,
             m_config.getQueueLowBarrier(), m_config.getQueueHighBarrier(), m_slope);
 
-        if (m_slope > 1.0) {
+        if (m_slope > config.getSlope2()) {
             // If our slope is > 1.0, then our producers are producing far more items than we can process, so let's counter this by adding 2 new processors;
             if (scale(Type.PROCESSOR, +2)) {
                 info("Producing too many items than is processed, added 2 new processors...");
             } else {
                 warn("System is overloaded, but no resources are available to compensate!");
             }
-        } else if (m_slope > 0.5) {
+        } else if (m_slope > config.getSlope1()) {
             // If our slope is > 0.5 && <= 1.0, then our producers are producing more items than we can process, add 1 new processor;
             if (scale(Type.PROCESSOR, +1)) {
                 info("Producing more items than is processed, added 1 new processor...");
             } else {
                 warn("System is overloaded, but no resources are available to compensate!");
             }
-        } else if (m_slope > -0.5) {
+        } else if (m_slope > -config.getSlope1()) {
             // If our slope is > -0.5 && <= 0.5, then our producers are producing roughly enough items,
             // check whether we're in the desired utilization of the queue...
             if (value < config.getQueueLowBarrier()) {
@@ -104,7 +104,7 @@ public class AutoScalerImpl implements ManagedService {
             } else {
                 info("Producing roughly the same number of items as processed, nothing needs to be done...");
             }
-        } else if (m_slope > -1.0 && value < config.getQueueHighBarrier()) {
+        } else if (m_slope > -config.getSlope2() && value < config.getQueueHighBarrier()) {
             // If our slope is > -1.0 && <= -0.5, then our processors are processing more than produces, remove 1 processor;
             if (scale(Type.PROCESSOR, -1)) {
                 info("Producing too little items than processed, removing 1 processor...");
