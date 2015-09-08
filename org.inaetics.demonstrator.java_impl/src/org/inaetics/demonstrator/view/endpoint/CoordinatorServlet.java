@@ -137,32 +137,30 @@ public class CoordinatorServlet extends HttpServlet {
                 // Return an array with all providers sorted on their name...
                 Map<String, StatsContainer> names = new TreeMap<>();
                 for (StatsContainer c : m_providerStats.values()) {
+                	String name = null;
                 	try {
                 		c.updateStats(System.currentTimeMillis());
-                	}
-                	catch (Exception e) {
-                        warn("Failed to update stats for provider %s: %s", c.m_provider, e.getMessage());
-                	}
-
-                    try {
-                        String name = getName(c.m_provider);
+                        name = getName(c.m_provider);
                         if (wantedNames.isEmpty() || wantedNames.contains(name)) {
                             names.put(name, c);
                         }
-                    } catch (Exception e) {
-                        warn("Failed to get name for provider %s: %s", c.m_provider, e.getMessage());
-                    }
+                	}
+                	catch (Exception e) {
+                        warn("Failed to process provider %s: %s", name == null ? "unknown provider" : name, e.getMessage());
+                        continue;
+                	}
                 }
 
                 generator.writeStartArray();
 
-                for (StatsContainer container : names.values()) {
+                for (Map.Entry<String, StatsContainer> entry: names.entrySet()) {
+                	StatsContainer container = entry.getValue();
                     try {
                         StatsProvider provider = container.m_provider;
                         TimestampMap<Double> stats = container.m_stats;
 
                         if (provider != null) {
-                            writeAsJSON(generator, provider, stats);
+                            writeAsJSON(generator, provider, stats, entry.getKey());
                         }
                     } catch (Exception e) {
                         warn("Failed to write provider %s to JSON: %s", container.m_provider, e.getMessage());
@@ -229,9 +227,8 @@ public class CoordinatorServlet extends HttpServlet {
         resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
     }
 
-    private void writeAsJSON(JsonGenerator generator, StatsProvider provider, TimestampMap<Double> stats)
+    private void writeAsJSON(JsonGenerator generator, StatsProvider provider, TimestampMap<Double> stats, String name)
         throws IOException {
-        String name = getName(provider);
         String displayName = provider.getName();
         String type = provider.getType();
         String unit = provider.getMeasurementUnit();
