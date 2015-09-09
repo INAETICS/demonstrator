@@ -180,7 +180,11 @@ celix_status_t producer_sendBursts(producer_thread_data_pt th_data, int samplesP
 		if (queueService != NULL) {
 			clock_gettime(CLOCK_REALTIME, &ts_before);
 
-			queueService->putAll(queueService->sampleQueue, burst, burst_len, &burst_samples_stored);
+			struct sample_sequence samples;
+            samples.cap = burst_len;
+            samples.len = burst_len;
+            samples.buf = burst;
+			queueService->putAll(queueService->sampleQueue, samples, &burst_samples_stored);
 			clock_gettime(CLOCK_REALTIME, &ts_after);
 		}
 		else {

@@ -1,0 +1,13 @@
+:header
+type=interface
+name=SampleQueue
+version=1.0.0
+:annotations
+classname=org.inaetics.demonstrator.api.queue.SampleQueue
+:types
+sample={jDD time value1 value2}
+:methods
+put=put(#am=handle;Lsample;#am=pre;*b)N
+putAll=put(#am=handle;P[lsample;#am=pre;*i)N
+take=take(#am=handle;#am=pre;Lsample;)N
+takeAll=takeAll(#am=handle;Pii#am=out;[lsample;)N

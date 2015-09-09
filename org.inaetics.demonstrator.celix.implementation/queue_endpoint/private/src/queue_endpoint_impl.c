@@ -168,7 +168,13 @@ celix_status_t queueEndpoint_putAll(remote_endpoint_pt endpoint, char *data, cha
 			queueEndpoint_decodeToSample(time, value1, value2, &workSample[arrayCnt]);
 		}
 
-		putAllRetVal = service->putAll(service->sampleQueue, workSample, json_array_size(array), &samples_stored);
+		size_t size = json_array_size(array);
+		struct sample_sequence seq;
+		seq.cap = (uint32_t)arrSize;
+		seq.len = (uint32_t)arrSize;
+		seq.buf = workSample;
+
+		putAllRetVal = service->putAll(service->sampleQueue, seq, &samples_stored);
 
 		if (putAllRetVal == 0) {
 			resultRoot = json_pack("{s:i}", "r", samples_stored);

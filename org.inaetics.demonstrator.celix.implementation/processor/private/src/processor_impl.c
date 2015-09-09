@@ -164,11 +164,9 @@ celix_status_t processor_receiveSamples(processor_thread_data_pt th_data, int sa
 celix_status_t processor_receiveBursts(processor_thread_data_pt th_data, int samplesPerSec) {
 	celix_status_t status = CELIX_SUCCESS;
 	struct sample_queue_service* queueService = th_data->service;
-	struct sample *recvSamples[MAX_BURST_LEN];
 	struct timespec ts_start;
 	struct timespec ts_end;
 	struct timespec ts_diff;
-	uint32_t numOfRecvSamples;
 	int burstSampleCnt = 0;
 
 	clock_gettime(CLOCK_REALTIME, &ts_start);
@@ -177,22 +175,21 @@ celix_status_t processor_receiveBursts(processor_thread_data_pt th_data, int sam
 	for (ts_end = ts_start; (burstSampleCnt < samplesPerSec) && (ts_diff.tv_sec<=0);) {
 		int j;
 
-		for (j = 0; j < MAX_BURST_LEN; j++) {
-			recvSamples[j] = calloc(1, sizeof(struct sample));
-		}
-
 		msg(3, "PROCESSOR: TakeAll (min: %d, max: %d)", MIN_BURST_LEN, MAX_BURST_LEN);
 
+		struct sample_sequence *samples = NULL;
+
 		if (queueService != NULL) {
-			if (queueService->takeAll(queueService->sampleQueue, MIN_BURST_LEN, MAX_BURST_LEN, &recvSamples[0], &numOfRecvSamples) == 0) {
+			if (queueService->takeAll(queueService->sampleQueue, MIN_BURST_LEN, MAX_BURST_LEN, &samples) == 0) {
+				uint32_t numOfRecvSamples = samples == NULL ? 0 : samples->len;
 				msg(3, "PROCESSOR:  %u samples received", numOfRecvSamples);
 
 				for (j = 0; j < numOfRecvSamples; j++) {
-					msg(3, "\tPROCESSOR: Processing Sample (%d/%d)  {Time:%llu | V1=%f | V2=%f}", j, numOfRecvSamples, recvSamples[j]->time, recvSamples[j]->value1, recvSamples[j]->value2);
+					msg(3, "\tPROCESSOR: Processing Sample (%d/%d)  {Time:%llu | V1=%f | V2=%f}", j, numOfRecvSamples, samples->buf[j].time, samples->buf[j].value1, samples->buf[j].value2);
 					struct result* result_pt = calloc(1, sizeof(*result_pt));
 
 					if (result_pt) {
-						processor_processSample(recvSamples[j], result_pt);
+						processor_processSample(&samples->buf[j], result_pt);
 						processor_sendResult(th_data->processor, *result_pt);
 						free(result_pt);
 					}
@@ -209,8 +206,10 @@ celix_status_t processor_receiveBursts(processor_thread_data_pt th_data, int sam
 			status = CELIX_BUNDLE_EXCEPTION;
 		}
 
-		for (j = 0; j < MAX_BURST_LEN; j++) {
-			free(recvSamples[j]);
+
+		if (samples != NULL) {
+			free(samples->buf);
+			free(samples);
 		}
 
 		clock_gettime(CLOCK_REALTIME, &ts_end);
