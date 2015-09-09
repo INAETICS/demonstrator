@@ -119,7 +119,7 @@ celix_status_t sampleQueue_destroy(sample_queue_type* sampleQueue) {
 
 }
 
-int sampleQueue_put(sample_queue_type *sampleQueue, struct sample sample, bool *sampleTaken) {
+int sampleQueue_put(sample_queue_type *sampleQueue, struct sample *sample, bool *sampleTaken) {
 
 	celix_status_t status = CELIX_SUCCESS;
 
@@ -132,7 +132,7 @@ int sampleQueue_put(sample_queue_type *sampleQueue, struct sample sample, bool *
 			struct sample* localSample = calloc(1, sizeof(struct sample));
 
 			if (localSample != NULL) {
-				memcpy(localSample, &sample, sizeof(struct sample));
+				memcpy(localSample, sample, sizeof(struct sample));
 				bool ret = arrayList_add(sampleQueue->queue, localSample);
 				if (ret) {
 					sampleQueue->putCnt++;
@@ -162,7 +162,7 @@ int sampleQueue_put(sample_queue_type *sampleQueue, struct sample sample, bool *
 	return (int) status;
 }
 
-int sampleQueue_putAll(sample_queue_type *sampleQueue, struct sample *samples, uint32_t size, uint32_t *samplesTaken) {
+int sampleQueue_putAll(sample_queue_type *sampleQueue, struct sample_sequence samples, uint32_t *samplesTaken) {
 
 	celix_status_t status = CELIX_SUCCESS;
 	uint32_t i = 0;
@@ -173,14 +173,14 @@ int sampleQueue_putAll(sample_queue_type *sampleQueue, struct sample *samples, u
 	if (sampleQueue->queue != NULL) {
 
 
-		msg(3, "SAMPLE_QUEUE: Adding a burst of %u samples\n", size);
+		msg(3, "SAMPLE_QUEUE: Adding a burst of %u samples\n", samples.len);
 
-		for (; (i < size) && ((MAX_QUEUE_SIZE == 0) || (arrayList_size(sampleQueue->queue) < MAX_QUEUE_SIZE)); i++) {
+		for (; (i < samples.len) && ((MAX_QUEUE_SIZE == 0) || (arrayList_size(sampleQueue->queue) < MAX_QUEUE_SIZE)); i++) {
 			struct sample* s = calloc(1, sizeof(struct sample));
 
 			if (s != NULL) {
 
-				memcpy(s, &samples[i], sizeof(struct sample));
+				memcpy(s, &samples.buf[i], sizeof(struct sample));
 
 				if (arrayList_add(sampleQueue->queue, s)) {
 					msg(3, "\tSAMPLE_QUEUE: Added sample {%llu | %f | %f } to queue\n", s->time, s->value1, s->value2);
@@ -205,8 +205,8 @@ int sampleQueue_putAll(sample_queue_type *sampleQueue, struct sample *samples, u
 		*samplesTaken = samples_added;
 		sampleQueue->putCnt += samples_added;
 
-		if (*samplesTaken != size) {
-			msg(2, "SAMPLE_QUEUE: Could not add all the requested samples (requested:%u, added%u)\n", size, *samplesTaken);
+		if (*samplesTaken != samples.len) {
+			msg(2, "SAMPLE_QUEUE: Could not add all the requested samples (requested:%u, added%u)\n", samples.len, *samplesTaken);
 			if (status == CELIX_SUCCESS) //Don't mask the ENOMEM
 				status = CELIX_BUNDLE_EXCEPTION;
 		}
@@ -253,7 +253,7 @@ int sampleQueue_take(sample_queue_type *sampleQueue, struct sample *sample) {
 	return (int) status;
 }
 
-int sampleQueue_takeAll(sample_queue_type *sampleQueue, uint32_t min, uint32_t max, struct sample **samples, uint32_t *samplesSize) {
+int sampleQueue_takeAll(sample_queue_type *sampleQueue, uint32_t min, uint32_t max, struct sample_sequence samples) {
 
 	celix_status_t status = CELIX_ILLEGAL_STATE;
 	struct timespec ts;
@@ -274,12 +274,12 @@ int sampleQueue_takeAll(sample_queue_type *sampleQueue, uint32_t min, uint32_t m
 		status = CELIX_SUCCESS;
 		for (i = 0; i < max && arrayList_size(sampleQueue->queue) > 0; i++) {
 			struct sample *tmpSample = arrayList_remove(sampleQueue->queue, 0);
-			memcpy(samples[i], tmpSample, sizeof(struct sample));
+			memcpy(&samples.buf[i], tmpSample, sizeof(struct sample));
 			free(tmpSample);
 		}
 	}
 
-	*samplesSize = i;
+	//*samplesSize = i;
 	sampleQueue->takeCnt += i;
 	sampleQueue->currentQueueSize -= i;
 
