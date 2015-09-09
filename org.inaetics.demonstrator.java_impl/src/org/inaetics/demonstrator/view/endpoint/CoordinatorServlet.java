@@ -33,7 +33,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.inaetics.demonstrator.api.coordinator.CoordinatorService;
 import org.inaetics.demonstrator.api.coordinator.CoordinatorService.Type;
-import org.inaetics.demonstrator.api.processor.Processor;
 import org.inaetics.demonstrator.api.producer.Producer;
 import org.inaetics.demonstrator.api.stats.StatsProvider;
 import org.osgi.framework.ServiceReference;
@@ -77,21 +76,12 @@ public class CoordinatorServlet extends HttpServlet {
         m_processorCount = new AtomicInteger(0);
         m_productionRate = new AtomicInteger(5);
     }
-
-    /* Called by Felix DM. */
-    public final void addProcessor(Processor p) {
-        m_processorCount.incrementAndGet();
     }
 
     /* Called by Felix DM. */
     public final void addProducer(Producer p) {
         m_producers.add(p);
         setSampleRate(p, m_productionRate.get());
-    }
-
-    /* Called by Felix DM. */
-    public final void removeProcessor(Processor p) {
-        m_processorCount.decrementAndGet();
     }
 
     /* Called by Felix DM. */
@@ -104,6 +94,9 @@ public class CoordinatorServlet extends HttpServlet {
         if ("true".equals(serviceRef.getProperty("aggregator"))) {
             m_aggregator = provider;
         }
+        if ("processor".equalsIgnoreCase("" + serviceRef.getProperty("type"))) {
+            m_processorCount.incrementAndGet();
+        }
         m_providerStats.putIfAbsent(serviceRef, new StatsContainer(provider, new TimestampMap<Double>()));
     }
 
@@ -111,6 +104,9 @@ public class CoordinatorServlet extends HttpServlet {
     public void removeStatsProvider(ServiceReference<StatsProvider> serviceRef, StatsProvider provider) {
         if ("true".equals(serviceRef.getProperty("aggregator"))) {
             m_aggregator = null;
+        }
+        if ("processor".equalsIgnoreCase("" + serviceRef.getProperty("type"))) {
+            m_processorCount.decrementAndGet();
         }
         m_providerStats.remove(serviceRef);
     }
