@@ -21,9 +21,14 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.servlet.ServletException;
@@ -49,6 +54,7 @@ public class CoordinatorServlet extends HttpServlet {
     static class StatsContainer {
         final StatsProvider m_provider;
         final TimestampMap<Double> m_stats;
+        String name;
 
         public StatsContainer(StatsProvider provider, TimestampMap<Double> stats) {
             m_provider = provider;
@@ -69,6 +75,7 @@ public class CoordinatorServlet extends HttpServlet {
     private final List<Producer> m_producers;
     private final AtomicInteger m_processorCount;
     private final AtomicInteger m_productionRate;
+	private ScheduledExecutorService m_executor;
 
     public CoordinatorServlet() {
         m_providerStats = new ConcurrentHashMap<>();
@@ -76,6 +83,15 @@ public class CoordinatorServlet extends HttpServlet {
         m_processorCount = new AtomicInteger(0);
         m_productionRate = new AtomicInteger(5);
     }
+    
+    // called by Felix DM
+    protected final void start() {
+		m_executor = Executors.newScheduledThreadPool(10);
+    }
+    
+    protected final void stop() throws Exception {
+        m_executor.shutdown();
+        m_executor.awaitTermination(10, TimeUnit.SECONDS);
     }
 
     /* Called by Felix DM. */
@@ -132,38 +148,63 @@ public class CoordinatorServlet extends HttpServlet {
 
                 // Return an array with all providers sorted on their name...
                 Map<String, StatsContainer> names = new TreeMap<>();
+                
+    			// get all stats async with a 1 second timeout
+                // prevents waiting for bigger remote service call timeouts and a hanging UI
+                List<Callable<StatsContainer>> tasks = new ArrayList<>();
+                List<Future<StatsContainer>> results = null;
+
                 for (StatsContainer c : m_providerStats.values()) {
-                	String name = null;
-                	try {
-                		c.updateStats(System.currentTimeMillis());
-                        name = getName(c.m_provider);
-                        if (wantedNames.isEmpty() || wantedNames.contains(name)) {
-                            names.put(name, c);
-                        }
-                	}
-                	catch (Exception e) {
-                        warn("Failed to process provider %s: %s", name == null ? "unknown provider" : name, e.getMessage());
-                        continue;
-                	}
-                }
-
-                generator.writeStartArray();
-
-                for (Map.Entry<String, StatsContainer> entry: names.entrySet()) {
-                	StatsContainer container = entry.getValue();
-                    try {
-                        StatsProvider provider = container.m_provider;
-                        TimestampMap<Double> stats = container.m_stats;
-
-                        if (provider != null) {
-                            writeAsJSON(generator, provider, stats, entry.getKey());
-                        }
-                    } catch (Exception e) {
-                        warn("Failed to write provider %s to JSON: %s", container.m_provider, e.getMessage());
-                    }
-                }
-
-                generator.writeEndArray();
+        			tasks.add(new Callable<StatsContainer>(){
+        				@Override
+        				public StatsContainer call() throws Exception {
+        					c.updateStats(System.currentTimeMillis());
+        					c.name = getName(c.m_provider);
+        					return c;
+        				}
+        			});
+            	}
+				
+                try {
+					results = m_executor.invokeAll(tasks, 1, TimeUnit.SECONDS);
+				} catch (InterruptedException e1) {
+					// what can we do...?
+				}
+            	
+				if (results != null) {
+					for (Future<StatsContainer> result : results) {
+						try {
+							StatsContainer c = result.get();
+							String name = c.name;
+							if (name != null && (wantedNames.isEmpty() || wantedNames.contains(name))) {
+								names.put(name, c);
+							}
+						}
+						catch (Exception e) {
+							// just skip this one
+							warn("Failed to process provider %s", e.getMessage());
+							continue;
+						}
+					}
+					
+					generator.writeStartArray();
+					
+					for (Map.Entry<String, StatsContainer> entry: names.entrySet()) {
+						StatsContainer container = entry.getValue();
+						try {
+							StatsProvider provider = container.m_provider;
+							TimestampMap<Double> stats = container.m_stats;
+							
+							if (provider != null) {
+								writeAsJSON(generator, provider, stats, entry.getKey());
+							}
+						} catch (Exception e) {
+							warn("Failed to write provider to JSON: %s", e.getMessage());
+						}
+					}
+					
+					generator.writeEndArray();
+				}
             } else if ("/systemStats".equals(pathInfo)) {
                 resp.setStatus(HttpServletResponse.SC_OK);
 
