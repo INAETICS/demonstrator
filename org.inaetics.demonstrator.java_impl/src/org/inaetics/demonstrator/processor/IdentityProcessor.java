@@ -3,6 +3,12 @@
  */
 package org.inaetics.demonstrator.processor;
 
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.inaetics.demonstrator.api.data.Result;
@@ -17,7 +23,8 @@ import org.inaetics.demonstrator.api.queue.SampleQueue;
  */
 public class IdentityProcessor extends AbstractSampleProcessor {
     private final AtomicLong m_processed;
-
+    private final ExecutorService m_executor;
+    
     // Injected by Felix DM...
     private volatile SampleQueue m_queue;
     private volatile DataStore m_store;
@@ -25,19 +32,44 @@ public class IdentityProcessor extends AbstractSampleProcessor {
     public IdentityProcessor() {
         super("Identity processor", 3 /* msec */);
         m_processed = new AtomicLong(0L);
+        m_executor = Executors.newSingleThreadScheduledExecutor();
     }
 
     @Override
     public void processSampleData() {
-        Sample sample = m_queue.take();
-        Result result = new Result(10, 1.0, sample);
-
-        m_store.store(result);
-        m_processed.incrementAndGet();
+    	Future<Void> result = null;
+    	try {
+    		//prevent waiting longer than 1 second
+    		result = m_executor.submit(new Callable<Void>() {
+    			@Override
+    			public Void call() throws Exception {
+    				Sample sample = m_queue.take();
+    				Result result = new Result(10, 1.0, sample);
+    				m_store.store(result);
+    				return null;
+    			}
+    		});
+			result.get(500, TimeUnit.MILLISECONDS);
+			m_processed.incrementAndGet();
+		} catch (TimeoutException e) {
+			// do not wait any longer
+			if (result != null && !result.isDone()) {
+				result.cancel(true);
+			}
+		} catch (Exception e) {
+			// nothing we can do
+		}
     }
 
     @Override
     protected long getProcessedCount() {
-        return m_processed.get();
+        return m_processed.getAndSet(0);
+    }
+    
+    @Override
+    protected void cleanup() {
+    	if (m_executor != null && !m_executor.isShutdown()) {
+    		m_executor.shutdownNow();
+    	}
     }
 }

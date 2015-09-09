@@ -22,8 +22,10 @@ public abstract class AbstractSampleProcessor implements Processor, StatsProvide
     private final Random m_rnd;
     private final int m_taskInterval;
 
-    private ExecutorService m_executor;
-    private Future<?> m_generatorFuture;
+    private ExecutorService m_processExecutor;
+    private ExecutorService m_avgExecutor;
+    private Future<?> m_processFuture;
+    private Future<?> m_avgFuture;
 
     private volatile double m_processedAvg = 0;
     // Injected by Felix DM...
@@ -81,18 +83,12 @@ public abstract class AbstractSampleProcessor implements Processor, StatsProvide
      * Called by Felix DM when starting this component.
      */
     protected final void start() throws Exception {
-        m_executor = Executors.newSingleThreadExecutor();
-
-        m_generatorFuture = m_executor.submit(() -> {
-            long oldProcessedCount = 0L;
-            while (!Thread.currentThread().isInterrupted() && !m_executor.isShutdown()) {
+    	// start producing
+    	m_processExecutor = Executors.newSingleThreadExecutor();
+        m_processFuture = m_processExecutor.submit(() -> {
+            while (!Thread.currentThread().isInterrupted() && !m_processExecutor.isShutdown()) {
                 try {
                     processSampleData();
-
-                    long processedCount = getProcessedCount();
-                    m_processedAvg = (1000.0 * (processedCount - oldProcessedCount)) / getTaskInterval();
-                    oldProcessedCount = processedCount;
-
                     TimeUnit.MILLISECONDS.sleep(getTaskInterval());
                 } catch (InterruptedException e) {
                     // Break out of our loop...
@@ -101,10 +97,31 @@ public abstract class AbstractSampleProcessor implements Processor, StatsProvide
                     // Ignore, not much we can do about this...
                     info("Failed to process sample(s)! Cause: %s",
                         (e.getMessage() == null ? "NullPointerException" : e.getMessage()));
-                    m_log.log(LogService.LOG_DEBUG, "Failed to process sample(s)!", e);
                 }
             }
-            ;
+        });
+        
+        // start calculating avg
+        m_avgExecutor = Executors.newSingleThreadExecutor();
+        m_avgFuture = m_avgExecutor.submit(() -> {
+            long oldTimeMillis = System.currentTimeMillis();
+            while (!Thread.currentThread().isInterrupted() && !m_processExecutor.isShutdown()) {
+                try {
+                    long processedCount = getProcessedCount();
+                    long currentTimeMillis = System.currentTimeMillis();
+                    m_processedAvg = (1000.0 * processedCount) / (currentTimeMillis - oldTimeMillis);
+                    oldTimeMillis = currentTimeMillis;
+
+                    TimeUnit.MILLISECONDS.sleep(900);
+                } catch (InterruptedException e) {
+                    // Break out of our loop...
+                    Thread.currentThread().interrupt();
+                } catch (Exception e) {
+                    // Ignore, not much we can do about this...
+                    info("Failed to process sample(s)! Cause: %s",
+                        (e.getMessage() == null ? "NullPointerException" : e.getMessage()));
+                }
+            }
         });
 
         info("Processor %s started...", getName());
@@ -114,13 +131,26 @@ public abstract class AbstractSampleProcessor implements Processor, StatsProvide
      * Called by Felix DM when stopping this component.
      */
     protected final void stop() throws Exception {
-        if (m_generatorFuture != null) {
-            m_generatorFuture.cancel(true);
-            m_generatorFuture = null;
+    	
+    	cleanup();
+    	
+        if (m_processFuture != null) {
+            m_processFuture.cancel(true);
+            m_processFuture = null;
         }
-        m_executor.shutdown();
-        m_executor.awaitTermination(10, TimeUnit.SECONDS);
+        m_processExecutor.shutdown();
+
+        if (m_avgFuture != null) {
+        	m_avgFuture.cancel(true);
+        	m_avgFuture = null;
+        }
+        m_avgExecutor.shutdown();
+
+        m_processExecutor.awaitTermination(10, TimeUnit.SECONDS);
+        m_avgExecutor.awaitTermination(10, TimeUnit.SECONDS);
         
         info("Processor %s stopped...", getName());
     }
+    
+    abstract protected void cleanup();
 }

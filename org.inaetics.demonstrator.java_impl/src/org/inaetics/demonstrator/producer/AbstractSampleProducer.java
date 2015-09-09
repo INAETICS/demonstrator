@@ -19,10 +19,12 @@ import org.osgi.service.log.LogService;
 public abstract class AbstractSampleProducer implements Producer, StatsProvider {
     private final Random m_rnd;
     private final String m_name;
-    private final int m_minTaskInterval;
+    private final int m_minTaskInterval; // in microseconds!
 
-    private ExecutorService m_executor;
-    private Future<?> m_generatorFuture;
+    private ExecutorService m_prodExecutor;
+    private Future<?> m_prodFuture;
+    private ExecutorService m_avgExecutor;
+    private Future<?> m_avgFuture;
 
     private volatile double m_producedAvg;
     private volatile int m_taskInterval;
@@ -115,12 +117,9 @@ public abstract class AbstractSampleProducer implements Producer, StatsProvider 
      * Called by Felix DM when starting this component.
      */
     protected final void start() throws Exception {
-        m_executor = Executors.newSingleThreadExecutor();
+        m_prodExecutor = Executors.newSingleThreadScheduledExecutor();
 
-        m_generatorFuture = m_executor.submit(() -> {
-            long oldProductionCount = 0L;
-            long oldTime = System.currentTimeMillis();
-
+        m_prodFuture = m_prodExecutor.submit(() -> {
             while (!Thread.currentThread().isInterrupted()) {
                 try {
                     int taskInterval = getTaskInterval();
@@ -128,15 +127,10 @@ public abstract class AbstractSampleProducer implements Producer, StatsProvider 
                         produceSampleData();
                     }
 
-                    long produced = getProductionCount();
-                    long time = System.currentTimeMillis();
-                    m_producedAvg = (1000.0 * (produced - oldProductionCount)) / (time - oldTime);
-                    oldProductionCount = produced;
-                    oldTime = time;
-
-                    // Make sure we sleep at least 1 millisecond, even when our taskInterval is zero or negative... 
-                    int millis = Math.max(1, getTaskInterval() / 1000);
-                    int nanos = getTaskInterval() - millis * 1000;
+                    // Make sure we sleep at least 1 millisecond, even when our taskInterval is zero or negative...
+                    int millis = Math.max(1, taskInterval / 1000);
+                    int nanos = Math.max(0, (taskInterval * 1000) - (millis * 1000000));
+//                    System.out.println("sleep: " + millis + " " + nanos);
                     Thread.sleep(millis, nanos);
                 } catch (InterruptedException e) {
                     // Break out of our loop...
@@ -145,7 +139,30 @@ public abstract class AbstractSampleProducer implements Producer, StatsProvider 
                     // Ignore, not much we can do about this...
                     info("Failed to produce sample(s)! Cause: %s",
                         (e.getMessage() == null ? "NullPointerException" : e.getMessage()));
-                    m_log.log(LogService.LOG_DEBUG, "Failed to produce sample(s)!", e);
+                }
+            }
+        });
+
+        m_avgExecutor = Executors.newSingleThreadExecutor();
+
+        m_avgFuture = m_avgExecutor.submit(() -> {
+            long oldTime = System.currentTimeMillis();
+
+            while (!Thread.currentThread().isInterrupted()) {
+                try {
+                    long produced = getProductionCount();
+                    long time = System.currentTimeMillis();
+                    m_producedAvg = (1000.0 * produced) / (time - oldTime);
+                    oldTime = time;
+
+                    Thread.sleep(900);
+                } catch (InterruptedException e) {
+                    // Break out of our loop...
+                    Thread.currentThread().interrupt();
+                } catch (Exception e) {
+                    // Ignore, not much we can do about this...
+                    info("Failed to produce sample(s)! Cause: %s",
+                        (e.getMessage() == null ? "NullPointerException" : e.getMessage()));
                 }
             }
         });
@@ -157,13 +174,25 @@ public abstract class AbstractSampleProducer implements Producer, StatsProvider 
      * Called by Felix DM when stopping this component.
      */
     protected final void stop() throws Exception {
-        if (m_generatorFuture != null) {
-            m_generatorFuture.cancel(true);
-            m_generatorFuture = null;
+        
+    	cleanup();
+    	
+    	if (m_prodFuture != null) {
+        	m_prodFuture.cancel(true);
+        	m_prodFuture = null;
         }
-        m_executor.shutdown();
-        m_executor.awaitTermination(10, TimeUnit.SECONDS);
+        m_prodExecutor.shutdown();
+        m_prodExecutor.awaitTermination(10, TimeUnit.SECONDS);
+
+        if (m_avgFuture != null) {
+        	m_avgFuture.cancel(true);
+        	m_avgFuture = null;
+        }
+        m_avgExecutor.shutdown();
+        m_avgExecutor.awaitTermination(10, TimeUnit.SECONDS);
 
         info("Producer %s stopped...", getName());
     }
+    
+    abstract protected void cleanup();
 }
