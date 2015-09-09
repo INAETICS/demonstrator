@@ -13,14 +13,13 @@
 #include "inaetics_demonstrator_api/result.h"
 #include "inaetics_demonstrator_api/sample.h"
 
-#define SINGLE_SAMPLES_PER_SEC  10    /* 10 samples every 20 msec */
+#define SINGLE_SAMPLES_PER_SEC  1000
 #define BURST_SAMPLES_PER_SEC 	0
 
 #define MIN_BURST_LEN 			2
 #define MAX_BURST_LEN 			200
 
 #define VERBOSE					2
-#define WAIT_TIME_USECONDS      20000
 
 #define THROUGHPUT_NAME_POSTFIX 		" Statistics"
 #define THROUGHPUT_TYPE 				"(throughput)"
@@ -84,13 +83,9 @@ static void processor_sendResult(processor_pt processor, struct result result) {
 
 static void processor_processSample(struct sample* sample, struct result* result) {
 
-	int i;
-
 	result->time = sample->time;
-	for (i =0; i < 10000; i++)
-	{
-		result->value1 = sample->value1 + sample->value2;
-	}
+	result->value1 = sample->value1 + sample->value2;
+
 	memcpy(&(result->sample), sample, sizeof(struct sample));
 
 }
@@ -120,7 +115,7 @@ celix_status_t processor_receiveSamples(processor_thread_data_pt th_data, int sa
 	clock_gettime(CLOCK_REALTIME, &ts_start);
 	timespec_diff(&ts_diff,&ts_start,&ts_start);
 
-	for (ts_end = ts_start; (singleSampleCnt < SINGLE_SAMPLES_PER_SEC) && (ts_diff.tv_sec<=0);) {
+	for (ts_end = ts_start; (singleSampleCnt < samplesPerSec) && (ts_diff.tv_sec<=0);) {
 		struct sample *recvSample = calloc(1, sizeof(struct sample));
 
 		if (recvSample) {
@@ -154,8 +149,6 @@ celix_status_t processor_receiveSamples(processor_thread_data_pt th_data, int sa
 	pthread_rwlock_unlock(&th_data->throughputLock);
 
 	msg(1, "PROCESSOR: %d single samples received.", singleSampleCnt);
-
-	usleep(WAIT_TIME_USECONDS);
 
 	return status;
 }
@@ -222,8 +215,6 @@ celix_status_t processor_receiveBursts(processor_thread_data_pt th_data, int sam
 	pthread_rwlock_unlock(&th_data->throughputLock);
 
 	msg(1, "PROCESSOR:  %d samples in bursts received.", burstSampleCnt);
-	
-  usleep(WAIT_TIME_USECONDS);
 
 	return status;
 }
@@ -388,7 +379,7 @@ int processor_getUtilizationStatsName(processor_pt processor, char **name) {
 	celix_status_t status = CELIX_SUCCESS;
 
 	if (processor->utilizationStatsName != NULL) {
-		(*name) = processor->utilizationStatsName;
+		(*name) = strdup(processor->utilizationStatsName);
 	}
 	else {
 		msg(0, "PROCESSOR_STAT: getName denied because service is removed");
@@ -399,7 +390,7 @@ int processor_getUtilizationStatsName(processor_pt processor, char **name) {
 }
 
 int processor_getUtilizationStatsType(processor_pt processor, char **type) {
-	(*type) = (char*) THROUGHPUT_TYPE;
+	(*type) = strdup((char*) THROUGHPUT_TYPE);
 	return (int) CELIX_SUCCESS;
 }
 
@@ -431,6 +422,6 @@ int processor_getUtilizationStatsValue(processor_pt processor, double* statVal) 
 }
 
 int processor_getUtilizationStatsMeasurementUnit(processor_pt processor, char **mUnit) {
-	(*mUnit) = (char*) THROUGHPUT_MEASUREMENT_UNIT;
+	(*mUnit) = strdup((char*) THROUGHPUT_MEASUREMENT_UNIT);
 	return (int) CELIX_SUCCESS;
 }
