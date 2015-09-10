@@ -222,7 +222,7 @@ celix_status_t processor_receiveBursts(processor_thread_data_pt th_data, int sam
 	pthread_rwlock_unlock(&th_data->throughputLock);
 
 	msg(1, "PROCESSOR:  %d samples in bursts received.", burstSampleCnt);
-	
+
   usleep(WAIT_TIME_USECONDS);
 
 	return status;
@@ -241,8 +241,6 @@ void* processor_receive(void *handle) {
 		if (SINGLE_SAMPLES_PER_SEC > 0) {
 			status = processor_receiveSamples(th_data, SINGLE_SAMPLES_PER_SEC);
 		}
-
-		pthread_yield();
 	}
 
 	return NULL;

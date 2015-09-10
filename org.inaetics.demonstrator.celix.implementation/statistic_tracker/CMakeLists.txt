@@ -11,4 +11,4 @@ bundle(org.inaetics.demonstrator.api.stats.StatisticTracker
 	 	private/src/statistic_tracker_impl.c
 )
 
-target_link_libraries(org.inaetics.demonstrator.api.stats.StatisticTracker pthread ${CELIX_LIBRARIES})
+target_link_libraries(org.inaetics.demonstrator.api.stats.StatisticTracker ${CELIX_LIBRARIES})

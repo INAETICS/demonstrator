@@ -7,9 +7,8 @@ include_directories("${CELIX_INCLUDE_DIR}/remote_service_admin")
 include_directories("private/include")
 
 bundle(org.inaetics.demonstrator.api.queue.SampleQueue
-	SOURCES private/src/activator 
+	SOURCES private/src/activator
 		    private/src/arraylist_sample_queue_impl
 )
 
-target_link_libraries(org.inaetics.demonstrator.api.queue.SampleQueue pthread ${CELIX_LIBRARIES})
-
+target_link_libraries(org.inaetics.demonstrator.api.queue.SampleQueue ${CELIX_LIBRARIES})

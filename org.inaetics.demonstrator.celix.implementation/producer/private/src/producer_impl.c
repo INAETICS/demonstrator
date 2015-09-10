@@ -11,6 +11,11 @@
 #include "utils.h"
 #include "hash_map.h"
 #include "inaetics_demonstrator_api/sample.h"
+#include <android/log.h>
+
+#define  LOG_TAG    "celix"
+#define  LOGI(...)  __android_log_print(ANDROID_LOG_INFO,LOG_TAG,__VA_ARGS__)
+
 
 #define MAX_SAMPLES_PER_SEC 	500
 
@@ -18,7 +23,7 @@
 #define MAX_BURST_LEN 			50
 
 #define VERBOSE					2
-#define WAIT_TIME_USECONDS      500000
+#define WAIT_TIME_USECONDS      0
 
 #define THROUGHPUT_NAME_POSTFIX 		" Statistics"
 #define THROUGHPUT_TYPE 				"(throughput)"
@@ -55,7 +60,7 @@ static void msg(int lvl, char *fmsg, ...) {
 		va_start(listPointer, fmsg);
 		vsprintf(msg, fmsg, listPointer);
 
-		printf("[%d] : %s\n", lvl, msg);
+		LOGI("[%d] : %s\n", lvl, msg);
 	}
 }
 
@@ -225,7 +230,6 @@ void *producer_generate(void *handle) {
 			status = producer_sendSamples(th_data, sampleRate);
 		}
 
-		pthread_yield();
 	}
 
 	return NULL;
@@ -461,4 +465,3 @@ void producer_setSampleRate(void* handle, int rate) {
 
 	pthread_rwlock_unlock(&producer->queueLock);
 }
-
