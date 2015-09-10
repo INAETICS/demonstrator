@@ -157,9 +157,14 @@ public class AutoScalerImpl implements ManagedService {
             }
         });
 
-        // TODO
-        m_coordinator.setReplicaCount(Type.PRODUCER, 1);
-        m_coordinator.setReplicaCount(Type.PROCESSOR, 1);
+        try {
+        	m_coordinator.setReplicaCount(Type.PRODUCER, 1);
+        	m_coordinator.setReplicaCount(Type.PROCESSOR, 1);
+        }
+        catch (Exception e) {
+        	// TODO how to handle this
+            m_log.log(LogService.LOG_ERROR, "Could not set initial replica count!", e);
+        }
     }
 
     /**
