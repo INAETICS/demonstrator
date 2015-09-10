@@ -166,6 +166,7 @@ public class AutoScalerImpl implements ManagedService {
      * Called by Felix DM when this component is stopped.
      */
     protected final void stop(Component comp) throws Exception {
+    	info("stopping autoscaler");
         try {
             if (m_pollFuture != null) {
                 m_pollFuture.cancel(true);
