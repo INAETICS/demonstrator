@@ -114,7 +114,7 @@ celix_status_t producer_sendSamples(producer_thread_data_pt th_data, int samples
 		producer_fillSample(&smpl);
 
 		if (queueService != NULL) {
-			queueService->put(queueService->sampleQueue, smpl, &ret);
+			queueService->put(queueService->sampleQueue, &smpl, &ret);
 
 			if (ret == true) {
 				msg(3, "PRODUCER: Sample {Time:%llu | V1=%f | V2=%f} stored.", smpl.time, smpl.value1,

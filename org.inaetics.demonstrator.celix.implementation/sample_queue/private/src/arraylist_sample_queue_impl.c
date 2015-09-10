@@ -120,8 +120,7 @@ celix_status_t sampleQueue_destroy(sample_queue_type* sampleQueue) {
 }
 
 int sampleQueue_put(sample_queue_type *sampleQueue, struct sample *sample, bool *sampleTaken) {
-
-	celix_status_t status = CELIX_SUCCESS;
+    celix_status_t status = CELIX_SUCCESS;
 
 	pthread_mutex_lock(&sampleQueue->lock);
 
@@ -163,7 +162,6 @@ int sampleQueue_put(sample_queue_type *sampleQueue, struct sample *sample, bool 
 }
 
 int sampleQueue_putAll(sample_queue_type *sampleQueue, struct sample_sequence samples, uint32_t *samplesTaken) {
-
 	celix_status_t status = CELIX_SUCCESS;
 	uint32_t i = 0;
 	uint32_t samples_added = 0;
@@ -222,7 +220,7 @@ int sampleQueue_putAll(sample_queue_type *sampleQueue, struct sample_sequence sa
 
 }
 
-int sampleQueue_take(sample_queue_type *sampleQueue, struct sample *sample) {
+int sampleQueue_take(sample_queue_type *sampleQueue, struct sample *sample, bool *sampleGiven) {
 	celix_status_t status = CELIX_ILLEGAL_STATE;
 	struct timespec ts;
 	int rc = 0;
@@ -243,6 +241,10 @@ int sampleQueue_take(sample_queue_type *sampleQueue, struct sample *sample) {
 		free(tmpSample);
 		sampleQueue->takeCnt++;
 		sampleQueue->currentQueueSize -= 1;
+		*sampleGiven = true;
+		status = CELIX_SUCCESS;
+	} else if (arrayList_size(sampleQueue->queue) == 0) {
+		*sampleGiven = false;
 		status = CELIX_SUCCESS;
 	}
 
@@ -254,7 +256,6 @@ int sampleQueue_take(sample_queue_type *sampleQueue, struct sample *sample) {
 }
 
 int sampleQueue_takeAll(sample_queue_type *sampleQueue, uint32_t min, uint32_t max, struct sample_sequence samples) {
-
 	celix_status_t status = CELIX_ILLEGAL_STATE;
 	struct timespec ts;
 	int i = 0;

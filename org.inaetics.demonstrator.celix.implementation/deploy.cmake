@@ -14,6 +14,7 @@ deploy("inaetics-demonstrator-all" BUNDLES
 		${CELIX_BUNDLES_DIR}/remote_service_admin_dfi.zip
 		org.inaetics.demonstrator.api.queue.SampleQueue
         PROPERTIES
+            DISCOVERY_CFG_POLL_INTERVAL=1
             LOGHELPER_ENABLE_STDOUT_FALLBACK=true
             RSA_PORT=50801
             DISCOVERY_CFG_SERVER_PORT=50901
@@ -37,6 +38,7 @@ deploy("inaetics-demonstrator-all" BUNDLES
 		${CELIX_BUNDLES_DIR}/remote_service_admin_dfi.zip
         org.inaetics.demonstrator.api.producer.Producer
         PROPERTIES
+            DISCOVERY_CFG_POLL_INTERVAL=1
             LOGHELPER_ENABLE_STDOUT_FALLBACK=true
             RSA_PORT=50802
             DISCOVERY_CFG_SERVER_PORT=50902
@@ -51,6 +53,7 @@ deploy("inaetics-demonstrator-all" BUNDLES
         ${CELIX_BUNDLES_DIR}/remote_service_admin_dfi.zip
         org.inaetics.demonstrator.api.processor.Processor
         PROPERTIES
+            DISCOVERY_CFG_POLL_INTERVAL=1
             LOGHELPER_ENABLE_STDOUT_FALLBACK=true
             RSA_PORT=50803
             DISCOVERY_CFG_SERVER_PORT=50903
@@ -65,6 +68,7 @@ deploy("inaetics-demonstrator-all" BUNDLES
         ${CELIX_BUNDLES_DIR}/remote_service_admin_dfi.zip
         org.inaetics.demonstrator.api.datastore.DataStore
         PROPERTIES
+            DISCOVERY_CFG_POLL_INTERVAL=1
             LOGHELPER_ENABLE_STDOUT_FALLBACK=true
             RSA_PORT=50804
             DISCOVERY_CFG_SERVER_PORT=50904

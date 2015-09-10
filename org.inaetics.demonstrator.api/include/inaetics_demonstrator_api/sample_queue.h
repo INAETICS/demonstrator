@@ -31,11 +31,11 @@ struct sample_sequence {
 struct sample_queue_service {
 	void *sampleQueue;
 
-	int (*put)(void *sampleQueue, struct sample sample, bool *sampleTaken);
+	int (*put)(void *sampleQueue, struct sample *sample, bool *sampleTaken);
 
 	int (*putAll)(void *sampleQueue, struct sample_sequence seq, uint32_t *samplesTaken);
 
-	int (*take)(void *sampleQueue, struct sample *sample);
+	int (*take)(void *sampleQueue, struct sample *sample, bool *sampleTaken);
 
 	int (*takeAll)(void *sampleQueue, uint32_t min, uint32_t max, struct sample_sequence **out);
 

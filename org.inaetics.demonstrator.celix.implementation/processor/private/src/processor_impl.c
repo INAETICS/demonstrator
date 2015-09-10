@@ -122,20 +122,25 @@ celix_status_t processor_receiveSamples(processor_thread_data_pt th_data, int sa
 
 	for (ts_end = ts_start; (singleSampleCnt < SINGLE_SAMPLES_PER_SEC) && (ts_diff.tv_sec<=0);) {
 		struct sample *recvSample = calloc(1, sizeof(struct sample));
+		bool taken = false;
 
 		if (recvSample) {
 			if (queueService != NULL) {
-				if (queueService->take(queueService->sampleQueue, recvSample) == 0) {
-					struct result* result_pt = calloc(1, sizeof(*result_pt));
+				status = queueService->take(queueService->sampleQueue, recvSample, &taken);
+				if (status == CELIX_SUCCESS) {
+					if (taken) {
+						struct result *result_pt = calloc(1, sizeof(*result_pt));
 
-					msg(3, "\tPROCESSOR: Received and Processing Sample {Time:%llu | V1=%f | V2=%f}", recvSample->time, recvSample->value1, recvSample->value2);
-					processor_processSample(recvSample, result_pt);
-					processor_sendResult(th_data->processor, *result_pt);
+						msg(3, "\tPROCESSOR: Received and Processing Sample {Time:%llu | V1=%f | V2=%f}",
+							recvSample->time, recvSample->value1, recvSample->value2);
+						processor_processSample(recvSample, result_pt);
+						processor_sendResult(th_data->processor, *result_pt);
 
-					singleSampleCnt++;
-				}
-				else {
-					msg(2, "PROCESSOR: Could not take a single sample.");
+						singleSampleCnt++;
+					}
+					else {
+						msg(2, "PROCESSOR: Could not take a single sample.");
+					}
 				}
 			}
 			else {
