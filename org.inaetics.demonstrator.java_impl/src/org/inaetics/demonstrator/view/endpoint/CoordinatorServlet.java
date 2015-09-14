@@ -26,13 +26,16 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.inaetics.demonstrator.api.coordinator.CoordinatorService;
 import org.inaetics.demonstrator.api.coordinator.CoordinatorService.Type;
+import org.inaetics.demonstrator.api.data.FleetUnitInfo;
 import org.inaetics.demonstrator.api.producer.Producer;
+import org.inaetics.demonstrator.api.stats.ClusterInfo;
 import org.inaetics.demonstrator.api.stats.StatsProvider;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.log.LogService;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Provides read-only access to some of the (low-level) system statistics.
@@ -69,6 +72,7 @@ public class CoordinatorServlet extends HttpServlet {
     private volatile LogService m_log;
     private volatile StatsProvider m_aggregator;
     private volatile CoordinatorService m_coordinator;
+    private volatile ClusterInfo m_clusterInfo;
 
     private final ConcurrentMap<ServiceReference<StatsProvider>, StatsContainer> m_providerStats;
     private final List<Producer> m_producers;
@@ -238,7 +242,14 @@ public class CoordinatorServlet extends HttpServlet {
                 generator.writeStringField("unit", m_aggregator.getMeasurementUnit());
                 generator.writeNumberField("value", m_aggregator.getValue());
                 generator.writeEndObject();
-            } else {
+            }
+            else if ("/clusterInfo".equals(pathInfo)) {
+                resp.setStatus(HttpServletResponse.SC_OK);
+                
+                new ObjectMapper().writeValue(generator, m_clusterInfo.getClusterInfo());;
+                
+                
+            }else {
                 resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
 
                 generator.writeStartObject();

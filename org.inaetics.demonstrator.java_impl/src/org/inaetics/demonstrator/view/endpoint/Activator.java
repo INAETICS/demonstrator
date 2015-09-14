@@ -11,6 +11,7 @@ import org.apache.felix.dm.DependencyActivatorBase;
 import org.apache.felix.dm.DependencyManager;
 import org.inaetics.demonstrator.api.coordinator.CoordinatorService;
 import org.inaetics.demonstrator.api.producer.Producer;
+import org.inaetics.demonstrator.api.stats.ClusterInfo;
 import org.inaetics.demonstrator.api.stats.StatsProvider;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.log.LogService;
@@ -30,6 +31,7 @@ public class Activator extends DependencyActivatorBase {
         manager.add(createComponent()
             .setInterface(Servlet.class.getName(), props)
             .setImplementation(CoordinatorServlet.class)
+            .add(createServiceDependency().setService(ClusterInfo.class).setRequired(false))
             .add(createServiceDependency().setService(StatsProvider.class).setCallbacks("addStatsProvider", "removeStatsProvider").setRequired(false))
             .add(createServiceDependency().setService(Producer.class).setCallbacks("addProducer", "removeProducer").setRequired(false))
             .add(createServiceDependency().setService(CoordinatorService.class).setRequired(true))
