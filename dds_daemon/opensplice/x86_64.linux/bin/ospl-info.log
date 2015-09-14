@@ -1,0 +1,767 @@
+========================================================================================
+Report      : INFO
+Date        : Tue Sep 08 09:30:34 CEST 2015
+Description : Termination request (signal 2) received from PID 24676 (self), UID 1000
+Node        : localhost.localdomain
+Process     : mmstat <24676>
+Thread      : signalHandler 7f0dbb2a9700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/signalHandlerThread/os_signalHandler.c/503/0/1441697434.403492890
+========================================================================================
+Report      : WARNING
+Date        : Tue Sep 08 09:30:34 CEST 2015
+Description : Received termination request, will detach user-layer from domain.
+Node        : localhost.localdomain
+Process     : mmstat <24676>
+Thread      : signalHandler 7f0dbb2a9700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/u__userExitRequestCallbackWrapper/u_user.c/373/0/1441697434.403752038
+========================================================================================
+Report      : INFO
+Date        : Tue Sep 08 09:31:35 CEST 2015
+Description : Termination request (signal 2) received from PID 24823 (self), UID 1000
+Node        : localhost.localdomain
+Process     : mmstat <24823>
+Thread      : signalHandler 7f20dc797700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/signalHandlerThread/os_signalHandler.c/503/0/1441697495.752393381
+========================================================================================
+Report      : WARNING
+Date        : Tue Sep 08 09:31:35 CEST 2015
+Description : Received termination request, will detach user-layer from domain.
+Node        : localhost.localdomain
+Process     : mmstat <24823>
+Thread      : signalHandler 7f20dc797700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/u__userExitRequestCallbackWrapper/u_user.c/373/0/1441697495.752486128
+========================================================================================
+Report      : INFO
+Date        : Tue Sep 08 09:33:14 CEST 2015
+Description : u_domainNew:Database allocated on heap
+Node        : localhost.localdomain
+Process     : mmstat <24851>
+Thread      : spliced 7fd116060700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/user::u_domain::u_domainNew/u_domain.c/706/0/1441697594.512107763
+========================================================================================
+Report      : INFO
+Date        : Tue Sep 08 09:33:14 CEST 2015
+Description : ---------------------------------------------------------------
+              -- The service is using the following configuration settings --
+              ---------------------------------------------------------------
+              Domain (id)          : ospl_sp_ddsi (0)
+              Storage              : 10240 Kbytes
+              Storage threshold    : 1024 Kbytes
+              Storage address      : Not available
+              Locking              : default
+              Memory mode          : Heap memory
+              Builtin topics       : true
+              Priority inheritance : false
+Node        : localhost.localdomain
+Process     : mmstat <24851>
+Thread      : spliced 7fd116060700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/The OpenSplice domain service/u_domain.c/827/0/1441697594.517535550
+========================================================================================
+Report      : INFO
+Date        : Tue Sep 08 09:33:14 CEST 2015
+Description : Service cmsoap disabled
+Node        : localhost.localdomain
+Process     : mmstat <24851>
+Thread      : spliced 7fd116060700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/OpenSplice domain service/sr_componentInfo.c/439/0/1441697594.517697482
+========================================================================================
+Report      : INFO
+Date        : Tue Sep 08 09:33:14 CEST 2015
+Description : ++++++++++++++++++++++++++++++++++++++++++++++++
+              ++ The service 'splicedaemon' is now operational. 
+              ++++++++++++++++++++++++++++++++++++++++++++++++
+Node        : localhost.localdomain
+Process     : mmstat <24851>
+Thread      : spliced 7fd116060700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/v_serviceChangeState/v_service.c/329/0/1441697594.518193753
+========================================================================================
+Report      : WARNING
+Date        : Tue Sep 08 09:33:14 CEST 2015
+Description : No multicast capable interfaces: disabling multicast
+
+Node        : localhost.localdomain
+Process     : mmstat <24851>
+Thread      : ddsi2 7fd11414b700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/ddsi2/q_init.c/425/0/1441697594.519567549
+========================================================================================
+Report      : INFO
+Date        : Tue Sep 08 09:33:14 CEST 2015
+Description : ++++++++++++++++++++++++++++++++++++++++++++++++
+              ++ The service 'ddsi2' is now operational. 
+              ++++++++++++++++++++++++++++++++++++++++++++++++
+Node        : localhost.localdomain
+Process     : mmstat <24851>
+Thread      : ddsi2 7fd11414b700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/v_serviceChangeState/v_service.c/329/0/1441697594.521398196
+========================================================================================
+Report      : INFO
+Date        : Tue Sep 08 09:33:14 CEST 2015
+Description : The durability service can by identified by ID: 72433481
+Node        : localhost.localdomain
+Process     : mmstat <24851>
+Thread      : durability 7fd1144bd700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/DurabilityService/d_durability.c/476/0/1441697594.524548562
+========================================================================================
+Report      : INFO
+Date        : Tue Sep 08 09:33:21 CEST 2015
+Description : ++++++++++++++++++++++++++++++++++++++++++++++++
+              ++ The service 'durability' is now operational. 
+              ++++++++++++++++++++++++++++++++++++++++++++++++
+Node        : localhost.localdomain
+Process     : mmstat <24851>
+Thread      : durability 7fd1144bd700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/v_serviceChangeState/v_service.c/329/0/1441697601.531168558
+========================================================================================
+Report      : INFO
+Date        : Tue Sep 08 09:34:10 CEST 2015
+Description : u_domainNew:Database allocated on heap
+Node        : localhost.localdomain
+Process     : mmstat <24956>
+Thread      : spliced 7fdd5e5c3700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/user::u_domain::u_domainNew/u_domain.c/706/0/1441697650.422121194
+========================================================================================
+Report      : INFO
+Date        : Tue Sep 08 09:34:10 CEST 2015
+Description : ---------------------------------------------------------------
+              -- The service is using the following configuration settings --
+              ---------------------------------------------------------------
+              Domain (id)          : ospl_sp_ddsi (0)
+              Storage              : 10240 Kbytes
+              Storage threshold    : 1024 Kbytes
+              Storage address      : Not available
+              Locking              : default
+              Memory mode          : Heap memory
+              Builtin topics       : true
+              Priority inheritance : false
+Node        : localhost.localdomain
+Process     : mmstat <24956>
+Thread      : spliced 7fdd5e5c3700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/The OpenSplice domain service/u_domain.c/827/0/1441697650.427403544
+========================================================================================
+Report      : INFO
+Date        : Tue Sep 08 09:34:10 CEST 2015
+Description : Service cmsoap disabled
+Node        : localhost.localdomain
+Process     : mmstat <24956>
+Thread      : spliced 7fdd5e5c3700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/OpenSplice domain service/sr_componentInfo.c/439/0/1441697650.427561416
+========================================================================================
+Report      : INFO
+Date        : Tue Sep 08 09:34:10 CEST 2015
+Description : ++++++++++++++++++++++++++++++++++++++++++++++++
+              ++ The service 'splicedaemon' is now operational. 
+              ++++++++++++++++++++++++++++++++++++++++++++++++
+Node        : localhost.localdomain
+Process     : mmstat <24956>
+Thread      : spliced 7fdd5e5c3700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/v_serviceChangeState/v_service.c/329/0/1441697650.428051574
+========================================================================================
+Report      : WARNING
+Date        : Tue Sep 08 09:34:10 CEST 2015
+Description : No multicast capable interfaces: disabling multicast
+
+Node        : localhost.localdomain
+Process     : mmstat <24956>
+Thread      : ddsi2 7fdd5c6ae700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/ddsi2/q_init.c/425/0/1441697650.429391948
+========================================================================================
+Report      : INFO
+Date        : Tue Sep 08 09:34:10 CEST 2015
+Description : ++++++++++++++++++++++++++++++++++++++++++++++++
+              ++ The service 'ddsi2' is now operational. 
+              ++++++++++++++++++++++++++++++++++++++++++++++++
+Node        : localhost.localdomain
+Process     : mmstat <24956>
+Thread      : ddsi2 7fdd5c6ae700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/v_serviceChangeState/v_service.c/329/0/1441697650.431563528
+========================================================================================
+Report      : INFO
+Date        : Tue Sep 08 09:34:10 CEST 2015
+Description : The durability service can by identified by ID: 2125969716
+Node        : localhost.localdomain
+Process     : mmstat <24956>
+Thread      : durability 7fdd5ca20700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/DurabilityService/d_durability.c/476/0/1441697650.434221964
+========================================================================================
+Report      : INFO
+Date        : Tue Sep 08 09:34:17 CEST 2015
+Description : ++++++++++++++++++++++++++++++++++++++++++++++++
+              ++ The service 'durability' is now operational. 
+              ++++++++++++++++++++++++++++++++++++++++++++++++
+Node        : localhost.localdomain
+Process     : mmstat <24956>
+Thread      : durability 7fdd5ca20700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/v_serviceChangeState/v_service.c/329/0/1441697657.442859209
+========================================================================================
+Report      : INFO
+Date        : Tue Sep 08 09:35:04 CEST 2015
+Description : u_domainNew:Database allocated on heap
+Node        : localhost.localdomain
+Process     : mmstat <25010>
+Thread      : spliced 7fd21cfda700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/user::u_domain::u_domainNew/u_domain.c/706/0/1441697704.773379113
+========================================================================================
+Report      : INFO
+Date        : Tue Sep 08 09:35:04 CEST 2015
+Description : ---------------------------------------------------------------
+              -- The service is using the following configuration settings --
+              ---------------------------------------------------------------
+              Domain (id)          : ospl_sp_ddsi (0)
+              Storage              : 10240 Kbytes
+              Storage threshold    : 1024 Kbytes
+              Storage address      : Not available
+              Locking              : default
+              Memory mode          : Heap memory
+              Builtin topics       : true
+              Priority inheritance : false
+Node        : localhost.localdomain
+Process     : mmstat <25010>
+Thread      : spliced 7fd21cfda700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/The OpenSplice domain service/u_domain.c/827/0/1441697704.777360913
+========================================================================================
+Report      : INFO
+Date        : Tue Sep 08 09:35:04 CEST 2015
+Description : Service cmsoap disabled
+Node        : localhost.localdomain
+Process     : mmstat <25010>
+Thread      : spliced 7fd21cfda700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/OpenSplice domain service/sr_componentInfo.c/439/0/1441697704.777480232
+========================================================================================
+Report      : INFO
+Date        : Tue Sep 08 09:35:04 CEST 2015
+Description : ++++++++++++++++++++++++++++++++++++++++++++++++
+              ++ The service 'splicedaemon' is now operational. 
+              ++++++++++++++++++++++++++++++++++++++++++++++++
+Node        : localhost.localdomain
+Process     : mmstat <25010>
+Thread      : spliced 7fd21cfda700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/v_serviceChangeState/v_service.c/329/0/1441697704.777854962
+========================================================================================
+Report      : WARNING
+Date        : Tue Sep 08 09:35:04 CEST 2015
+Description : No multicast capable interfaces: disabling multicast
+
+Node        : localhost.localdomain
+Process     : mmstat <25010>
+Thread      : ddsi2 7fd21b0c5700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/ddsi2/q_init.c/425/0/1441697704.778891471
+========================================================================================
+Report      : INFO
+Date        : Tue Sep 08 09:35:04 CEST 2015
+Description : ++++++++++++++++++++++++++++++++++++++++++++++++
+              ++ The service 'ddsi2' is now operational. 
+              ++++++++++++++++++++++++++++++++++++++++++++++++
+Node        : localhost.localdomain
+Process     : mmstat <25010>
+Thread      : ddsi2 7fd21b0c5700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/v_serviceChangeState/v_service.c/329/0/1441697704.780922854
+========================================================================================
+Report      : INFO
+Date        : Tue Sep 08 09:35:04 CEST 2015
+Description : The durability service can by identified by ID: 2128101243
+Node        : localhost.localdomain
+Process     : mmstat <25010>
+Thread      : durability 7fd21b437700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/DurabilityService/d_durability.c/476/0/1441697704.783991848
+========================================================================================
+Report      : INFO
+Date        : Tue Sep 08 09:35:18 CEST 2015
+Description : u_domainNew:Database allocated on heap
+Node        : localhost.localdomain
+Process     : mmstat <25064>
+Thread      : spliced 7f004d6e5700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/user::u_domain::u_domainNew/u_domain.c/706/0/1441697718.668054855
+========================================================================================
+Report      : INFO
+Date        : Tue Sep 08 09:35:18 CEST 2015
+Description : ---------------------------------------------------------------
+              -- The service is using the following configuration settings --
+              ---------------------------------------------------------------
+              Domain (id)          : ospl_sp_ddsi (0)
+              Storage              : 10240 Kbytes
+              Storage threshold    : 1024 Kbytes
+              Storage address      : Not available
+              Locking              : default
+              Memory mode          : Heap memory
+              Builtin topics       : true
+              Priority inheritance : false
+Node        : localhost.localdomain
+Process     : mmstat <25064>
+Thread      : spliced 7f004d6e5700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/The OpenSplice domain service/u_domain.c/827/0/1441697718.671638926
+========================================================================================
+Report      : INFO
+Date        : Tue Sep 08 09:35:18 CEST 2015
+Description : Service cmsoap disabled
+Node        : localhost.localdomain
+Process     : mmstat <25064>
+Thread      : spliced 7f004d6e5700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/OpenSplice domain service/sr_componentInfo.c/439/0/1441697718.671750373
+========================================================================================
+Report      : INFO
+Date        : Tue Sep 08 09:35:18 CEST 2015
+Description : ++++++++++++++++++++++++++++++++++++++++++++++++
+              ++ The service 'splicedaemon' is now operational. 
+              ++++++++++++++++++++++++++++++++++++++++++++++++
+Node        : localhost.localdomain
+Process     : mmstat <25064>
+Thread      : spliced 7f004d6e5700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/v_serviceChangeState/v_service.c/329/0/1441697718.672111129
+========================================================================================
+Report      : WARNING
+Date        : Tue Sep 08 09:35:18 CEST 2015
+Description : No multicast capable interfaces: disabling multicast
+
+Node        : localhost.localdomain
+Process     : mmstat <25064>
+Thread      : ddsi2 7f00477a2700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/ddsi2/q_init.c/425/0/1441697718.673113469
+========================================================================================
+Report      : INFO
+Date        : Tue Sep 08 09:35:18 CEST 2015
+Description : ++++++++++++++++++++++++++++++++++++++++++++++++
+              ++ The service 'ddsi2' is now operational. 
+              ++++++++++++++++++++++++++++++++++++++++++++++++
+Node        : localhost.localdomain
+Process     : mmstat <25064>
+Thread      : ddsi2 7f00477a2700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/v_serviceChangeState/v_service.c/329/0/1441697718.675199884
+========================================================================================
+Report      : INFO
+Date        : Tue Sep 08 09:35:18 CEST 2015
+Description : The durability service can by identified by ID: 1181638545
+Node        : localhost.localdomain
+Process     : mmstat <25064>
+Thread      : durability 7f0047b14700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/DurabilityService/d_durability.c/476/0/1441697718.677760963
+========================================================================================
+Report      : INFO
+Date        : Tue Sep 08 09:35:25 CEST 2015
+Description : ++++++++++++++++++++++++++++++++++++++++++++++++
+              ++ The service 'durability' is now operational. 
+              ++++++++++++++++++++++++++++++++++++++++++++++++
+Node        : localhost.localdomain
+Process     : mmstat <25064>
+Thread      : durability 7f0047b14700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/v_serviceChangeState/v_service.c/329/0/1441697725.685941158
+========================================================================================
+Report      : INFO
+Date        : Tue Sep 08 09:36:19 CEST 2015
+Description : u_domainNew:Database allocated on heap
+Node        : localhost.localdomain
+Process     : mmstat <25119>
+Thread      : spliced 7fbd54348700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/user::u_domain::u_domainNew/u_domain.c/706/0/1441697779.078775144
+========================================================================================
+Report      : INFO
+Date        : Tue Sep 08 09:36:19 CEST 2015
+Description : ---------------------------------------------------------------
+              -- The service is using the following configuration settings --
+              ---------------------------------------------------------------
+              Domain (id)          : ospl_sp_ddsi (0)
+              Storage              : 10240 Kbytes
+              Storage threshold    : 1024 Kbytes
+              Storage address      : Not available
+              Locking              : default
+              Memory mode          : Heap memory
+              Builtin topics       : true
+              Priority inheritance : false
+Node        : localhost.localdomain
+Process     : mmstat <25119>
+Thread      : spliced 7fbd54348700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/The OpenSplice domain service/u_domain.c/827/0/1441697779.091820739
+========================================================================================
+Report      : INFO
+Date        : Tue Sep 08 09:36:19 CEST 2015
+Description : Service cmsoap disabled
+Node        : localhost.localdomain
+Process     : mmstat <25119>
+Thread      : spliced 7fbd54348700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/OpenSplice domain service/sr_componentInfo.c/439/0/1441697779.092362805
+========================================================================================
+Report      : INFO
+Date        : Tue Sep 08 09:36:19 CEST 2015
+Description : ++++++++++++++++++++++++++++++++++++++++++++++++
+              ++ The service 'splicedaemon' is now operational. 
+              ++++++++++++++++++++++++++++++++++++++++++++++++
+Node        : localhost.localdomain
+Process     : mmstat <25119>
+Thread      : spliced 7fbd54348700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/v_serviceChangeState/v_service.c/329/0/1441697779.093361953
+========================================================================================
+Report      : WARNING
+Date        : Tue Sep 08 09:36:19 CEST 2015
+Description : No multicast capable interfaces: disabling multicast
+
+Node        : localhost.localdomain
+Process     : mmstat <25119>
+Thread      : ddsi2 7fbd52433700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/ddsi2/q_init.c/425/0/1441697779.096086247
+========================================================================================
+Report      : INFO
+Date        : Tue Sep 08 09:36:19 CEST 2015
+Description : ++++++++++++++++++++++++++++++++++++++++++++++++
+              ++ The service 'ddsi2' is now operational. 
+              ++++++++++++++++++++++++++++++++++++++++++++++++
+Node        : localhost.localdomain
+Process     : mmstat <25119>
+Thread      : ddsi2 7fbd52433700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/v_serviceChangeState/v_service.c/329/0/1441697779.102199724
+========================================================================================
+Report      : INFO
+Date        : Tue Sep 08 09:36:19 CEST 2015
+Description : The durability service can by identified by ID: 789633475
+Node        : localhost.localdomain
+Process     : mmstat <25119>
+Thread      : durability 7fbd527a5700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/DurabilityService/d_durability.c/476/0/1441697779.109964282
+========================================================================================
+Report      : INFO
+Date        : Tue Sep 08 09:36:26 CEST 2015
+Description : ++++++++++++++++++++++++++++++++++++++++++++++++
+              ++ The service 'durability' is now operational. 
+              ++++++++++++++++++++++++++++++++++++++++++++++++
+Node        : localhost.localdomain
+Process     : mmstat <25119>
+Thread      : durability 7fbd527a5700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/v_serviceChangeState/v_service.c/329/0/1441697786.118516771
+========================================================================================
+Report      : INFO
+Date        : Tue Sep 08 09:36:47 CEST 2015
+Description : u_domainNew:Database allocated on heap
+Node        : localhost.localdomain
+Process     : mmstat <25173>
+Thread      : spliced 7f5d963cc700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/user::u_domain::u_domainNew/u_domain.c/706/0/1441697807.666880554
+========================================================================================
+Report      : INFO
+Date        : Tue Sep 08 09:36:47 CEST 2015
+Description : ---------------------------------------------------------------
+              -- The service is using the following configuration settings --
+              ---------------------------------------------------------------
+              Domain (id)          : ospl_sp_ddsi (0)
+              Storage              : 10240 Kbytes
+              Storage threshold    : 1024 Kbytes
+              Storage address      : Not available
+              Locking              : default
+              Memory mode          : Heap memory
+              Builtin topics       : true
+              Priority inheritance : false
+Node        : localhost.localdomain
+Process     : mmstat <25173>
+Thread      : spliced 7f5d963cc700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/The OpenSplice domain service/u_domain.c/827/0/1441697807.673937286
+========================================================================================
+Report      : INFO
+Date        : Tue Sep 08 09:36:47 CEST 2015
+Description : Service cmsoap disabled
+Node        : localhost.localdomain
+Process     : mmstat <25173>
+Thread      : spliced 7f5d963cc700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/OpenSplice domain service/sr_componentInfo.c/439/0/1441697807.674156134
+========================================================================================
+Report      : INFO
+Date        : Tue Sep 08 09:36:47 CEST 2015
+Description : ++++++++++++++++++++++++++++++++++++++++++++++++
+              ++ The service 'splicedaemon' is now operational. 
+              ++++++++++++++++++++++++++++++++++++++++++++++++
+Node        : localhost.localdomain
+Process     : mmstat <25173>
+Thread      : spliced 7f5d963cc700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/v_serviceChangeState/v_service.c/329/0/1441697807.674523498
+========================================================================================
+Report      : WARNING
+Date        : Tue Sep 08 09:36:47 CEST 2015
+Description : No multicast capable interfaces: disabling multicast
+
+Node        : localhost.localdomain
+Process     : mmstat <25173>
+Thread      : ddsi2 7f5d944b7700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/ddsi2/q_init.c/425/0/1441697807.675482870
+========================================================================================
+Report      : INFO
+Date        : Tue Sep 08 09:36:47 CEST 2015
+Description : ++++++++++++++++++++++++++++++++++++++++++++++++
+              ++ The service 'ddsi2' is now operational. 
+              ++++++++++++++++++++++++++++++++++++++++++++++++
+Node        : localhost.localdomain
+Process     : mmstat <25173>
+Thread      : ddsi2 7f5d944b7700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/v_serviceChangeState/v_service.c/329/0/1441697807.677526644
+========================================================================================
+Report      : INFO
+Date        : Tue Sep 08 09:36:47 CEST 2015
+Description : The durability service can by identified by ID: 777154422
+Node        : localhost.localdomain
+Process     : mmstat <25173>
+Thread      : durability 7f5d94829700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/DurabilityService/d_durability.c/476/0/1441697807.680073416
+========================================================================================
+Report      : INFO
+Date        : Tue Sep 08 09:36:54 CEST 2015
+Description : ++++++++++++++++++++++++++++++++++++++++++++++++
+              ++ The service 'durability' is now operational. 
+              ++++++++++++++++++++++++++++++++++++++++++++++++
+Node        : localhost.localdomain
+Process     : mmstat <25173>
+Thread      : durability 7f5d94829700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/v_serviceChangeState/v_service.c/329/0/1441697814.687609535
+========================================================================================
+Report      : INFO
+Date        : Tue Sep 08 09:37:33 CEST 2015
+Description : u_domainNew:Database allocated on heap
+Node        : localhost.localdomain
+Process     : mmstat <25281>
+Thread      : spliced 7fc74aa9c700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/user::u_domain::u_domainNew/u_domain.c/706/0/1441697853.969419503
+========================================================================================
+Report      : INFO
+Date        : Tue Sep 08 09:37:33 CEST 2015
+Description : ---------------------------------------------------------------
+              -- The service is using the following configuration settings --
+              ---------------------------------------------------------------
+              Domain (id)          : ospl_sp_ddsi (0)
+              Storage              : 10240 Kbytes
+              Storage threshold    : 1024 Kbytes
+              Storage address      : Not available
+              Locking              : default
+              Memory mode          : Heap memory
+              Builtin topics       : true
+              Priority inheritance : false
+Node        : localhost.localdomain
+Process     : mmstat <25281>
+Thread      : spliced 7fc74aa9c700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/The OpenSplice domain service/u_domain.c/827/0/1441697853.975573476
+========================================================================================
+Report      : INFO
+Date        : Tue Sep 08 09:37:33 CEST 2015
+Description : Service cmsoap disabled
+Node        : localhost.localdomain
+Process     : mmstat <25281>
+Thread      : spliced 7fc74aa9c700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/OpenSplice domain service/sr_componentInfo.c/439/0/1441697853.975760521
+========================================================================================
+Report      : INFO
+Date        : Tue Sep 08 09:37:33 CEST 2015
+Description : ++++++++++++++++++++++++++++++++++++++++++++++++
+              ++ The service 'splicedaemon' is now operational. 
+              ++++++++++++++++++++++++++++++++++++++++++++++++
+Node        : localhost.localdomain
+Process     : mmstat <25281>
+Thread      : spliced 7fc74aa9c700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/v_serviceChangeState/v_service.c/329/0/1441697853.976276191
+========================================================================================
+Report      : WARNING
+Date        : Tue Sep 08 09:37:33 CEST 2015
+Description : No multicast capable interfaces: disabling multicast
+
+Node        : localhost.localdomain
+Process     : mmstat <25281>
+Thread      : ddsi2 7fc748b87700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/ddsi2/q_init.c/425/0/1441697853.977596047
+========================================================================================
+Report      : INFO
+Date        : Tue Sep 08 09:37:33 CEST 2015
+Description : ++++++++++++++++++++++++++++++++++++++++++++++++
+              ++ The service 'ddsi2' is now operational. 
+              ++++++++++++++++++++++++++++++++++++++++++++++++
+Node        : localhost.localdomain
+Process     : mmstat <25281>
+Thread      : ddsi2 7fc748b87700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/v_serviceChangeState/v_service.c/329/0/1441697853.979829568
+========================================================================================
+Report      : INFO
+Date        : Tue Sep 08 09:37:33 CEST 2015
+Description : The durability service can by identified by ID: 1194439529
+Node        : localhost.localdomain
+Process     : mmstat <25281>
+Thread      : durability 7fc748ef9700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/DurabilityService/d_durability.c/476/0/1441697853.982044359
+========================================================================================
+Report      : INFO
+Date        : Tue Sep 08 09:37:40 CEST 2015
+Description : ++++++++++++++++++++++++++++++++++++++++++++++++
+              ++ The service 'durability' is now operational. 
+              ++++++++++++++++++++++++++++++++++++++++++++++++
+Node        : localhost.localdomain
+Process     : mmstat <25281>
+Thread      : durability 7fc748ef9700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/v_serviceChangeState/v_service.c/329/0/1441697860.990181303
+========================================================================================
+Report      : INFO
+Date        : Tue Sep 08 09:38:27 CEST 2015
+Description : u_domainNew:Database allocated on heap
+Node        : localhost.localdomain
+Process     : mmstat <25335>
+Thread      : spliced 7f58c01d2700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/user::u_domain::u_domainNew/u_domain.c/706/0/1441697907.759514767
+========================================================================================
+Report      : INFO
+Date        : Tue Sep 08 09:38:27 CEST 2015
+Description : ---------------------------------------------------------------
+              -- The service is using the following configuration settings --
+              ---------------------------------------------------------------
+              Domain (id)          : ospl_sp_ddsi (0)
+              Storage              : 10240 Kbytes
+              Storage threshold    : 1024 Kbytes
+              Storage address      : Not available
+              Locking              : default
+              Memory mode          : Heap memory
+              Builtin topics       : true
+              Priority inheritance : false
+Node        : localhost.localdomain
+Process     : mmstat <25335>
+Thread      : spliced 7f58c01d2700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/The OpenSplice domain service/u_domain.c/827/0/1441697907.765005847
+========================================================================================
+Report      : INFO
+Date        : Tue Sep 08 09:38:27 CEST 2015
+Description : Service cmsoap disabled
+Node        : localhost.localdomain
+Process     : mmstat <25335>
+Thread      : spliced 7f58c01d2700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/OpenSplice domain service/sr_componentInfo.c/439/0/1441697907.765188981
+========================================================================================
+Report      : INFO
+Date        : Tue Sep 08 09:38:27 CEST 2015
+Description : ++++++++++++++++++++++++++++++++++++++++++++++++
+              ++ The service 'splicedaemon' is now operational. 
+              ++++++++++++++++++++++++++++++++++++++++++++++++
+Node        : localhost.localdomain
+Process     : mmstat <25335>
+Thread      : spliced 7f58c01d2700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/v_serviceChangeState/v_service.c/329/0/1441697907.765653556
+========================================================================================
+Report      : WARNING
+Date        : Tue Sep 08 09:38:27 CEST 2015
+Description : No multicast capable interfaces: disabling multicast
+
+Node        : localhost.localdomain
+Process     : mmstat <25335>
+Thread      : ddsi2 7f58be2bd700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/ddsi2/q_init.c/425/0/1441697907.766944951
+========================================================================================
+Report      : INFO
+Date        : Tue Sep 08 09:38:27 CEST 2015
+Description : ++++++++++++++++++++++++++++++++++++++++++++++++
+              ++ The service 'ddsi2' is now operational. 
+              ++++++++++++++++++++++++++++++++++++++++++++++++
+Node        : localhost.localdomain
+Process     : mmstat <25335>
+Thread      : ddsi2 7f58be2bd700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/v_serviceChangeState/v_service.c/329/0/1441697907.769083054
+========================================================================================
+Report      : INFO
+Date        : Tue Sep 08 09:38:27 CEST 2015
+Description : The durability service can by identified by ID: 1610724085
+Node        : localhost.localdomain
+Process     : mmstat <25335>
+Thread      : durability 7f58be62f700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/DurabilityService/d_durability.c/476/0/1441697907.771595770
+========================================================================================
+Report      : INFO
+Date        : Tue Sep 08 09:38:34 CEST 2015
+Description : ++++++++++++++++++++++++++++++++++++++++++++++++
+              ++ The service 'durability' is now operational. 
+              ++++++++++++++++++++++++++++++++++++++++++++++++
+Node        : localhost.localdomain
+Process     : mmstat <25335>
+Thread      : durability 7f58be62f700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/v_serviceChangeState/v_service.c/329/0/1441697914.779647889
+========================================================================================
+Report      : INFO
+Date        : Tue Sep 08 09:38:40 CEST 2015
+Description : Termination request (signal 2) received from PID 25335 (self), UID 1000
+Node        : localhost.localdomain
+Process     : mmstat <25335>
+Thread      : signalHandler 7f58bef1b700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/signalHandlerThread/os_signalHandler.c/503/0/1441697920.629700394
+========================================================================================
+Report      : INFO
+Date        : Tue Sep 08 09:38:53 CEST 2015
+Description : u_domainNew:Database allocated on heap
+Node        : localhost.localdomain
+Process     : mmstat <25390>
+Thread      : spliced 7fc6575ce700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/user::u_domain::u_domainNew/u_domain.c/706/0/1441697933.265329430
+========================================================================================
+Report      : INFO
+Date        : Tue Sep 08 09:38:53 CEST 2015
+Description : ---------------------------------------------------------------
+              -- The service is using the following configuration settings --
+              ---------------------------------------------------------------
+              Domain (id)          : ospl_sp_ddsi (0)
+              Storage              : 10240 Kbytes
+              Storage threshold    : 1024 Kbytes
+              Storage address      : Not available
+              Locking              : default
+              Memory mode          : Heap memory
+              Builtin topics       : true
+              Priority inheritance : false
+Node        : localhost.localdomain
+Process     : mmstat <25390>
+Thread      : spliced 7fc6575ce700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/The OpenSplice domain service/u_domain.c/827/0/1441697933.275741700
+========================================================================================
+Report      : INFO
+Date        : Tue Sep 08 09:38:53 CEST 2015
+Description : Service cmsoap disabled
+Node        : localhost.localdomain
+Process     : mmstat <25390>
+Thread      : spliced 7fc6575ce700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/OpenSplice domain service/sr_componentInfo.c/439/0/1441697933.275953251
+========================================================================================
+Report      : INFO
+Date        : Tue Sep 08 09:38:53 CEST 2015
+Description : ++++++++++++++++++++++++++++++++++++++++++++++++
+              ++ The service 'splicedaemon' is now operational. 
+              ++++++++++++++++++++++++++++++++++++++++++++++++
+Node        : localhost.localdomain
+Process     : mmstat <25390>
+Thread      : spliced 7fc6575ce700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/v_serviceChangeState/v_service.c/329/0/1441697933.276446327
+========================================================================================
+Report      : WARNING
+Date        : Tue Sep 08 09:38:53 CEST 2015
+Description : No multicast capable interfaces: disabling multicast
+
+Node        : localhost.localdomain
+Process     : mmstat <25390>
+Thread      : ddsi2 7fc6556b9700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/ddsi2/q_init.c/425/0/1441697933.277917364
+========================================================================================
+Report      : INFO
+Date        : Tue Sep 08 09:38:53 CEST 2015
+Description : ++++++++++++++++++++++++++++++++++++++++++++++++
+              ++ The service 'ddsi2' is now operational. 
+              ++++++++++++++++++++++++++++++++++++++++++++++++
+Node        : localhost.localdomain
+Process     : mmstat <25390>
+Thread      : ddsi2 7fc6556b9700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/v_serviceChangeState/v_service.c/329/0/1441697933.281384016
+========================================================================================
+Report      : INFO
+Date        : Tue Sep 08 09:38:53 CEST 2015
+Description : The durability service can by identified by ID: 1301591580
+Node        : localhost.localdomain
+Process     : mmstat <25390>
+Thread      : durability 7fc655a2b700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/DurabilityService/d_durability.c/476/0/1441697933.284499943
+========================================================================================
+Report      : INFO
+Date        : Tue Sep 08 09:39:00 CEST 2015
+Description : ++++++++++++++++++++++++++++++++++++++++++++++++
+              ++ The service 'durability' is now operational. 
+              ++++++++++++++++++++++++++++++++++++++++++++++++
+Node        : localhost.localdomain
+Process     : mmstat <25390>
+Thread      : durability 7fc655a2b700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/v_serviceChangeState/v_service.c/329/0/1441697940.292565641
+========================================================================================
+Report      : INFO
+Date        : Tue Sep 08 09:39:05 CEST 2015
+Description : Termination request (signal 2) received from PID 25390 (self), UID 1000
+Node        : localhost.localdomain
+Process     : mmstat <25390>
+Thread      : signalHandler 7fc656317700
+Internals   : V6.4.140407OSS/3b83e82/3b83e82/signalHandlerThread/os_signalHandler.c/503/0/1441697945.989062601

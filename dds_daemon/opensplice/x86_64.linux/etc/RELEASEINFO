@@ -1,0 +1,19 @@
+PACKAGE_NAME="OpenSplice DDS"
+OSPL_MAJOR="6"
+OSPL_MINOR="4"
+OSPL_MAINT="140407"
+OSPL_PATCH="OSS"
+#this file is also parsed as java properties so PACKAGE_VERSION must be hardcoded here#
+PACKAGE_VERSION=V6.4.140407OSS
+
+PACKAGE_DATE="2014-04-15"
+CS_DLL_VERSION="6.4.16174.0"
+
+export PACKAGE_NAME
+export OSPL_MAJOR
+export OSPL_MINOR
+export OSPL_MAINT
+export OSPL_PATCH
+export PACKAGE_VERSION
+export PACKAGE_DATE
+export CS_DLL_VERSION

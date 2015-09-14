@@ -13,13 +13,14 @@
 #include "inaetics_demonstrator_api/result.h"
 #include "inaetics_demonstrator_api/sample.h"
 
-#define SINGLE_SAMPLES_PER_SEC  0
-#define BURST_SAMPLES_PER_SEC 	250
+#define SINGLE_SAMPLES_PER_SEC  10    /* 10 samples every 20 msec */
+#define BURST_SAMPLES_PER_SEC 	0
 
-#define MIN_BURST_LEN 			25
-#define MAX_BURST_LEN 			25
+#define MIN_BURST_LEN 			2
+#define MAX_BURST_LEN 			200
 
 #define VERBOSE					2
+#define WAIT_TIME_USECONDS      20000
 
 #define THROUGHPUT_NAME_POSTFIX 		" Statistics"
 #define THROUGHPUT_TYPE 				"(throughput)"
@@ -83,9 +84,13 @@ static void processor_sendResult(processor_pt processor, struct result result) {
 
 static void processor_processSample(struct sample* sample, struct result* result) {
 
-	result->time = sample->time;
-	result->value1 = sample->value1 + sample->value2;
+	int i;
 
+	result->time = sample->time;
+	for (i =0; i < 10000; i++)
+	{
+		result->value1 = sample->value1 + sample->value2;
+	}
 	memcpy(&(result->sample), sample, sizeof(struct sample));
 
 }
@@ -115,50 +120,42 @@ celix_status_t processor_receiveSamples(processor_thread_data_pt th_data, int sa
 	clock_gettime(CLOCK_REALTIME, &ts_start);
 	timespec_diff(&ts_diff,&ts_start,&ts_start);
 
-	struct sample *recvSample = calloc(1, sizeof(struct sample));
+	for (ts_end = ts_start; (singleSampleCnt < SINGLE_SAMPLES_PER_SEC) && (ts_diff.tv_sec<=0);) {
+		struct sample *recvSample = calloc(1, sizeof(struct sample));
 
-	if (!recvSample) {
-		status = CELIX_BUNDLE_EXCEPTION;
-	}
-	else {
-		for (ts_end = ts_start; ts_diff.tv_sec<=0;) {
+		if (recvSample) {
+			if (queueService != NULL) {
+				if (queueService->take(queueService->sampleQueue, recvSample) == 0) {
+					struct result* result_pt = calloc(1, sizeof(*result_pt));
 
-			if (singleSampleCnt < samplesPerSec) {
-				if (queueService != NULL) {
-					if (queueService->take(queueService->sampleQueue, recvSample) == 0) {
-						struct result* result_pt = calloc(1, sizeof(*result_pt));
+					msg(3, "\tPROCESSOR: Received and Processing Sample {Time:%llu | V1=%f | V2=%f}", recvSample->time, recvSample->value1, recvSample->value2);
+					processor_processSample(recvSample, result_pt);
+					processor_sendResult(th_data->processor, *result_pt);
 
-						msg(3, "\tPROCESSOR: Received and Processing Sample {Time:%llu | V1=%f | V2=%f}", recvSample->time, recvSample->value1, recvSample->value2);
-						processor_processSample(recvSample, result_pt);
-						processor_sendResult(th_data->processor, *result_pt);
-
-						singleSampleCnt++;
-					}
-					else {
-						msg(2, "PROCESSOR: Could not take a single sample.");
-					}
+					singleSampleCnt++;
 				}
 				else {
-					status = CELIX_BUNDLE_EXCEPTION;
+					msg(2, "PROCESSOR: Could not take a single sample.");
 				}
 			}
 			else {
-				usleep(2000);
+				status = CELIX_BUNDLE_EXCEPTION;
 			}
 
-			clock_gettime(CLOCK_REALTIME, &ts_end);
-			timespec_diff(&ts_diff,&ts_start,&ts_end);
+			free(recvSample);
 		}
-		free(recvSample);
-
-		/* Update the statistic */
-		pthread_rwlock_wrlock(&th_data->throughputLock);
-		th_data->single_throughput = singleSampleCnt;
-		pthread_rwlock_unlock(&th_data->throughputLock);
-
-		msg(1, "PROCESSOR: %d single samples received.", singleSampleCnt);
+		clock_gettime(CLOCK_REALTIME, &ts_end);
+		timespec_diff(&ts_diff,&ts_start,&ts_end);
 	}
 
+	/* Update the statistic */
+	pthread_rwlock_wrlock(&th_data->throughputLock);
+	th_data->single_throughput = singleSampleCnt;
+	pthread_rwlock_unlock(&th_data->throughputLock);
+
+	msg(1, "PROCESSOR: %d single samples received.", singleSampleCnt);
+
+	usleep(WAIT_TIME_USECONDS);
 
 	return status;
 }
@@ -176,59 +173,57 @@ celix_status_t processor_receiveBursts(processor_thread_data_pt th_data, int sam
 
 	clock_gettime(CLOCK_REALTIME, &ts_start);
 	timespec_diff(&ts_diff,&ts_start,&ts_start);
-	int j;
 
-	for (j = 0; j < MAX_BURST_LEN; j++) {
-		recvSamples[j] = calloc(1, sizeof(struct sample));
-	}
+	for (ts_end = ts_start; (burstSampleCnt < samplesPerSec) && (ts_diff.tv_sec<=0);) {
+		int j;
 
-	for (ts_end = ts_start; (ts_diff.tv_sec<=0);) {
+		for (j = 0; j < MAX_BURST_LEN; j++) {
+			recvSamples[j] = calloc(1, sizeof(struct sample));
+		}
 
-		if (burstSampleCnt < samplesPerSec) {
-			msg(3, "PROCESSOR: TakeAll (min: %d, max: %d)", MIN_BURST_LEN, MAX_BURST_LEN);
+		msg(3, "PROCESSOR: TakeAll (min: %d, max: %d)", MIN_BURST_LEN, MAX_BURST_LEN);
 
-			if (queueService != NULL) {
-				if (queueService->takeAll(queueService->sampleQueue, MIN_BURST_LEN, MAX_BURST_LEN, &recvSamples[0], &numOfRecvSamples) == 0) {
-					msg(3, "PROCESSOR:  %u samples received", numOfRecvSamples);
+		if (queueService != NULL) {
+			if (queueService->takeAll(queueService->sampleQueue, MIN_BURST_LEN, MAX_BURST_LEN, &recvSamples[0], &numOfRecvSamples) == 0) {
+				msg(3, "PROCESSOR:  %u samples received", numOfRecvSamples);
 
-					for (j = 0; j < numOfRecvSamples; j++) {
-						msg(3, "\tPROCESSOR: Processing Sample (%d/%d)  {Time:%llu | V1=%f | V2=%f}", j, numOfRecvSamples, recvSamples[j]->time, recvSamples[j]->value1, recvSamples[j]->value2);
-						struct result* result_pt = calloc(1, sizeof(*result_pt));
+				for (j = 0; j < numOfRecvSamples; j++) {
+					msg(3, "\tPROCESSOR: Processing Sample (%d/%d)  {Time:%llu | V1=%f | V2=%f}", j, numOfRecvSamples, recvSamples[j]->time, recvSamples[j]->value1, recvSamples[j]->value2);
+					struct result* result_pt = calloc(1, sizeof(*result_pt));
 
-						if (result_pt) {
-							processor_processSample(recvSamples[j], result_pt);
-							processor_sendResult(th_data->processor, *result_pt);
-							free(result_pt);
-						}
-
+					if (result_pt) {
+						processor_processSample(recvSamples[j], result_pt);
+						processor_sendResult(th_data->processor, *result_pt);
+						free(result_pt);
 					}
 
-					burstSampleCnt += j;
 				}
-				else {
-					msg(2, "PROCESSOR: Could not take all samples.");
-				}
+
+				burstSampleCnt += j;
 			}
 			else {
-				status = CELIX_BUNDLE_EXCEPTION;
+				msg(2, "PROCESSOR: Could not take all samples.");
 			}
 		}
 		else {
-			usleep(2000);
+			status = CELIX_BUNDLE_EXCEPTION;
+		}
+
+		for (j = 0; j < MAX_BURST_LEN; j++) {
+			free(recvSamples[j]);
 		}
 
 		clock_gettime(CLOCK_REALTIME, &ts_end);
 		timespec_diff(&ts_diff,&ts_start,&ts_end);
 	}
 
-	for (j = 0; j < MAX_BURST_LEN; j++) {
-		free(recvSamples[j]);
-	}
-
 	pthread_rwlock_wrlock(&th_data->throughputLock);
 	th_data->burst_throughput = burstSampleCnt;
 	pthread_rwlock_unlock(&th_data->throughputLock);
+
 	msg(1, "PROCESSOR:  %d samples in bursts received.", burstSampleCnt);
+	
+  usleep(WAIT_TIME_USECONDS);
 
 	return status;
 }
@@ -393,7 +388,7 @@ int processor_getUtilizationStatsName(processor_pt processor, char **name) {
 	celix_status_t status = CELIX_SUCCESS;
 
 	if (processor->utilizationStatsName != NULL) {
-		(*name) = strdup(processor->utilizationStatsName);
+		(*name) = processor->utilizationStatsName;
 	}
 	else {
 		msg(0, "PROCESSOR_STAT: getName denied because service is removed");
@@ -404,7 +399,7 @@ int processor_getUtilizationStatsName(processor_pt processor, char **name) {
 }
 
 int processor_getUtilizationStatsType(processor_pt processor, char **type) {
-	(*type) = strdup((char*) THROUGHPUT_TYPE);
+	(*type) = (char*) THROUGHPUT_TYPE;
 	return (int) CELIX_SUCCESS;
 }
 
@@ -422,17 +417,7 @@ int processor_getUtilizationStatsValue(processor_pt processor, double* statVal) 
 		if (entry != NULL) {
 			processor_thread_data_pt value = (processor_thread_data_pt) hashMapEntry_getValue(entry);
 			if (value != NULL) {
-				if (BURST_SAMPLES_PER_SEC > 0) {
-					total_average += (double) value->burst_throughput;
-				}
-
-				if (SINGLE_SAMPLES_PER_SEC > 0) {
-					total_average += (double) value->single_throughput;
-				}
-
-				if ((BURST_SAMPLES_PER_SEC > 0) && (SINGLE_SAMPLES_PER_SEC > 0)) {
-					total_average /= (double) 2.0f;
-				}
+				total_average += (double) (((double) (value->single_throughput + value->burst_throughput)) / ((double) 2.0f));
 			}
 		}
 	}
@@ -446,6 +431,6 @@ int processor_getUtilizationStatsValue(processor_pt processor, double* statVal) 
 }
 
 int processor_getUtilizationStatsMeasurementUnit(processor_pt processor, char **mUnit) {
-	(*mUnit) = strdup((char*) THROUGHPUT_MEASUREMENT_UNIT);
+	(*mUnit) = (char*) THROUGHPUT_MEASUREMENT_UNIT;
 	return (int) CELIX_SUCCESS;
 }

@@ -4,6 +4,9 @@
 The purpose of the demonstator project is to demonstrate the capabilities of an
 INAETICS system.
 
+## This Branch of the Demonstrator
+The purpose of this branch is to demonstate a Queue implementation with a distributed database. With this distributed database in Open Splice the Queue can be re-allocated or restarted after a crash without loosing the data in the Queue.
+
 ## Java implementation
 
 To run this Java implementation, you need a recent Eclipse IDE along with the
@@ -36,6 +39,20 @@ This branch contains an implementation of the demonstrator based on Celix bundle
 4.   Start cmake with either: `cmake -DCELIX_DIR=<celix-install-dir>`  ..  or: `ccmake  -DCELIX_DIR=<celix-install-dir>` .. to configure the project via the interactive menu
 5.   make all
 6.   make deploy
-7.  cd deploy/inaetics-demonstrator
-8.  rm -rf .cache && sh run.sh. Celix Framework will be started ( a shell for controlling the bundles, the sample_queue, the producer and the processor) and you should see the Producer storing samples, the Processor retrieving samples and the Sample Queue Service logging all the operations. Equivalent deployment using remote services can be found within the according deploy folders inaetics-demonstrator-processor, inaetics-demonstrator-producer and inaetics-demonstrator-queue.
+7.  Start seperate terminals to run the Producer, the opensplice Queue and the Processor
+    a) cd deploy/inaetics-demonstrator-producer
+    b) cd deploy/inaetics-demonstrator-opensplice-queue
+    c) cd deploy/inaetics-demonstrator-processor
+8.  Start the Producer, Queue and Processor in the terminals with:
+rm -rf .cache && sh run.sh. Celix Framework will be started and you should see the Producer storing samples, the Processor retrieving samples and the Sample Queue Service logging all the operations. 
+9.  For the demonstration of the distributed database, the queue can be stopped and started again. However to remain the data in the queue when the queue is stopped an other program must have domain participant for the same domain. For this purpose the program dds_daemon is delivered in this branch (demonstrator/dds_daemon). To build and start dds_daemon:
+    a) cd demonstrator/dds_daemon/queue
+    b) . ./release.com
+    c) cd bld
+    d) gmake all
+    e) cd ../exe
+    f) ./dds_daemon
+The application will start a connect to the domain 2147483647 (default domain)
 
+## Shortcomings
+This demonstration will only run as described above. It is not integrated yet in the demonstrator-cluster, where the bundles are executed on seperate nodes / virtual boxes.
