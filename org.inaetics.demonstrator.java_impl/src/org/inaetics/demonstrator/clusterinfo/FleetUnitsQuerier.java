@@ -1,3 +1,6 @@
+/**
+ * Licensed under Apache License v2. See LICENSE for more information.
+ */
 package org.inaetics.demonstrator.clusterinfo;
 
 
@@ -6,7 +9,7 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.TimerTask;
 
-import org.inaetics.demonstrator.api.data.FleetUnitInfo;
+import org.inaetics.demonstrator.api.stats.FleetUnitInfo;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

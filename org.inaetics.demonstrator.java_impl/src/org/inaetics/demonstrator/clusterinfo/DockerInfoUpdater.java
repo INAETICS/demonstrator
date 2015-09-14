@@ -1,3 +1,6 @@
+/**
+ * Licensed under Apache License v2. See LICENSE for more information.
+ */
 package org.inaetics.demonstrator.clusterinfo;
 
 import java.math.BigInteger;
@@ -5,8 +8,8 @@ import java.net.URL;
 import java.util.Iterator;
 import java.util.List;
 
-import org.inaetics.demonstrator.api.data.DockerContainerInfo;
-import org.inaetics.demonstrator.api.data.FleetUnitInfo;
+import org.inaetics.demonstrator.api.stats.DockerContainerInfo;
+import org.inaetics.demonstrator.api.stats.FleetUnitInfo;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

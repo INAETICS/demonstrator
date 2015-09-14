@@ -26,7 +26,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.inaetics.demonstrator.api.coordinator.CoordinatorService;
 import org.inaetics.demonstrator.api.coordinator.CoordinatorService.Type;
-import org.inaetics.demonstrator.api.data.FleetUnitInfo;
 import org.inaetics.demonstrator.api.producer.Producer;
 import org.inaetics.demonstrator.api.stats.ClusterInfo;
 import org.inaetics.demonstrator.api.stats.StatsProvider;

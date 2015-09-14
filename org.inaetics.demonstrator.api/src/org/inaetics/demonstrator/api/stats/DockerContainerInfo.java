@@ -1,4 +1,7 @@
-package org.inaetics.demonstrator.api.data;
+/**
+ * Licensed under Apache License v2. See LICENSE for more information.
+ */
+package org.inaetics.demonstrator.api.stats;
 
 import java.math.RoundingMode;
 import java.text.DecimalFormat;

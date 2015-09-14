@@ -1,3 +1,6 @@
+/**
+ * Licensed under Apache License v2. See LICENSE for more information.
+ */
 package org.inaetics.demonstrator.clusterinfo;
 
 
@@ -8,8 +11,8 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-import org.inaetics.demonstrator.api.data.FleetUnitInfo;
 import org.inaetics.demonstrator.api.stats.ClusterInfo;
+import org.inaetics.demonstrator.api.stats.FleetUnitInfo;
 
 public class ClusterInfoImpl implements ClusterInfo{
 	
