@@ -1,4 +1,4 @@
--runfw: org.apache.felix.framework;version='[4,5)'
+-runfw: org.apache.felix.framework;version='[5.2.0,5.2.0]'
 -runee: JavaSE-1.8
 -runsystemcapabilities: ${native_capability}
 -resolve.effective: active
@@ -22,6 +22,9 @@
 	org.apache.felix.metatype,\
 	org.apache.felix.log,\
 	org.amdatu.web.resourcehandler;version='[1.0.7,1.0.8)',\
+	org.amdatu.configurator.api;version='[1.0.0,1.0.1)',\
+	org.amdatu.configurator.properties;version='[1.0.0,1.0.1)',\
+	org.amdatu.configurator.shell;version='[1.0.0,1.0.1)',\
 	com.fasterxml.jackson.core.jackson-annotations;version='[2.3,2.4)',\
 	com.fasterxml.jackson.core.jackson-core;version='[2.3,2.4)',\
 	com.fasterxml.jackson.core.jackson-databind;version='[2.3,2.4)',\
@@ -32,12 +35,10 @@
 	org.inaetics.demonstrator.api.producer;version=latest,\
 	org.inaetics.demonstrator.api.queue;version=latest,\
 	org.inaetics.demonstrator.api.stats;version=latest,\
+	org.inaetics.demonstrator.java_impl.logsender;version=latest,\
 	org.inaetics.demonstrator.java_impl.coordinator.autoscaler;version=latest,\
 	org.inaetics.demonstrator.java_impl.coordinator.stub;version=latest,\
 	org.inaetics.demonstrator.java_impl.datastore;version=latest,\
 	org.inaetics.demonstrator.java_impl.queue;version=latest,\
 	org.inaetics.demonstrator.java_impl.utilization;version=latest,\
-	org.inaetics.demonstrator.java_impl.view;version=latest,\
-	org.amdatu.configurator.api;version='[1.0.0,1.0.1)',\
-	org.amdatu.configurator.properties;version='[1.0.0,1.0.1)',\
-	org.amdatu.configurator.shell;version='[1.0.0,1.0.1)'
+	org.inaetics.demonstrator.java_impl.view;version=latest
