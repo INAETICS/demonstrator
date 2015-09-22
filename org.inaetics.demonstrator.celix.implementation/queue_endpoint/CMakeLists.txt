@@ -16,4 +16,4 @@ bundle(org.inaetics.demonstrator.api.queue.SampleQueue_endpoint SOURCES
     private/include/queue_endpoint_impl.h
 )
 
-target_link_libraries(org.inaetics.demonstrator.api.queue.SampleQueue_endpoint ${JANSSON_LIBRARIES} ${CELIX_LIBRARIES})
+target_link_libraries(org.inaetics.demonstrator.api.queue.SampleQueue_endpoint m ${JANSSON_LIBRARIES} ${CELIX_LIBRARIES})
