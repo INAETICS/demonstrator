@@ -12,6 +12,10 @@
 #include "hash_map.h"
 #include "inaetics_demonstrator_api/result.h"
 #include "inaetics_demonstrator_api/sample.h"
+#include <android/log.h>
+
+#define  LOG_TAG    "celix"
+#define  LOGI(...)  __android_log_print(ANDROID_LOG_INFO,LOG_TAG,__VA_ARGS__)
 
 #define SINGLE_SAMPLES_PER_SEC  10    /* 10 samples every 20 msec */
 #define BURST_SAMPLES_PER_SEC 	0
@@ -60,7 +64,7 @@ static void msg(int lvl, char *fmsg, ...) {
 		va_start(listPointer, fmsg);
 		vsprintf(msg, fmsg, listPointer);
 
-		printf("[%d] : %s\n", lvl, msg);
+		LOGI("[%d] : %s\n", lvl, msg);
 	}
 }
 

@@ -11,4 +11,4 @@ bundle(org.inaetics.demonstrator.api.queue.SampleQueue
 		    private/src/arraylist_sample_queue_impl
 )
 
-target_link_libraries(org.inaetics.demonstrator.api.queue.SampleQueue ${CELIX_LIBRARIES})
+target_link_libraries(org.inaetics.demonstrator.api.queue.SampleQueue log ${CELIX_LIBRARIES})

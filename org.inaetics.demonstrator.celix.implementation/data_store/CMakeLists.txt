@@ -11,4 +11,4 @@ bundle(org.inaetics.demonstrator.api.datastore.DataStore
 		    private/src/arraylist_data_store_impl
 )
 
-target_link_libraries(org.inaetics.demonstrator.api.datastore.DataStore ${CELIX_LIBRARIES})
+target_link_libraries(org.inaetics.demonstrator.api.datastore.DataStore log ${CELIX_LIBRARIES})

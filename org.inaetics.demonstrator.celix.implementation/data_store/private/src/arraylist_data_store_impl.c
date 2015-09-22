@@ -10,6 +10,10 @@
 #include "celix_errno.h"
 
 #include "arraylist_data_store_impl.h"
+#include <android/log.h>
+
+#define  LOG_TAG    "celix"
+#define  LOGI(...)  __android_log_print(ANDROID_LOG_INFO,LOG_TAG,__VA_ARGS__)
 
 #define MAX_STORE_SIZE       	100000
 
@@ -37,7 +41,7 @@ static void msg(int lvl, char *fmsg, ...) {
 		va_start(listPointer, fmsg);
 		vsprintf(msg, fmsg, listPointer);
 
-		printf("[%d] : %s\n", lvl, msg);
+		LOGI("[%d] : %s\n", lvl, msg);
 	}
 }
 
