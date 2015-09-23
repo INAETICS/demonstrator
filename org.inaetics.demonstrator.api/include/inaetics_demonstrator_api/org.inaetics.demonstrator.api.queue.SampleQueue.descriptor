@@ -10,4 +10,4 @@ sample={jDD sampleTime value1 value2}
 put(Lorg/inaetics/demonstrator/api/data/Sample;)Z=put(#am=handle;PLsample;#am=pre;*b)N
 putAll(Ljava/util/Collection;)I=put(#am=handle;P[lsample;#am=pre;*i)N
 take()Lorg/inaetics/demonstrator/api/data/Sample;=take(#am=handle;P#am=pre;Lsample;#am=pre;*b)N
-takeMinMax(II)Ljava/util/Collection;=takeAll(#am=handle;Pii#am=out;[lsample;)N
+takeMinMax(II)Ljava/util/Collection;=takeAll(#am=handle;Pii#am=out;**[lsample;)N
