@@ -15,7 +15,7 @@ deploy("inaetics-demonstrator-all" BUNDLES
 		org.inaetics.demonstrator.api.queue.SampleQueue
         PROPERTIES
             DISCOVERY_CFG_POLL_INTERVAL=1
-            LOGHELPER_ENABLE_STDOUT_FALLBACK=true
+            #LOGHELPER_ENABLE_STDOUT_FALLBACK=true
             RSA_PORT=50801
             DISCOVERY_ETCD_ROOT_PATH=inaetics/discovery
 
@@ -30,7 +30,7 @@ deploy("inaetics-demonstrator-all" BUNDLES
         org.inaetics.demonstrator.api.stats.StatisticTracker
         PROPERTIES
           DISCOVERY_CFG_POLL_INTERVAL=1
-          LOGHELPER_ENABLE_STDOUT_FALLBACK=true
+          #LOGHELPER_ENABLE_STDOUT_FALLBACK=true
           RSA_PORT=50802
           DISCOVERY_ETCD_ROOT_PATH=inaetics/discovery
 
@@ -45,7 +45,7 @@ deploy("inaetics-demonstrator-all" BUNDLES
         org.inaetics.demonstrator.api.producer.Producer
         PROPERTIES
             DISCOVERY_CFG_POLL_INTERVAL=1
-            LOGHELPER_ENABLE_STDOUT_FALLBACK=true
+            #LOGHELPER_ENABLE_STDOUT_FALLBACK=true
             RSA_PORT=50803
             DISCOVERY_ETCD_ROOT_PATH=inaetics/discovery
       )
@@ -59,7 +59,7 @@ deploy("inaetics-demonstrator-all" BUNDLES
         org.inaetics.demonstrator.api.processor.Processor
         PROPERTIES
             DISCOVERY_CFG_POLL_INTERVAL=1
-            LOGHELPER_ENABLE_STDOUT_FALLBACK=true
+            #LOGHELPER_ENABLE_STDOUT_FALLBACK=true
             RSA_PORT=50804
             DISCOVERY_ETCD_ROOT_PATH=inaetics/discovery
       )
@@ -73,7 +73,7 @@ deploy("inaetics-demonstrator-all" BUNDLES
         org.inaetics.demonstrator.api.datastore.DataStore
         PROPERTIES
             DISCOVERY_CFG_POLL_INTERVAL=1
-            LOGHELPER_ENABLE_STDOUT_FALLBACK=true
+            #LOGHELPER_ENABLE_STDOUT_FALLBACK=true
             RSA_PORT=50805
             DISCOVERY_ETCD_ROOT_PATH=inaetics/discovery
       )

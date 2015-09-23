@@ -64,18 +64,18 @@ static void msg(int lvl, char *fmsg, ...) {
 	}
 }
 
-static void processor_sendResult(processor_pt processor, struct result result) {
+static void processor_sendResult(processor_pt processor, struct result *result) {
 
 	int i = 0;
 
 	pthread_rwlock_rdlock(&processor->dataStoreLock);
 
 	for (; i < arrayList_size(processor->dataStoreServices); i++) {
-		bool resultStored = false;
 		struct data_store_service* dsService = arrayList_get(processor->dataStoreServices, i);
 
-		if ((dsService->store(dsService->dataStore, result, &resultStored) != 0) || resultStored == false) {
-			msg(2, "PROCESSOR: Could not store single sample.");
+		int rc = dsService->store(dsService->dataStore, result);
+		if (rc != 0) {
+			msg(2, "PROCESSOR: Error storing sample in sample store got error nr %i", rc);
 		}
 	}
 
@@ -86,10 +86,10 @@ static void processor_processSample(struct sample* sample, struct result* result
 
 	int i;
 
-	result->time = sample->time;
+	result->processingTime = (long)time(NULL);
 	for (i =0; i < 10000; i++)
 	{
-		result->value1 = sample->value1 + sample->value2;
+		result->result1 = sample->value1 + sample->value2;
 	}
 	memcpy(&(result->sample), sample, sizeof(struct sample));
 
@@ -121,34 +121,32 @@ celix_status_t processor_receiveSamples(processor_thread_data_pt th_data, int sa
 	timespec_diff(&ts_diff,&ts_start,&ts_start);
 
 	for (ts_end = ts_start; (singleSampleCnt < SINGLE_SAMPLES_PER_SEC) && (ts_diff.tv_sec<=0);) {
-		struct sample *recvSample = calloc(1, sizeof(struct sample));
-		bool taken = false;
+		struct sample *recvSample = NULL;
 
-		if (recvSample) {
-			if (queueService != NULL) {
-				status = queueService->take(queueService->sampleQueue, recvSample, &taken);
-				if (status == CELIX_SUCCESS) {
-					if (taken) {
-						struct result *result_pt = calloc(1, sizeof(*result_pt));
+		if (queueService != NULL) {
+			status = queueService->take(queueService->sampleQueue, &recvSample);
+			if (status == CELIX_SUCCESS) {
+				if (recvSample != NULL) {
+					struct result *result = calloc(1, sizeof(*result));
 
-						msg(3, "\tPROCESSOR: Received and Processing Sample {Time:%llu | V1=%f | V2=%f}",
-							recvSample->time, recvSample->value1, recvSample->value2);
-						processor_processSample(recvSample, result_pt);
-						processor_sendResult(th_data->processor, *result_pt);
+					msg(3, "\tPROCESSOR: Received and Processing Sample {Time:%llu | V1=%f | V2=%f}",
+						recvSample->time, recvSample->value1, recvSample->value2);
+					processor_processSample(recvSample, result);
+					processor_sendResult(th_data->processor, result);
 
-						singleSampleCnt++;
-					}
-					else {
-						msg(2, "PROCESSOR: Could not take a single sample.");
-					}
+					singleSampleCnt++;
+				}
+				else {
+					//msg(2, "PROCESSOR: Could not take a single sample.");
 				}
 			}
-			else {
-				status = CELIX_BUNDLE_EXCEPTION;
-			}
-
-			free(recvSample);
 		}
+		else {
+			status = CELIX_BUNDLE_EXCEPTION;
+		}
+
+		free(recvSample);
+
 		clock_gettime(CLOCK_REALTIME, &ts_end);
 		timespec_diff(&ts_diff,&ts_start,&ts_end);
 	}
@@ -187,16 +185,16 @@ celix_status_t processor_receiveBursts(processor_thread_data_pt th_data, int sam
 		if (queueService != NULL) {
 			if (queueService->takeAll(queueService->sampleQueue, MIN_BURST_LEN, MAX_BURST_LEN, &samples) == 0) {
 				uint32_t numOfRecvSamples = samples == NULL ? 0 : samples->len;
-				msg(3, "PROCESSOR:  %u samples received", numOfRecvSamples);
+				msg(2, "PROCESSOR:  %u samples received", numOfRecvSamples);
 
 				for (j = 0; j < numOfRecvSamples; j++) {
 					msg(3, "\tPROCESSOR: Processing Sample (%d/%d)  {Time:%llu | V1=%f | V2=%f}", j, numOfRecvSamples, samples->buf[j].time, samples->buf[j].value1, samples->buf[j].value2);
-					struct result* result_pt = calloc(1, sizeof(*result_pt));
+					struct result* result = calloc(1, sizeof(*result));
 
-					if (result_pt) {
-						processor_processSample(&samples->buf[j], result_pt);
-						processor_sendResult(th_data->processor, *result_pt);
-						free(result_pt);
+					if (result) {
+						processor_processSample(&samples->buf[j], result);
+						processor_sendResult(th_data->processor, result);
+						free(result);
 					}
 
 				}

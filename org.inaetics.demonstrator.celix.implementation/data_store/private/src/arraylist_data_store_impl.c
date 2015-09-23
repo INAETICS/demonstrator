@@ -110,8 +110,7 @@ static bool dataStoreService_isStoreFull(array_list_pt store)
 	return !((MAX_STORE_SIZE == 0) || (arrayList_size(store) < MAX_STORE_SIZE));
 }
 
-int dataStore_store(data_store_type *dataStore, struct result result, bool *resultStored) {
-
+int dataStore_store(data_store_type *dataStore, struct result *result) {
 	celix_status_t status = CELIX_SUCCESS;
 
 	pthread_mutex_lock(&dataStore->lock);
@@ -119,27 +118,16 @@ int dataStore_store(data_store_type *dataStore, struct result result, bool *resu
 
 		if (!dataStoreService_isStoreFull(dataStore->store))
 		{
-			struct result* s = calloc(1, sizeof(struct result));
-
-			if (s != NULL) {
-
-				memcpy(s, &result, sizeof(struct result));
-				bool ret = arrayList_add(dataStore->store, s);
-				if (ret) {
-					msg(3, "DATA_STORE: stored result {%llu | %f | [ %llu # %f # %f ] }to queue", s->time, s->value1, s->sample.time, s->sample.value1, s->sample.value2);
-					dataStore->currentStoreSize += 1;
-					pthread_cond_signal(&dataStore->listEmpty);
-				}
-				else {
-					free(s);
-				}
-
-				*resultStored = ret;
-
+			bool ret = arrayList_add(dataStore->store, result);
+			if (ret) {
+				struct result *s = result;
+				msg(3, "DATA_STORE: stored result {%llu | %f | [ %llu # %f # %f ] }to queue", s->processingTime, s->result1, s->sample.time, s->sample.value1, s->sample.value2);
+				dataStore->currentStoreSize += 1;
+				pthread_cond_signal(&dataStore->listEmpty);
 			}
-			else {
-				status = CELIX_ENOMEM;
-			}
+		}
+		else {
+			status = CELIX_ENOMEM;
 		}
 
 	}
@@ -152,7 +140,7 @@ int dataStore_store(data_store_type *dataStore, struct result result, bool *resu
 	return (int) status;
 }
 
-int dataStore_storeAll(data_store_type *dataStore, struct result *results, uint32_t size, uint32_t *storedResult) {
+int dataStore_storeAll(data_store_type *dataStore, struct result_seq results) {
 
 	celix_status_t status = CELIX_SUCCESS;
 	uint32_t i = 0;
@@ -162,18 +150,18 @@ int dataStore_storeAll(data_store_type *dataStore, struct result *results, uint3
 
 	if (dataStore->store != NULL) {
 
-		msg(3, "DATA_STORE: Adding a burst of %u results", size);
+		msg(3, "DATA_STORE: Adding a burst of %u results", results.len);
 
-		for (; (i < size) && (!dataStoreService_isStoreFull(dataStore->store)); i++) {
+		for (; (i < results.len) && (!dataStoreService_isStoreFull(dataStore->store)); i++) {
 
 			struct result* s = calloc(1, sizeof(struct result));
 
 			if (s != NULL) {
 
-				memcpy(s, &results[i], sizeof(struct result));
+				memcpy(s, &results.buf[i], sizeof(struct result));
 
 				if (arrayList_add(dataStore->store, s)) {
-					msg(3, "\tDATA_STORE: stored result {%llu | %f | [ %llu # %f # %f ] }to queue", s->time, s->value1, s->sample.time, s->sample.value1, s->sample.value2);
+					msg(3, "\tDATA_STORE: stored result {%llu | %f | [ %llu # %f # %f ] }to queue", s->processingTime, s->result1, s->sample.time, s->sample.value1, s->sample.value2);
 					results_added++;
 					dataStore->currentStoreSize += 1;
 					pthread_cond_signal(&dataStore->listEmpty);
@@ -188,10 +176,8 @@ int dataStore_storeAll(data_store_type *dataStore, struct result *results, uint3
 
 		msg(3, "DATA_STORE: End burst");
 
-		*storedResult = results_added;
-
-		if (*storedResult != size) {
-			msg(2, "DATA_STORE: Could not add all the requested results (requested:%u, added%u)", size, *storedResult);
+		if (results_added != results.len) {
+			msg(2, "DATA_STORE: Could not add all the requested results (requested:%u, added%u)", results.len, results_added);
 			if (status == CELIX_SUCCESS) //Don't mask the ENOMEM
 				status = CELIX_BUNDLE_EXCEPTION;
 		}

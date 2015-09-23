@@ -35,7 +35,7 @@ struct sample_queue_service {
 
 	int (*putAll)(void *sampleQueue, struct sample_sequence seq, uint32_t *samplesTaken);
 
-	int (*take)(void *sampleQueue, struct sample *sample, bool *sampleTaken);
+	int (*take)(void *sampleQueue, struct sample **sample);
 
 	int (*takeAll)(void *sampleQueue, uint32_t min, uint32_t max, struct sample_sequence **out);
 

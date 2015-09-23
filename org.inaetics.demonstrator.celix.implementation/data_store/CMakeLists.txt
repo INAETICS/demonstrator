@@ -9,6 +9,8 @@ include_directories("private/include")
 bundle(org.inaetics.demonstrator.api.datastore.DataStore
 	SOURCES private/src/activator 
 		    private/src/arraylist_data_store_impl
+	FILES
+		${PROJECT_SOURCE_DIR}/org.inaetics.demonstrator.api/include/inaetics_demonstrator_api/org.inaetics.demonstrator.api.datastore.DataStore.descriptor
 )
 
 target_link_libraries(org.inaetics.demonstrator.api.datastore.DataStore pthread ${CELIX_LIBRARIES})

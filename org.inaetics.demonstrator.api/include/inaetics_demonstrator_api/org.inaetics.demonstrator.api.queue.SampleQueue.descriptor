@@ -7,7 +7,7 @@ classname=org.inaetics.demonstrator.api.queue.SampleQueue
 :types
 sample={jDD sampleTime value1 value2}
 :methods
-put(Lorg/inaetics/demonstrator/api/data/Sample;)Z=put(#am=handle;PLsample;#am=pre;*b)N
+put(Lorg/inaetics/demonstrator/api/data/Sample;)Z=put(#am=handle;PLsample;#am=pre;*Z)N
 putAll(Ljava/util/Collection;)I=put(#am=handle;P[lsample;#am=pre;*i)N
-take()Lorg/inaetics/demonstrator/api/data/Sample;=take(#am=handle;P#am=pre;Lsample;#am=pre;*b)N
+take()Lorg/inaetics/demonstrator/api/data/Sample;=take(#am=handle;P#am=out;*Lsample;)N
 takeMinMax(II)Ljava/util/Collection;=takeAll(#am=handle;Pii#am=out;**[lsample;)N
