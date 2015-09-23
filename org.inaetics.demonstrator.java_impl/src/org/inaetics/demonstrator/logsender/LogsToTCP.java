@@ -15,6 +15,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.Dictionary;
 
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedService;
 import org.osgi.service.log.LogEntry;
@@ -33,12 +35,14 @@ public class LogsToTCP implements LogListener, ManagedService {
 	
 	// injected by Felix DM
 	private volatile LogReaderService m_logReader;
+	private volatile BundleContext m_context;
 	
 	private String m_logstashHost;
 	private int m_logstashPort = -1;
 
 	private DateTimeFormatter m_formatter;
 	private String m_hostname;
+	private String m_frameworkUUID;
 
 	private Socket m_socket;
 	private Writer m_writer;
@@ -56,6 +60,7 @@ public class LogsToTCP implements LogListener, ManagedService {
 	// called by Felix DM
 	protected final void start() throws Exception {
 		m_logReader.addLogListener(this);
+		m_frameworkUUID = m_context.getProperty(Constants.FRAMEWORK_UUID);
 	}
 	
 	// called by Felix DM
@@ -106,7 +111,7 @@ public class LogsToTCP implements LogListener, ManagedService {
 			
 			// prepare a exception string if the log contains an exception
 			String exception = entry.getException() == null ? "" : " " + entry.getException().getMessage();
-			
+
 			// format time of log
 			Instant dateTimeInstant = new Date(entry.getTime()).toInstant();
 			LocalDateTime dateTime = LocalDateTime.ofInstant(dateTimeInstant, ZoneId.of("GMT"));
@@ -114,6 +119,7 @@ public class LogsToTCP implements LogListener, ManagedService {
 			// concatenate log string
 			String log = m_formatter.format(dateTime)
 					+ " " + m_hostname
+					+ " " + m_frameworkUUID
 					+ " " + entry.getBundle().getSymbolicName()
 					+ " " + getLogLevel(entry.getLevel())
 					+ " " + entry.getMessage()
@@ -131,11 +137,11 @@ public class LogsToTCP implements LogListener, ManagedService {
 	
 	private Writer getWriter() {
 		try {
-			if ((m_socket == null || m_socket.isClosed() || m_writer == null)
-					&& m_logstashHost != null && m_logstashPort > 0) {
+//			if ((m_socket == null || m_socket.isClosed() || m_writer == null)
+//					&& m_logstashHost != null && m_logstashPort > 0) {
 				m_socket = new Socket(m_logstashHost, m_logstashPort);
 				m_writer = new PrintWriter(m_socket.getOutputStream(), true);
-			}
+//			}
 		}
 		catch (Exception e) {
 			// silently fail, ELK service might just not be running
