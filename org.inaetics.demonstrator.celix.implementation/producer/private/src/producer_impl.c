@@ -243,10 +243,13 @@ celix_status_t producer_create(char* name, producer_pt* producer)
 		lclProducer->utilizationStatsName = calloc(1, strlen(name) + strlen(THROUGHPUT_NAME_POSTFIX) + 1);
 
 		if (lclProducer->name != NULL && lclProducer->utilizationStatsName != NULL) {
+			pthread_rwlockattr_t queueLockAttr;
 
 			sprintf(lclProducer->utilizationStatsName, "%s%s", lclProducer->name, (char*) THROUGHPUT_NAME_POSTFIX);
 
-			pthread_rwlock_init(&lclProducer->queueLock, NULL);
+			pthread_rwlockattr_init(&queueLockAttr);
+			pthread_rwlockattr_setkind_np(&queueLockAttr, PTHREAD_RWLOCK_PREFER_WRITER_NONRECURSIVE_NP);
+			pthread_rwlock_init(&lclProducer->queueLock, &queueLockAttr);
 
 			lclProducer->queueServices = hashMap_create(utils_stringHash, NULL, utils_stringEquals, NULL);
 

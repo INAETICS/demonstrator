@@ -265,14 +265,21 @@ celix_status_t processor_create(char* name, processor_pt* processor)
 		lclProcessor->utilizationStatsName = calloc(1, strlen(name) + strlen(THROUGHPUT_NAME_POSTFIX) + 1);
 
 		if (lclProcessor->name != NULL && lclProcessor->utilizationStatsName != NULL) {
+			pthread_rwlockattr_t queueLockAttr;
+			pthread_rwlockattr_t dataStoreLockAttr;
 
 			sprintf(lclProcessor->utilizationStatsName, "%s%s", lclProcessor->name, (char*) THROUGHPUT_NAME_POSTFIX);
 
 			lclProcessor->queueServices = hashMap_create(utils_stringHash, NULL, utils_stringEquals, NULL);
 			arrayList_create(&lclProcessor->dataStoreServices);
 
-			pthread_rwlock_init(&lclProcessor->queueLock, NULL);
-			pthread_rwlock_init(&lclProcessor->dataStoreLock, NULL);
+			pthread_rwlockattr_init(&queueLockAttr);
+			pthread_rwlockattr_setkind_np(&queueLockAttr, PTHREAD_RWLOCK_PREFER_WRITER_NONRECURSIVE_NP);
+			pthread_rwlock_init(&lclProcessor->queueLock, &queueLockAttr);
+
+			pthread_rwlockattr_init(&dataStoreLockAttr);
+			pthread_rwlockattr_setkind_np(&dataStoreLockAttr, PTHREAD_RWLOCK_PREFER_WRITER_NONRECURSIVE_NP);
+			pthread_rwlock_init(&lclProcessor->dataStoreLock, &dataStoreLockAttr);
 
 			lclProcessor->running = false;
 
