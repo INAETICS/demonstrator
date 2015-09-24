@@ -56,11 +56,9 @@ celix_status_t sampleQueue_create(char *name, sample_queue_type **result) {
 	sampleQueue = calloc(1, sizeof(struct sample_queue));
 	if (sampleQueue != NULL) {
 		sampleQueue->name = strdup(name);
-		sampleQueue->utilizationStatsName = calloc(1, strlen(name) + strlen(UTILIZATION_NAME_POSTFIX) + 1);
-	}
 
-	if (sampleQueue != NULL && sampleQueue->name != NULL && sampleQueue->utilizationStatsName != NULL) {
-		sprintf(sampleQueue->utilizationStatsName, "%s%s", sampleQueue->name, (char*)UTILIZATION_NAME_POSTFIX);
+		/* this needs to be set exaclty to Queue, otherwise the dashboard cannot pick this up */
+		sampleQueue->utilizationStatsName = strdup("Queue");
 
 		pthread_mutex_init(&(sampleQueue->lock), NULL);
 		pthread_cond_init(&sampleQueue->listEmpty, NULL);
