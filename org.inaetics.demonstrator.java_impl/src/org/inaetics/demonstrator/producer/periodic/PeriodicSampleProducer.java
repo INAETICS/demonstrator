@@ -20,7 +20,7 @@ import org.inaetics.demonstrator.producer.AbstractSampleProducer;
  */
 public class PeriodicSampleProducer extends AbstractSampleProducer {
     private final AtomicLong m_produced;
-    private final ScheduledExecutorService m_executor;
+    private ScheduledExecutorService m_executor;
 
     // Injected by Felix DM...
     private volatile SampleQueue m_queue;
@@ -28,7 +28,6 @@ public class PeriodicSampleProducer extends AbstractSampleProducer {
     public PeriodicSampleProducer() {
         super("Periodic Sample Producer", 10000 /* msec */, 1000 /* msec */);
         m_produced = new AtomicLong(0L);
-        m_executor = Executors.newSingleThreadScheduledExecutor();
     }
 
     @Override
@@ -63,7 +62,14 @@ public class PeriodicSampleProducer extends AbstractSampleProducer {
     }
     
     @Override
-    protected void cleanup() {
+    protected void start() throws Exception {
+        m_executor = Executors.newSingleThreadScheduledExecutor();
+    	super.start();
+    }
+
+    @Override
+    protected void stop() throws Exception {
+    	super.stop();
     	if (m_executor != null && !m_executor.isShutdown()) {
     		m_executor.shutdownNow();
     	}

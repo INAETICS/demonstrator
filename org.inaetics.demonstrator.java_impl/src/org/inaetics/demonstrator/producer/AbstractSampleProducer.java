@@ -116,9 +116,32 @@ public abstract class AbstractSampleProducer implements Producer, StatsProvider 
     /**
      * Called by Felix DM when starting this component.
      */
-    protected final void start() throws Exception {
-        m_prodExecutor = Executors.newSingleThreadScheduledExecutor();
+    protected void start() throws Exception {
+        
+    	m_avgExecutor = Executors.newSingleThreadExecutor();
+        m_avgFuture = m_avgExecutor.submit(() -> {
+            long oldTime = System.currentTimeMillis();
 
+            while (!Thread.currentThread().isInterrupted()) {
+                try {
+                    long produced = getProductionCount();
+                    long time = System.currentTimeMillis();
+                    m_producedAvg = (1000.0 * produced) / (time - oldTime);
+                    oldTime = time;
+
+                    Thread.sleep(900);
+                } catch (InterruptedException e) {
+                    // Break out of our loop...
+                    Thread.currentThread().interrupt();
+                } catch (Exception e) {
+                    // Ignore, not much we can do about this...
+                    info("Failed to produce sample(s)! Cause: %s",
+                        (e.getMessage() == null ? "NullPointerException" : e.getMessage()));
+                }
+            }
+        });
+        
+        m_prodExecutor = Executors.newSingleThreadScheduledExecutor();
         m_prodFuture = m_prodExecutor.submit(() -> {
             while (!Thread.currentThread().isInterrupted()) {
                 try {
@@ -142,57 +165,31 @@ public abstract class AbstractSampleProducer implements Producer, StatsProvider 
                 }
             }
         });
-
-        m_avgExecutor = Executors.newSingleThreadExecutor();
-
-        m_avgFuture = m_avgExecutor.submit(() -> {
-            long oldTime = System.currentTimeMillis();
-
-            while (!Thread.currentThread().isInterrupted()) {
-                try {
-                    long produced = getProductionCount();
-                    long time = System.currentTimeMillis();
-                    m_producedAvg = (1000.0 * produced) / (time - oldTime);
-                    oldTime = time;
-
-                    Thread.sleep(900);
-                } catch (InterruptedException e) {
-                    // Break out of our loop...
-                    Thread.currentThread().interrupt();
-                } catch (Exception e) {
-                    // Ignore, not much we can do about this...
-                    info("Failed to produce sample(s)! Cause: %s",
-                        (e.getMessage() == null ? "NullPointerException" : e.getMessage()));
-                }
-            }
-        });
-
         info("Producer %s started...", getName());
     }
 
     /**
      * Called by Felix DM when stopping this component.
      */
-    protected final void stop() throws Exception {
-        
-    	cleanup();
-    	
+    protected void stop() throws Exception {
     	if (m_prodFuture != null) {
         	m_prodFuture.cancel(true);
         	m_prodFuture = null;
         }
         m_prodExecutor.shutdown();
-        m_prodExecutor.awaitTermination(10, TimeUnit.SECONDS);
-
+        
         if (m_avgFuture != null) {
         	m_avgFuture.cancel(true);
         	m_avgFuture = null;
         }
         m_avgExecutor.shutdown();
-        m_avgExecutor.awaitTermination(10, TimeUnit.SECONDS);
+        
+        m_producedAvg = 0;
 
+        m_prodExecutor.awaitTermination(10, TimeUnit.SECONDS);
+        m_avgExecutor.awaitTermination(10, TimeUnit.SECONDS);
+       
         info("Producer %s stopped...", getName());
     }
-    
-    abstract protected void cleanup();
+
 }

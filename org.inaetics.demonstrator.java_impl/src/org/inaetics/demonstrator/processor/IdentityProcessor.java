@@ -23,7 +23,7 @@ import org.inaetics.demonstrator.api.queue.SampleQueue;
  */
 public class IdentityProcessor extends AbstractSampleProcessor {
     private final AtomicLong m_processed;
-    private final ExecutorService m_executor;
+    private ExecutorService m_executor;
     
     // Injected by Felix DM...
     private volatile SampleQueue m_queue;
@@ -32,7 +32,6 @@ public class IdentityProcessor extends AbstractSampleProcessor {
     public IdentityProcessor() {
         super("Identity processor", 3 /* msec */);
         m_processed = new AtomicLong(0L);
-        m_executor = Executors.newSingleThreadScheduledExecutor();
     }
 
     @Override
@@ -67,7 +66,14 @@ public class IdentityProcessor extends AbstractSampleProcessor {
     }
     
     @Override
-    protected void cleanup() {
+    protected void start() throws Exception {
+        m_executor = Executors.newSingleThreadScheduledExecutor();
+    	super.start();
+    }
+
+    @Override
+    protected void stop() throws Exception {
+    	super.stop();
     	if (m_executor != null && !m_executor.isShutdown()) {
     		m_executor.shutdownNow();
     	}

@@ -82,30 +82,12 @@ public abstract class AbstractSampleProcessor implements Processor, StatsProvide
     /**
      * Called by Felix DM when starting this component.
      */
-    protected final void start() throws Exception {
-    	// start producing
-    	m_processExecutor = Executors.newSingleThreadExecutor();
-        m_processFuture = m_processExecutor.submit(() -> {
-            while (!Thread.currentThread().isInterrupted() && !m_processExecutor.isShutdown()) {
-                try {
-                    processSampleData();
-                    TimeUnit.MILLISECONDS.sleep(getTaskInterval());
-                } catch (InterruptedException e) {
-                    // Break out of our loop...
-                    Thread.currentThread().interrupt();
-                } catch (Exception e) {
-                    // Ignore, not much we can do about this...
-                    info("Failed to process sample(s)! Cause: %s",
-                        (e.getMessage() == null ? "NullPointerException" : e.getMessage()));
-                }
-            }
-        });
-        
+    protected void start() throws Exception {
         // start calculating avg
         m_avgExecutor = Executors.newSingleThreadExecutor();
         m_avgFuture = m_avgExecutor.submit(() -> {
             long oldTimeMillis = System.currentTimeMillis();
-            while (!Thread.currentThread().isInterrupted() && !m_processExecutor.isShutdown()) {
+            while (!Thread.currentThread().isInterrupted()) {
                 try {
                     long processedCount = getProcessedCount();
                     long currentTimeMillis = System.currentTimeMillis();
@@ -123,34 +105,48 @@ public abstract class AbstractSampleProcessor implements Processor, StatsProvide
                 }
             }
         });
-
+        
+    	// start producing
+    	m_processExecutor = Executors.newSingleThreadExecutor();
+        m_processFuture = m_processExecutor.submit(() -> {
+            while (!Thread.currentThread().isInterrupted() && !m_processExecutor.isShutdown()) {
+                try {
+                    processSampleData();
+                    TimeUnit.MILLISECONDS.sleep(getTaskInterval());
+                } catch (InterruptedException e) {
+                    // Break out of our loop...
+                    Thread.currentThread().interrupt();
+                } catch (Exception e) {
+                    // Ignore, not much we can do about this...
+                    info("Failed to process sample(s)! Cause: %s",
+                        (e.getMessage() == null ? "NullPointerException" : e.getMessage()));
+                }
+            }
+        });
         info("Processor %s started...", getName());
     }
 
     /**
      * Called by Felix DM when stopping this component.
      */
-    protected final void stop() throws Exception {
-    	
-    	cleanup();
-    	
+    protected void stop() throws Exception {
         if (m_processFuture != null) {
             m_processFuture.cancel(true);
             m_processFuture = null;
         }
         m_processExecutor.shutdown();
-
+        
         if (m_avgFuture != null) {
         	m_avgFuture.cancel(true);
         	m_avgFuture = null;
         }
         m_avgExecutor.shutdown();
 
+        m_processedAvg = 0;
+        
         m_processExecutor.awaitTermination(10, TimeUnit.SECONDS);
         m_avgExecutor.awaitTermination(10, TimeUnit.SECONDS);
         
         info("Processor %s stopped...", getName());
     }
-    
-    abstract protected void cleanup();
 }

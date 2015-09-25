@@ -22,7 +22,7 @@ public class BurstSampleProducer extends AbstractSampleProducer {
     private static final int BURST_LENGTH = 10; // samples
 
     private final AtomicLong m_produced;
-    private final ExecutorService m_executor;
+    private ExecutorService m_executor;
 
 
     // Injected by Felix DM...
@@ -31,12 +31,11 @@ public class BurstSampleProducer extends AbstractSampleProducer {
     public BurstSampleProducer() {
         super("Burst Sample Producer", 500000 /* msec */, 1000 /* msec */);
         m_produced = new AtomicLong(0L);
-        m_executor = Executors.newSingleThreadScheduledExecutor();
     }
 
     @Override
     protected long getProductionCount() {
-        return m_produced.get();
+        return m_produced.getAndSet(0);
     }
 
     @Override
@@ -71,9 +70,17 @@ public class BurstSampleProducer extends AbstractSampleProducer {
     }
 
     @Override
-    protected void cleanup() {
+    protected void start() throws Exception {
+        m_executor = Executors.newSingleThreadScheduledExecutor();
+    	super.start();
+    }
+
+    @Override
+    protected void stop() throws Exception {
+    	super.stop();
     	if (m_executor != null && !m_executor.isShutdown()) {
     		m_executor.shutdownNow();
     	}
     }
+
 }
