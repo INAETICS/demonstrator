@@ -62,6 +62,7 @@ public class CoordinatorServlet extends HttpServlet {
     private final ConcurrentMap<ServiceReference<StatsProvider>, StatsContainer> m_providerStats;
     private final List<Producer> m_producers;
     private final AtomicInteger m_processorCount;
+    private final AtomicInteger m_producerCount;
     private final AtomicInteger m_productionRate;
 	private ScheduledExecutorService m_executor;
 
@@ -69,6 +70,7 @@ public class CoordinatorServlet extends HttpServlet {
         m_providerStats = new ConcurrentHashMap<>();
         m_producers = new CopyOnWriteArrayList<>();
         m_processorCount = new AtomicInteger(0);
+        m_producerCount = new AtomicInteger(0);
         m_productionRate = new AtomicInteger(5);
     }
     
@@ -86,11 +88,13 @@ public class CoordinatorServlet extends HttpServlet {
     public final void addProducer(Producer p) {
         m_producers.add(p);
         setSampleRate(p, m_productionRate.get());
+        log("added producer");
     }
 
     /* Called by Felix DM. */
     public final void removeProducer(Producer p) {
         m_producers.remove(p);
+        log("removed producer");
     }
 
     /* Called by Felix DM. */
@@ -98,10 +102,15 @@ public class CoordinatorServlet extends HttpServlet {
         if ("true".equals(serviceRef.getProperty("aggregator"))) {
             m_aggregator = provider;
         }
-        if ("processor".equalsIgnoreCase("" + serviceRef.getProperty("type"))) {
+        String type = "" + serviceRef.getProperty("type"); 
+        if ("processor".equalsIgnoreCase(type)) {
             m_processorCount.incrementAndGet();
         }
+        else if ("producer".equalsIgnoreCase(type)) {
+            m_producerCount.incrementAndGet();
+        }
         m_providerStats.putIfAbsent(serviceRef, new StatsContainer(provider, new TimestampMap<Double>()));
+        log("added statsprovider of type " + type);
     }
 
     /* Called by Felix DM. */
@@ -109,10 +118,15 @@ public class CoordinatorServlet extends HttpServlet {
         if ("true".equals(serviceRef.getProperty("aggregator"))) {
             m_aggregator = null;
         }
-        if ("processor".equalsIgnoreCase("" + serviceRef.getProperty("type"))) {
+        String type = "" + serviceRef.getProperty("type"); 
+        if ("processor".equalsIgnoreCase(type)) {
             m_processorCount.decrementAndGet();
         }
+        else if ("producer".equalsIgnoreCase(type)) {
+            m_producerCount.decrementAndGet();
+        }
         m_providerStats.remove(serviceRef);
+        log("added statsprovider of type " + type);
     }
 
     @Override
@@ -202,7 +216,7 @@ public class CoordinatorServlet extends HttpServlet {
                 generator.writeStartObject();
                 generator.writeNumberField("productionRate", m_productionRate.get());
                 generator.writeStringField("processors", m_processorCount.get() + " / " + currentProcessorReplicaCount);
-                generator.writeStringField("producers", m_producers.size() + " / " + currentProducerReplicaCount);
+                generator.writeStringField("producers", m_producerCount.get() + " / " + currentProducerReplicaCount);
                 generator.writeEndObject();
             } else if ("/utilisation".equals(pathInfo)) {
                 resp.setStatus(HttpServletResponse.SC_OK);
