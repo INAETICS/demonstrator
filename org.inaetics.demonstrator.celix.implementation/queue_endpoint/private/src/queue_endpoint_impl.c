@@ -211,7 +211,7 @@ celix_status_t queueEndpoint_take(remote_endpoint_pt endpoint, char *data, char 
 		int result = service->take(service->sampleQueue, workSample);
 
 		if (result == 0) {
-			resultRoot = json_pack("{s:{s:i, s:f, s:f}}", "r", "sampleTime", workSample->time, "value1", workSample->value1, "value2", workSample->value2);
+			resultRoot = json_pack("{s:{s:I, s:f, s:f}}", "r", "sampleTime", workSample->time, "value1", workSample->value1, "value2", workSample->value2);
 		}
 		else
 		{
