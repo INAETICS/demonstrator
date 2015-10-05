@@ -159,7 +159,7 @@ int queueProxy_take(void* queue, struct sample *sample) {
 				else if (json_is_null(js_sample)) {
 					status = CELIX_BUNDLE_EXCEPTION;
 				}
-				else if (json_unpack(js_sample, "{s:i,s:f,s:f}", "sampleTime", &sample->time, "value1", &sample->value1, "value1", &sample->value2) != 0) {
+				else if (json_unpack(js_sample, "{s:I,s:f,s:f}", "sampleTime", &sample->time, "value1", &sample->value1, "value1", &sample->value2) != 0) {
 	                printf("QUEUE_PROXY: take: got error while json_unpack for '%s'\n", json_dumps(js_sample, JSON_DECODE_ANY));
 					status = CELIX_BUNDLE_EXCEPTION;
 				}
