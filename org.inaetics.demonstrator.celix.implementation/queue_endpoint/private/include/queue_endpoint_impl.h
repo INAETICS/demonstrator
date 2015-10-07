@@ -11,6 +11,7 @@
 #include "inaetics_demonstrator_api/sample_queue.h"
 
 celix_status_t queueEndpoint_create(remote_endpoint_pt *endpoint);
+celix_status_t queueEndpoint_destroy(remote_endpoint_pt *endpoint);
 celix_status_t queueEndpoint_setService(remote_endpoint_pt endpoint, void *service);
 celix_status_t queueEndpoint_handleRequest(remote_endpoint_pt endpoint, char *data, char **reply);
 

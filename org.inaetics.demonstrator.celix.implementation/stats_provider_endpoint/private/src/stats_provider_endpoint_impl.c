@@ -14,6 +14,20 @@ celix_status_t serviceStatisticsEndpoint_create(remote_endpoint_pt *endpoint) {
 		status = CELIX_ENOMEM;
 	} else {
 		(*endpoint)->service = NULL;
+		celixThreadMutex_create(&(*endpoint)->serviceLock, NULL);
+	}
+
+	return status;
+}
+
+
+celix_status_t serviceStatisticsEndpoint_destroy(remote_endpoint_pt *endpoint) {
+	celix_status_t status = CELIX_SUCCESS;
+
+	if (*endpoint) {
+		celixThreadMutex_destroy(&(*endpoint)->serviceLock);
+		free(*endpoint);
+		*endpoint = NULL;
 	}
 
 	return status;
@@ -21,7 +35,11 @@ celix_status_t serviceStatisticsEndpoint_create(remote_endpoint_pt *endpoint) {
 
 celix_status_t statsProviderEndpoint_setService(remote_endpoint_pt endpoint, void *service) {
 	celix_status_t status = CELIX_SUCCESS;
+
+	celixThreadMutex_lock(&endpoint->serviceLock);
 	endpoint->service = service;
+	celixThreadMutex_unlock(&endpoint->serviceLock);
+
 	return status;
 }
 
@@ -67,6 +85,8 @@ celix_status_t statsProviderEndpoint_getName(remote_endpoint_pt endpoint, char *
 
 	root = json_loads(data, 0, &jsonError);
 
+	celixThreadMutex_lock(&endpoint->serviceLock);
+
 	if (!root) {
 		status = CELIX_ILLEGAL_ARGUMENT;
 	} else if (endpoint->service != NULL) {
@@ -97,6 +117,8 @@ celix_status_t statsProviderEndpoint_getName(remote_endpoint_pt endpoint, char *
 		status = CELIX_BUNDLE_EXCEPTION;
 	}
 
+	celixThreadMutex_unlock(&endpoint->serviceLock);
+
 	json_decref(root);
 
 	return status;
@@ -109,6 +131,8 @@ celix_status_t statsProviderEndpoint_getType(remote_endpoint_pt endpoint, char *
 	json_t *root;
 
 	root = json_loads(data, 0, &jsonError);
+
+	celixThreadMutex_lock(&endpoint->serviceLock);
 
 	if (!root) {
 		status = CELIX_ILLEGAL_ARGUMENT;
@@ -139,6 +163,8 @@ celix_status_t statsProviderEndpoint_getType(remote_endpoint_pt endpoint, char *
 		status = CELIX_BUNDLE_EXCEPTION;
 	}
 
+	celixThreadMutex_unlock(&endpoint->serviceLock);
+
 	json_decref(root);
 
 	return status;
@@ -151,6 +177,8 @@ celix_status_t statsProviderEndpoint_getMeasurementUnit(remote_endpoint_pt endpo
 	json_t *root;
 
 	root = json_loads(data, 0, &jsonError);
+
+	celixThreadMutex_lock(&endpoint->serviceLock);
 
 	if (!root) {
 		status = CELIX_ILLEGAL_ARGUMENT;
@@ -181,6 +209,9 @@ celix_status_t statsProviderEndpoint_getMeasurementUnit(remote_endpoint_pt endpo
 		status = CELIX_BUNDLE_EXCEPTION;
 	}
 
+	celixThreadMutex_unlock(&endpoint->serviceLock);
+
+
 	json_decref(root);
 
 	return status;
@@ -193,6 +224,8 @@ celix_status_t statsProviderEndpoint_getValue(remote_endpoint_pt endpoint, char 
 	json_t *root;
 
 	root = json_loads(data, 0, &jsonError);
+
+	celixThreadMutex_lock(&endpoint->serviceLock);
 
 	if (!root) {
 		status = CELIX_ILLEGAL_ARGUMENT;
@@ -220,6 +253,8 @@ celix_status_t statsProviderEndpoint_getValue(remote_endpoint_pt endpoint, char 
 		printf("STATS_PROVIDER_ENDPOINT: No service available");
 		status = CELIX_BUNDLE_EXCEPTION;
 	}
+
+	celixThreadMutex_unlock(&endpoint->serviceLock);
 
 	json_decref(root);
 

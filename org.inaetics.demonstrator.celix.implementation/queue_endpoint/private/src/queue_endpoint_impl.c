@@ -28,12 +28,26 @@ celix_status_t queueEndpoint_create(remote_endpoint_pt *endpoint) {
 	return status;
 }
 
+
+celix_status_t queueEndpoint_destroy(remote_endpoint_pt *endpoint) {
+	celix_status_t status = CELIX_SUCCESS;
+
+	if (*endpoint) {
+		celixThreadMutex_destroy(&(*endpoint)->serviceLock);
+		free(*endpoint);
+		*endpoint = NULL;
+	}
+
+	return status;
+}
+
 celix_status_t queueEndpoint_setService(remote_endpoint_pt endpoint, void *service) {
 	celix_status_t status = CELIX_SUCCESS;
 
 	celixThreadMutex_lock(&endpoint->serviceLock);
 	endpoint->service = service;
 	celixThreadMutex_unlock(&endpoint->serviceLock);
+
 	return status;
 }
 
@@ -145,9 +159,9 @@ celix_status_t queueEndpoint_putAll(remote_endpoint_pt endpoint, char *data, cha
 		status = CELIX_ILLEGAL_ARGUMENT;
 	} else if (endpoint->service != NULL) {
 		int putAllRetVal;
-		int arrSize;
 		json_t* array;
 		json_t *resultRoot;
+		uint32_t arrSize;
 		uint32_t samples_stored = 0;
 		uint32_t arrayCnt;
 
@@ -247,10 +261,12 @@ celix_status_t queueEndpoint_takeAll(remote_endpoint_pt endpoint, char *data, ch
 		status = CELIX_ILLEGAL_ARGUMENT;
 	} else if (endpoint->service != NULL) {
 		struct sample_queue_service* service = endpoint->service;
+		uint32_t j = 0;
+		uint32_t arrayCnt = 0;
 		uint32_t min = 0;
 		uint32_t max = 0;
 		uint32_t numOfRecvSamples;
-		int j, result, arrayCnt;
+		int result;
 		json_t *resultRoot;
 		json_t *array = json_array();
 

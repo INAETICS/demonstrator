@@ -83,7 +83,7 @@ celix_status_t sampleQueue_create(char *name, sample_queue_type **result) {
 celix_status_t sampleQueue_destroy(sample_queue_type* sampleQueue) {
 
 	celix_status_t status = CELIX_SUCCESS;
-	int i = 0;
+	unsigned int i = 0;
 
 	sampleQueue->statisticsRunning = false;
 
@@ -255,7 +255,7 @@ int sampleQueue_takeAll(sample_queue_type *sampleQueue, uint32_t min, uint32_t m
 
 	celix_status_t status = CELIX_ILLEGAL_STATE;
 	struct timespec ts;
-	int i = 0;
+	unsigned int i = 0;
 	int rc = 0;
 
 	clock_gettime(CLOCK_REALTIME, &ts);

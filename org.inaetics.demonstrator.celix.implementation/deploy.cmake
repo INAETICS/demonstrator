@@ -16,7 +16,7 @@ deploy("inaetics-demonstrator-all" BUNDLES
   deploy("inaetics-demonstrator-queue" BUNDLES
 		${CELIX_BUNDLES_DIR}/shell.zip
 		${CELIX_BUNDLES_DIR}/shell_tui.zip
-		${CELIX_BUNDLES_DIR}/discovery_configured.zip
+		${CELIX_BUNDLES_DIR}/discovery_etcd.zip
 		${CELIX_BUNDLES_DIR}/topology_manager.zip
 		${CELIX_BUNDLES_DIR}/remote_service_admin_http.zip
 		org.inaetics.demonstrator.api.queue.SampleQueue
@@ -33,7 +33,7 @@ deploy("inaetics-demonstrator-all" BUNDLES
 		${CELIX_BUNDLES_DIR}/shell.zip
 		${CELIX_BUNDLES_DIR}/shell_tui.zip
 		${CELIX_BUNDLES_DIR}/topology_manager.zip
-		${CELIX_BUNDLES_DIR}/discovery_configured.zip
+		${CELIX_BUNDLES_DIR}/discovery_etcd.zip
 		${CELIX_BUNDLES_DIR}/remote_service_admin_http.zip
         org.inaetics.demonstrator.api.stats.StatisticTracker
         ENDPOINTS org.inaetics.demonstrator.api.stats.StatsProvider_proxy
@@ -43,7 +43,7 @@ deploy("inaetics-demonstrator-all" BUNDLES
 		${CELIX_BUNDLES_DIR}/shell.zip
 		${CELIX_BUNDLES_DIR}/shell_tui.zip
 		${CELIX_BUNDLES_DIR}/topology_manager.zip
-		${CELIX_BUNDLES_DIR}/discovery_configured.zip
+		${CELIX_BUNDLES_DIR}/discovery_etcd.zip
 		${CELIX_BUNDLES_DIR}/remote_service_admin_http.zip
         org.inaetics.demonstrator.api.producer.Producer
         ENDPOINTS
@@ -60,7 +60,7 @@ deploy("inaetics-demonstrator-all" BUNDLES
 		${CELIX_BUNDLES_DIR}/shell.zip
 		${CELIX_BUNDLES_DIR}/shell_tui.zip
 		${CELIX_BUNDLES_DIR}/topology_manager.zip
-        ${CELIX_BUNDLES_DIR}/discovery_configured.zip
+        ${CELIX_BUNDLES_DIR}/discovery_etcd.zip
         ${CELIX_BUNDLES_DIR}/remote_service_admin_http.zip
         org.inaetics.demonstrator.api.processor.Processor
         ENDPOINTS 
@@ -76,7 +76,7 @@ deploy("inaetics-demonstrator-all" BUNDLES
   deploy("inaetics-demonstrator-dataStore" BUNDLES
         ${CELIX_BUNDLES_DIR}/shell.zip
         ${CELIX_BUNDLES_DIR}/shell_tui.zip
-        ${CELIX_BUNDLES_DIR}/discovery_configured.zip
+        ${CELIX_BUNDLES_DIR}/discovery_etcd.zip
         ${CELIX_BUNDLES_DIR}/topology_manager.zip
         ${CELIX_BUNDLES_DIR}/remote_service_admin_http.zip
         org.inaetics.demonstrator.api.datastore.DataStore

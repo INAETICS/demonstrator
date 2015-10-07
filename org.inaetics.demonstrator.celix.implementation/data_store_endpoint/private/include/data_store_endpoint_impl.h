@@ -12,6 +12,7 @@
 #include "inaetics_demonstrator_api/sample.h"
 
 celix_status_t dataStoreEndpoint_create(remote_endpoint_pt *endpoint);
+celix_status_t dataStoreEndpoint_destroy(remote_endpoint_pt *endpoint);
 celix_status_t dataStoreEndpoint_setService(remote_endpoint_pt endpoint, void *service);
 celix_status_t dataStoreEndpoint_handleRequest(remote_endpoint_pt endpoint, char *data, char **reply);
 

@@ -17,6 +17,20 @@ celix_status_t dataStoreEndpoint_create(remote_endpoint_pt *endpoint) {
 		status = CELIX_ENOMEM;
 	} else {
 		(*endpoint)->service = NULL;
+		celixThreadMutex_create(&(*endpoint)->serviceLock, NULL);
+	}
+
+	return status;
+}
+
+
+celix_status_t dataStoreEndpoint_destroy(remote_endpoint_pt *endpoint) {
+	celix_status_t status = CELIX_SUCCESS;
+
+	if (*endpoint) {
+		celixThreadMutex_destroy(&(*endpoint)->serviceLock);
+		free(*endpoint);
+		*endpoint = NULL;
 	}
 
 	return status;
@@ -24,7 +38,9 @@ celix_status_t dataStoreEndpoint_create(remote_endpoint_pt *endpoint) {
 
 celix_status_t dataStoreEndpoint_setService(remote_endpoint_pt endpoint, void *service) {
 	celix_status_t status = CELIX_SUCCESS;
+	celixThreadMutex_lock(&endpoint->serviceLock);
 	endpoint->service = service;
+	celixThreadMutex_unlock(&endpoint->serviceLock);
 	return status;
 
 }
@@ -83,6 +99,8 @@ celix_status_t dataStoreEndpoint_store(remote_endpoint_pt endpoint, char *data, 
 
 		json_unpack(root, "{s:[{s:I,s:f, s:{s:I,s:f,s:f}]}", "a", "processingTime", &time, "result1", &value1, "sample", "sampleTime", &(sample.time),"value1", &(sample.value1),"value2", &(sample.value2));
 
+		celixThreadMutex_lock(&endpoint->serviceLock);
+
 		if (endpoint->service != NULL ) {
 			struct result workResult;
 			bool result = false;
@@ -95,6 +113,8 @@ celix_status_t dataStoreEndpoint_store(remote_endpoint_pt endpoint, char *data, 
 			printf("DATA_STORE_ENDPOINT: No service available\n");
 			status = CELIX_BUNDLE_EXCEPTION;
 		}
+
+		celixThreadMutex_unlock(&endpoint->serviceLock);
 	}
 
 	json_decref(root);
@@ -110,13 +130,14 @@ celix_status_t dataStoreEndpoint_storeAll(remote_endpoint_pt endpoint, char *dat
 
 	root = json_loads(data, 0, &jsonError);
 
+	celixThreadMutex_lock(&endpoint->serviceLock);
+
 	if (!root) {
 		status = CELIX_ILLEGAL_ARGUMENT;
 	} else if (endpoint->service != NULL ) {
-		int arrSize;
 		json_t* array;
 		uint32_t samples_stored = 0;
-		uint32_t arrayCnt;
+		uint32_t arrayCnt, arrSize;
 
 		struct data_store_service* service = endpoint->service;
 
@@ -142,6 +163,8 @@ celix_status_t dataStoreEndpoint_storeAll(remote_endpoint_pt endpoint, char *dat
 		printf("DATA_STORE_ENDPOINT: No service available");
 		status = CELIX_BUNDLE_EXCEPTION;
 	}
+
+	celixThreadMutex_unlock(&endpoint->serviceLock);
 
 	json_decref(root);
 

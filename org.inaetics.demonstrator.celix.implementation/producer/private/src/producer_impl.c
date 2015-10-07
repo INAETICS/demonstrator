@@ -303,6 +303,8 @@ celix_status_t producer_destroy(producer_pt producer)
 		free(producer->name);
 	}
 
+	free(producer);
+
 	return status;
 }
 

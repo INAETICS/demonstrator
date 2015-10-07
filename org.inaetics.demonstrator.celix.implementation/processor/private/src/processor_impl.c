@@ -65,7 +65,7 @@ static void msg(int lvl, char *fmsg, ...) {
 
 static void processor_sendResult(processor_pt processor, struct result result) {
 
-	int i = 0;
+	unsigned int i = 0;
 
 	pthread_rwlock_rdlock(&processor->dataStoreLock);
 
@@ -171,12 +171,11 @@ celix_status_t processor_receiveBursts(processor_thread_data_pt th_data, int sam
 	struct timespec ts_start;
 	struct timespec ts_end;
 	struct timespec ts_diff;
-	uint32_t numOfRecvSamples;
+	uint32_t j, numOfRecvSamples;
 	int burstSampleCnt = 0;
 
 	clock_gettime(CLOCK_REALTIME, &ts_start);
 	timespec_diff(&ts_diff,&ts_start,&ts_start);
-	int j;
 
 	for (j = 0; j < MAX_BURST_LEN; j++) {
 		recvSamples[j] = calloc(1, sizeof(struct sample));
