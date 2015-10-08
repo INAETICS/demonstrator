@@ -10,11 +10,6 @@
 #include "celix_errno.h"
 
 #include "arraylist_sample_queue_impl.h"
-#include <android/log.h>
-
-#define  LOG_TAG    "celix"
-#define  LOGI(...)  __android_log_print(ANDROID_LOG_INFO,LOG_TAG,__VA_ARGS__)
-
 
 #define MAX_QUEUE_SIZE       	10000
 
@@ -49,7 +44,7 @@ static void msg(int lvl, char *fmsg, ...) {
 		va_start(listPointer, fmsg);
 		vsprintf(msg, fmsg, listPointer);
 
-		LOGI("[%d] : %s\n", lvl, msg);
+		printf("[%d] : %s\n", lvl, msg);
 	}
 }
 
@@ -61,11 +56,9 @@ celix_status_t sampleQueue_create(char *name, sample_queue_type **result) {
 	sampleQueue = calloc(1, sizeof(struct sample_queue));
 	if (sampleQueue != NULL) {
 		sampleQueue->name = strdup(name);
-		sampleQueue->utilizationStatsName = calloc(1, strlen(name) + strlen(UTILIZATION_NAME_POSTFIX) + 1);
-	}
 
-	if (sampleQueue != NULL && sampleQueue->name != NULL && sampleQueue->utilizationStatsName != NULL) {
-		sprintf(sampleQueue->utilizationStatsName, "%s%s", sampleQueue->name, (char*)UTILIZATION_NAME_POSTFIX);
+		/* this needs to be set exaclty to Queue, otherwise the dashboard cannot pick this up */
+		sampleQueue->utilizationStatsName = strdup("Queue");
 
 		pthread_mutex_init(&(sampleQueue->lock), NULL);
 		pthread_cond_init(&sampleQueue->listEmpty, NULL);
@@ -90,7 +83,7 @@ celix_status_t sampleQueue_create(char *name, sample_queue_type **result) {
 celix_status_t sampleQueue_destroy(sample_queue_type* sampleQueue) {
 
 	celix_status_t status = CELIX_SUCCESS;
-	int i = 0;
+	unsigned int i = 0;
 
 	sampleQueue->statisticsRunning = false;
 
@@ -262,7 +255,7 @@ int sampleQueue_takeAll(sample_queue_type *sampleQueue, uint32_t min, uint32_t m
 
 	celix_status_t status = CELIX_ILLEGAL_STATE;
 	struct timespec ts;
-	int i = 0;
+	unsigned int i = 0;
 	int rc = 0;
 
 	clock_gettime(CLOCK_REALTIME, &ts);

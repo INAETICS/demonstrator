@@ -42,10 +42,10 @@ void* statPoller(void* handle) {
 
 		struct stats_provider_service* statService = NULL;
 
-		char* name = NULL;
 		char* type = NULL;
 		double statVal = 0.0f;
 		char* mUnit = NULL;
+		char* name = NULL;
 
 		pthread_rwlock_rdlock(&statTracker->statLock);
 		pthread_t self = pthread_self();
@@ -73,6 +73,7 @@ void* statPoller(void* handle) {
 			free(name);
 		}
 
+
 		sleep(WAIT_TIME_SECONDS);
 	}
 
@@ -86,8 +87,13 @@ celix_status_t statistic_tracker_create(statistic_tracker_pt* statTracker) {
 	statistic_tracker_pt lclStatTracker = calloc(1, sizeof(*lclStatTracker));
 
 	if (lclStatTracker != NULL) {
+		pthread_rwlockattr_t statLockAttr;
+
 		lclStatTracker->running = false;
-		pthread_rwlock_init(&lclStatTracker->statLock, NULL);
+
+		pthread_rwlockattr_init(&statLockAttr);
+		pthread_rwlock_init(&lclStatTracker->statLock, &statLockAttr);
+
 		lclStatTracker->statServices = hashMap_create(threadHash, NULL, threadEqual, NULL);
 
 		(*statTracker) = lclStatTracker;
@@ -135,13 +141,13 @@ celix_status_t statistic_tracker_statServiceAdded(void *handle, service_referenc
 			pthread_rwlock_unlock(&statTracker->statLock);
 
         	msg(1, "STAT_TRACKER: Service %s Added (handled by thread %lu)", name, (unsigned long) *thread_pt);
+
+    		free(name);
 	}
 	else {
     	msg(1, "STAT_TRACKER: Could not receive name - Wire set up correctly?");
 	}
 
-
-	free(name);
 
 	return CELIX_SUCCESS;
 }

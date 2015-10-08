@@ -11,6 +11,7 @@
 #include "inaetics_demonstrator_api/producer.h"
 
 celix_status_t producerEndpoint_create(remote_endpoint_pt *endpoint);
+celix_status_t producerEndpoint_destroy(remote_endpoint_pt *endpoint);
 celix_status_t producerEndpoint_setService(remote_endpoint_pt endpoint, void *service);
 celix_status_t producerEndpoint_handleRequest(remote_endpoint_pt endpoint, char *data, char **reply);
 

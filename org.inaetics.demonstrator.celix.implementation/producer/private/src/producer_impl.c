@@ -11,16 +11,11 @@
 #include "utils.h"
 #include "hash_map.h"
 #include "inaetics_demonstrator_api/sample.h"
-#include <android/log.h>
 
-#define  LOG_TAG    "celix"
-#define  LOGI(...)  __android_log_print(ANDROID_LOG_INFO,LOG_TAG,__VA_ARGS__)
-
-
-#define MAX_SAMPLES_PER_SEC 	500
+#define MAX_SAMPLES_PER_SEC 	40
 
 #define MIN_BURST_LEN 			10
-#define MAX_BURST_LEN 			50
+#define MAX_BURST_LEN 			25
 
 #define VERBOSE					2
 #define WAIT_TIME_USECONDS      0
@@ -60,7 +55,7 @@ static void msg(int lvl, char *fmsg, ...) {
 		va_start(listPointer, fmsg);
 		vsprintf(msg, fmsg, listPointer);
 
-		LOGI("[%d] : %s\n", lvl, msg);
+		printf("[%d] : %s\n", lvl, msg);
 	}
 }
 
@@ -229,7 +224,6 @@ void *producer_generate(void *handle) {
 			status = producer_sendBursts(th_data, sampleRate);
 			status = producer_sendSamples(th_data, sampleRate);
 		}
-
 	}
 
 	return NULL;
@@ -247,10 +241,12 @@ celix_status_t producer_create(char* name, producer_pt* producer)
 		lclProducer->utilizationStatsName = calloc(1, strlen(name) + strlen(THROUGHPUT_NAME_POSTFIX) + 1);
 
 		if (lclProducer->name != NULL && lclProducer->utilizationStatsName != NULL) {
+			pthread_rwlockattr_t queueLockAttr;
 
 			sprintf(lclProducer->utilizationStatsName, "%s%s", lclProducer->name, (char*) THROUGHPUT_NAME_POSTFIX);
 
-			pthread_rwlock_init(&lclProducer->queueLock, NULL);
+			pthread_rwlockattr_init(&queueLockAttr);
+			pthread_rwlock_init(&lclProducer->queueLock, &queueLockAttr);
 
 			lclProducer->queueServices = hashMap_create(utils_stringHash, NULL, utils_stringEquals, NULL);
 
@@ -303,6 +299,8 @@ celix_status_t producer_destroy(producer_pt producer)
 	if (producer->name != NULL) {
 		free(producer->name);
 	}
+
+	free(producer);
 
 	return status;
 }

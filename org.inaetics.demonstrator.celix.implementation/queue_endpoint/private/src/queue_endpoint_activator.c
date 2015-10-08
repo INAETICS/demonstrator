@@ -9,7 +9,8 @@
 #include "service_registration.h"
 
 struct activator {
-	service_registration_pt endpoint;
+	service_registration_pt registration;
+	remote_endpoint_service_pt endpointService;
 };
 
 celix_status_t bundleActivator_create(bundle_context_pt context, void **userData) {
@@ -21,7 +22,8 @@ celix_status_t bundleActivator_create(bundle_context_pt context, void **userData
 	if (!activator) {
 		status = CELIX_ENOMEM;
 	} else {
-		activator->endpoint = NULL;
+		activator->registration = NULL;
+		activator->endpointService = NULL;
 
 		*userData = activator;
 	}
@@ -33,19 +35,29 @@ celix_status_t bundleActivator_start(void * userData, bundle_context_pt context)
 	celix_status_t status = CELIX_SUCCESS;
 	struct activator *activator = userData;
 	remote_endpoint_pt endpoint = NULL;
-	remote_endpoint_service_pt endpointService = NULL;
+	remote_endpoint_service_pt endpointService;
 
 	queueEndpoint_create(&endpoint);
 	endpointService = calloc(1, sizeof(*endpointService));
-	endpointService->endpoint = endpoint;
-	endpointService->handleRequest = queueEndpoint_handleRequest;
-	endpointService->setService = queueEndpoint_setService;
 
-	properties_pt props = properties_create();
-	properties_set(props, (char *) "remote.interface", (char *) INAETICS_DEMONSTRATOR_API__SAMPLE_QUEUE_SERVICE_NAME);
+	if (endpointService) {
+		endpointService->endpoint = endpoint;
+		endpointService->handleRequest = queueEndpoint_handleRequest;
+		endpointService->setService = queueEndpoint_setService;
 
-	bundleContext_registerService(context, OSGI_RSA_REMOTE_ENDPOINT, endpointService, props, &activator->endpoint);
+		properties_pt props = properties_create();
+		properties_set(props, (char *) "remote.interface", (char *) INAETICS_DEMONSTRATOR_API__SAMPLE_QUEUE_SERVICE_NAME);
 
+		status = bundleContext_registerService(context, OSGI_RSA_REMOTE_ENDPOINT, endpointService, props, &activator->registration);
+
+		if (status == CELIX_SUCCESS) {
+			activator->endpointService = endpointService;
+		}
+
+	}
+	else {
+		status = CELIX_ENOMEM;
+	}
 
 	return status;
 }
@@ -54,12 +66,21 @@ celix_status_t bundleActivator_stop(void * userData, bundle_context_pt context) 
 	celix_status_t status = CELIX_SUCCESS;
 	struct activator *activator = userData;
 
-	serviceRegistration_unregister(activator->endpoint);
+	serviceRegistration_unregister(activator->registration);
+
+	if (activator->endpointService) {
+		queueEndpoint_destroy(&activator->endpointService->endpoint);
+		free(activator->endpointService);
+	}
+
 
 	return status;
 }
 
 celix_status_t bundleActivator_destroy(void * userData, bundle_context_pt context) {
 	celix_status_t status = CELIX_SUCCESS;
+
+	free((struct activator *) userData);
+
 	return status;
 }

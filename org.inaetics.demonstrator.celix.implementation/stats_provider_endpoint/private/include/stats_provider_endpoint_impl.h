@@ -7,6 +7,7 @@
 #include "inaetics_demonstrator_api/stats_provider.h"
 
 celix_status_t serviceStatisticsEndpoint_create(remote_endpoint_pt *endpoint);
+celix_status_t serviceStatisticsEndpoint_destroy(remote_endpoint_pt *endpoint);
 celix_status_t statsProviderEndpoint_setService(remote_endpoint_pt endpoint, void *service);
 celix_status_t statsProviderEndpoint_handleRequest(remote_endpoint_pt endpoint, char *data, char **reply);
 

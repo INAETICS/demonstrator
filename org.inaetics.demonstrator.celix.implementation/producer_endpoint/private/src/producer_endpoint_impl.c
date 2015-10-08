@@ -16,6 +16,19 @@ celix_status_t producerEndpoint_create(remote_endpoint_pt *endpoint) {
 		status = CELIX_ENOMEM;
 	} else {
 		(*endpoint)->service = NULL;
+		celixThreadMutex_create(&(*endpoint)->serviceLock, NULL);
+	}
+
+	return status;
+}
+
+celix_status_t producerEndpoint_destroy(remote_endpoint_pt *endpoint) {
+	celix_status_t status = CELIX_SUCCESS;
+
+	if (*endpoint) {
+		celixThreadMutex_destroy(&(*endpoint)->serviceLock);
+		free(*endpoint);
+		*endpoint = NULL;
 	}
 
 	return status;
@@ -23,7 +36,11 @@ celix_status_t producerEndpoint_create(remote_endpoint_pt *endpoint) {
 
 celix_status_t producerEndpoint_setService(remote_endpoint_pt endpoint, void *service) {
 	celix_status_t status = CELIX_SUCCESS;
+
+	celixThreadMutex_lock(&endpoint->serviceLock);
 	endpoint->service = service;
+	celixThreadMutex_unlock(&endpoint->serviceLock);
+
 	return status;
 }
 
@@ -61,6 +78,8 @@ celix_status_t producerEndpoint_getMaxSampleRate(remote_endpoint_pt endpoint, ch
 
 	root = json_loads(data, 0, &jsonError);
 
+	celixThreadMutex_lock(&endpoint->serviceLock);
+
 	if (!root) {
 		status = CELIX_ILLEGAL_ARGUMENT;
 	} else if (endpoint->service != NULL) {
@@ -79,6 +98,8 @@ celix_status_t producerEndpoint_getMaxSampleRate(remote_endpoint_pt endpoint, ch
 		status = CELIX_BUNDLE_EXCEPTION;
 	}
 
+	celixThreadMutex_unlock(&endpoint->serviceLock);
+
 	json_decref(root);
 
 	return status;
@@ -91,6 +112,8 @@ celix_status_t producerEndpoint_getSampleRate(remote_endpoint_pt endpoint, char 
 	json_t *root;
 
 	root = json_loads(data, 0, &jsonError);
+
+	celixThreadMutex_lock(&endpoint->serviceLock);
 
 	if (!root) {
 		status = CELIX_ILLEGAL_ARGUMENT;
@@ -109,6 +132,8 @@ celix_status_t producerEndpoint_getSampleRate(remote_endpoint_pt endpoint, char 
 		status = CELIX_BUNDLE_EXCEPTION;
 	}
 
+	celixThreadMutex_unlock(&endpoint->serviceLock);
+
 	json_decref(root);
 
 	return status;
@@ -121,6 +146,8 @@ celix_status_t producerEndpoint_setSampleRate(remote_endpoint_pt endpoint, char 
 	json_t *root;
 
 	root = json_loads(data, 0, &jsonError);
+
+	celixThreadMutex_lock(&endpoint->serviceLock);
 
 	if (!root) {
 		status = CELIX_ILLEGAL_ARGUMENT;
@@ -136,6 +163,8 @@ celix_status_t producerEndpoint_setSampleRate(remote_endpoint_pt endpoint, char 
 		printf("%s: No service available", TAG);
 		status = CELIX_BUNDLE_EXCEPTION;
 	}
+
+	celixThreadMutex_unlock(&endpoint->serviceLock);
 
 	json_decref(root);
 
