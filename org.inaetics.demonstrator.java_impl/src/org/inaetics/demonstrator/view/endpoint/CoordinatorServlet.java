@@ -7,8 +7,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -39,7 +39,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
  */
 public class CoordinatorServlet extends HttpServlet {
 
-    static class StatsContainer {
+    static class StatsContainer implements Comparable<StatsContainer> {
         final StatsProvider m_provider;
         final TimestampMap<Double> m_stats;
         String name;
@@ -52,6 +52,17 @@ public class CoordinatorServlet extends HttpServlet {
         public void updateStats(Long time) {
             m_stats.put(time, m_provider.getValue());
         }
+
+		@Override
+		public int compareTo(StatsContainer other) {
+			if (name == null) {
+				return 1;
+			}
+			if (other == null || other.name == null) {
+				return -1;
+			}
+			return name.compareTo(other.name);
+		}
     }
 
     // Injected by Felix DM...
@@ -88,13 +99,13 @@ public class CoordinatorServlet extends HttpServlet {
     public final void addProducer(Producer p) {
         m_producers.add(p);
         setSampleRate(p, m_productionRate.get());
-        log("added producer");
+        info("added producer");
     }
 
     /* Called by Felix DM. */
     public final void removeProducer(Producer p) {
         m_producers.remove(p);
-        log("removed producer");
+        info("removed producer");
     }
 
     /* Called by Felix DM. */
@@ -110,7 +121,7 @@ public class CoordinatorServlet extends HttpServlet {
             m_producerCount.incrementAndGet();
         }
         m_providerStats.putIfAbsent(serviceRef, new StatsContainer(provider, new TimestampMap<Double>()));
-        log("added statsprovider of type " + type);
+        info("added statsprovider of type " + type);
     }
 
     /* Called by Felix DM. */
@@ -126,7 +137,7 @@ public class CoordinatorServlet extends HttpServlet {
             m_producerCount.decrementAndGet();
         }
         m_providerStats.remove(serviceRef);
-        log("added statsprovider of type " + type);
+        info("added statsprovider of type " + type);
     }
 
     @Override
@@ -149,7 +160,7 @@ public class CoordinatorServlet extends HttpServlet {
                 resp.setStatus(HttpServletResponse.SC_OK);
 
                 // Return an array with all providers sorted on their name...
-                Map<String, StatsContainer> names = new TreeMap<>();
+                Set<StatsContainer> statsContainers = new TreeSet<>();
                 
     			// get all stats async with a 1 second timeout
                 // prevents waiting for bigger remote service call timeouts and a hanging UI
@@ -179,7 +190,7 @@ public class CoordinatorServlet extends HttpServlet {
 							StatsContainer c = result.get();
 							String name = c.name;
 							if (name != null && (wantedNames.isEmpty() || wantedNames.contains(name))) {
-								names.put(name, c);
+								statsContainers.add(c);
 							}
 						}
 						catch (Exception e) {
@@ -191,14 +202,14 @@ public class CoordinatorServlet extends HttpServlet {
 					
 					generator.writeStartArray();
 					
-					for (Map.Entry<String, StatsContainer> entry: names.entrySet()) {
-						StatsContainer container = entry.getValue();
+					for (StatsContainer container: statsContainers) {
 						try {
 							StatsProvider provider = container.m_provider;
 							TimestampMap<Double> stats = container.m_stats;
+							String name = container.name;
 							
-							if (provider != null) {
-								writeAsJSON(generator, provider, stats, entry.getKey());
+							if (provider != null && stats != null && name != null) {
+								writeAsJSON(generator, provider, stats, name);
 							}
 						} catch (Exception e) {
 							warn("Failed to write provider to JSON: %s", e.getMessage());
