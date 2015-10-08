@@ -136,6 +136,7 @@ static celix_status_t bundleActivator_registerStatsService(bundle_activator_pt a
 	properties_pt props = NULL;
 	props = properties_create();
 	properties_set(props, (char *) OSGI_RSA_SERVICE_EXPORTED_INTERFACES, (char *) INAETICS_DEMONSTRATOR_API__STATS_PROVIDER_SERVICE_NAME);
+	properties_set(props, (char *) "type", (char *) "processor");
 
 	status = bundleContext_registerService(act->context, (char *) INAETICS_DEMONSTRATOR_API__STATS_PROVIDER_SERVICE_NAME,
 			act->processorStatsService, props, &act->processorStatsRegistration);

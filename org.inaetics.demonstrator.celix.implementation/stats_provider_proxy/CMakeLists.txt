@@ -17,4 +17,4 @@ bundle(org.inaetics.demonstrator.api.stats.StatsProvider_proxy SOURCES
     ${CELIX_DIR}/share/celix/remote_service_admin/remote_proxy_factory_impl.c
 )
 
-target_link_libraries(org.inaetics.demonstrator.api.stats.StatsProvider_proxy ${JANSSON_LIBRARIES} ${CELIX_LIBRARIES})
+target_link_libraries(org.inaetics.demonstrator.api.stats.StatsProvider_proxy m ${JANSSON_LIBRARIES} ${CELIX_LIBRARIES})

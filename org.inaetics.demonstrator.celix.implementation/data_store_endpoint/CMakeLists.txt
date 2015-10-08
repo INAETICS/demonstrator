@@ -16,4 +16,4 @@ bundle(org.inaetics.demonstrator.api.datastore.DataStore_endpoint SOURCES
     private/include/data_store_endpoint_impl.h
 )
 
-target_link_libraries(org.inaetics.demonstrator.api.datastore.DataStore_endpoint ${JANSSON_LIBRARIES} ${CELIX_LIBRARIES})
+target_link_libraries(org.inaetics.demonstrator.api.datastore.DataStore_endpoint m ${JANSSON_LIBRARIES} ${CELIX_LIBRARIES})

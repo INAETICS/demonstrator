@@ -16,4 +16,4 @@ bundle(org.inaetics.demonstrator.api.stats.StatsProvider_endpoint SOURCES
     private/include/stats_provider_endpoint_impl.h
 )
 
-target_link_libraries(org.inaetics.demonstrator.api.stats.StatsProvider_endpoint ${JANSSON_LIBRARIES} ${CELIX_LIBRARIES})
+target_link_libraries(org.inaetics.demonstrator.api.stats.StatsProvider_endpoint m ${JANSSON_LIBRARIES} ${CELIX_LIBRARIES})

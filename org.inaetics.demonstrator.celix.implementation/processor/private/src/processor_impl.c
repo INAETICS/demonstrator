@@ -12,19 +12,14 @@
 #include "hash_map.h"
 #include "inaetics_demonstrator_api/result.h"
 #include "inaetics_demonstrator_api/sample.h"
-#include <android/log.h>
 
-#define  LOG_TAG    "celix"
-#define  LOGI(...)  __android_log_print(ANDROID_LOG_INFO,LOG_TAG,__VA_ARGS__)
+#define SINGLE_SAMPLES_PER_SEC  15
+#define BURST_SAMPLES_PER_SEC 	10
 
-#define SINGLE_SAMPLES_PER_SEC  10    /* 10 samples every 20 msec */
-#define BURST_SAMPLES_PER_SEC 	0
-
-#define MIN_BURST_LEN 			2
-#define MAX_BURST_LEN 			200
+#define MIN_BURST_LEN 			10
+#define MAX_BURST_LEN 			25
 
 #define VERBOSE					2
-#define WAIT_TIME_USECONDS      20000
 
 #define THROUGHPUT_NAME_POSTFIX 		" Statistics"
 #define THROUGHPUT_TYPE 				"(throughput)"
@@ -64,13 +59,13 @@ static void msg(int lvl, char *fmsg, ...) {
 		va_start(listPointer, fmsg);
 		vsprintf(msg, fmsg, listPointer);
 
-		LOGI("[%d] : %s\n", lvl, msg);
+		printf("[%d] : %s\n", lvl, msg);
 	}
 }
 
 static void processor_sendResult(processor_pt processor, struct result result) {
 
-	int i = 0;
+	unsigned int i = 0;
 
 	pthread_rwlock_rdlock(&processor->dataStoreLock);
 
@@ -88,13 +83,9 @@ static void processor_sendResult(processor_pt processor, struct result result) {
 
 static void processor_processSample(struct sample* sample, struct result* result) {
 
-	int i;
-
 	result->time = sample->time;
-	for (i =0; i < 10000; i++)
-	{
-		result->value1 = sample->value1 + sample->value2;
-	}
+	result->value1 = sample->value1 + sample->value2;
+
 	memcpy(&(result->sample), sample, sizeof(struct sample));
 
 }
@@ -124,42 +115,50 @@ celix_status_t processor_receiveSamples(processor_thread_data_pt th_data, int sa
 	clock_gettime(CLOCK_REALTIME, &ts_start);
 	timespec_diff(&ts_diff,&ts_start,&ts_start);
 
-	for (ts_end = ts_start; (singleSampleCnt < SINGLE_SAMPLES_PER_SEC) && (ts_diff.tv_sec<=0);) {
-		struct sample *recvSample = calloc(1, sizeof(struct sample));
+	struct sample *recvSample = calloc(1, sizeof(struct sample));
 
-		if (recvSample) {
-			if (queueService != NULL) {
-				if (queueService->take(queueService->sampleQueue, recvSample) == 0) {
-					struct result* result_pt = calloc(1, sizeof(*result_pt));
+	if (!recvSample) {
+		status = CELIX_BUNDLE_EXCEPTION;
+	}
+	else {
+		for (ts_end = ts_start; ts_diff.tv_sec<=0;) {
 
-					msg(3, "\tPROCESSOR: Received and Processing Sample {Time:%llu | V1=%f | V2=%f}", recvSample->time, recvSample->value1, recvSample->value2);
-					processor_processSample(recvSample, result_pt);
-					processor_sendResult(th_data->processor, *result_pt);
+			if (singleSampleCnt < samplesPerSec) {
+				if (queueService != NULL) {
+					if (queueService->take(queueService->sampleQueue, recvSample) == 0) {
+						struct result* result_pt = calloc(1, sizeof(*result_pt));
 
-					singleSampleCnt++;
+						msg(3, "\tPROCESSOR: Received and Processing Sample {Time:%llu | V1=%f | V2=%f}", recvSample->time, recvSample->value1, recvSample->value2);
+						processor_processSample(recvSample, result_pt);
+						processor_sendResult(th_data->processor, *result_pt);
+
+						singleSampleCnt++;
+					}
+					else {
+						msg(2, "PROCESSOR: Could not take a single sample.");
+					}
 				}
 				else {
-					msg(2, "PROCESSOR: Could not take a single sample.");
+					status = CELIX_BUNDLE_EXCEPTION;
 				}
 			}
 			else {
-				status = CELIX_BUNDLE_EXCEPTION;
+				usleep(2000);
 			}
 
-			free(recvSample);
+			clock_gettime(CLOCK_REALTIME, &ts_end);
+			timespec_diff(&ts_diff,&ts_start,&ts_end);
 		}
-		clock_gettime(CLOCK_REALTIME, &ts_end);
-		timespec_diff(&ts_diff,&ts_start,&ts_end);
+		free(recvSample);
+
+		/* Update the statistic */
+		pthread_rwlock_wrlock(&th_data->throughputLock);
+		th_data->single_throughput = singleSampleCnt;
+		pthread_rwlock_unlock(&th_data->throughputLock);
+
+		msg(1, "PROCESSOR: %d single samples received.", singleSampleCnt);
 	}
 
-	/* Update the statistic */
-	pthread_rwlock_wrlock(&th_data->throughputLock);
-	th_data->single_throughput = singleSampleCnt;
-	pthread_rwlock_unlock(&th_data->throughputLock);
-
-	msg(1, "PROCESSOR: %d single samples received.", singleSampleCnt);
-
-	usleep(WAIT_TIME_USECONDS);
 
 	return status;
 }
@@ -172,62 +171,63 @@ celix_status_t processor_receiveBursts(processor_thread_data_pt th_data, int sam
 	struct timespec ts_start;
 	struct timespec ts_end;
 	struct timespec ts_diff;
-	uint32_t numOfRecvSamples;
+	uint32_t j, numOfRecvSamples;
 	int burstSampleCnt = 0;
 
 	clock_gettime(CLOCK_REALTIME, &ts_start);
 	timespec_diff(&ts_diff,&ts_start,&ts_start);
 
-	for (ts_end = ts_start; (burstSampleCnt < samplesPerSec) && (ts_diff.tv_sec<=0);) {
-		int j;
+	for (j = 0; j < MAX_BURST_LEN; j++) {
+		recvSamples[j] = calloc(1, sizeof(struct sample));
+	}
 
-		for (j = 0; j < MAX_BURST_LEN; j++) {
-			recvSamples[j] = calloc(1, sizeof(struct sample));
-		}
+	for (ts_end = ts_start; (ts_diff.tv_sec<=0);) {
 
-		msg(3, "PROCESSOR: TakeAll (min: %d, max: %d)", MIN_BURST_LEN, MAX_BURST_LEN);
+		if (burstSampleCnt < samplesPerSec) {
+			msg(3, "PROCESSOR: TakeAll (min: %d, max: %d)", MIN_BURST_LEN, MAX_BURST_LEN);
 
-		if (queueService != NULL) {
-			if (queueService->takeAll(queueService->sampleQueue, MIN_BURST_LEN, MAX_BURST_LEN, &recvSamples[0], &numOfRecvSamples) == 0) {
-				msg(3, "PROCESSOR:  %u samples received", numOfRecvSamples);
+			if (queueService != NULL) {
+				if (queueService->takeAll(queueService->sampleQueue, MIN_BURST_LEN, MAX_BURST_LEN, &recvSamples[0], &numOfRecvSamples) == 0) {
+					msg(3, "PROCESSOR:  %u samples received", numOfRecvSamples);
 
-				for (j = 0; j < numOfRecvSamples; j++) {
-					msg(3, "\tPROCESSOR: Processing Sample (%d/%d)  {Time:%llu | V1=%f | V2=%f}", j, numOfRecvSamples, recvSamples[j]->time, recvSamples[j]->value1, recvSamples[j]->value2);
-					struct result* result_pt = calloc(1, sizeof(*result_pt));
+					for (j = 0; j < numOfRecvSamples; j++) {
+						msg(3, "\tPROCESSOR: Processing Sample (%d/%d)  {Time:%llu | V1=%f | V2=%f}", j, numOfRecvSamples, recvSamples[j]->time, recvSamples[j]->value1, recvSamples[j]->value2);
+						struct result* result_pt = calloc(1, sizeof(*result_pt));
 
-					if (result_pt) {
-						processor_processSample(recvSamples[j], result_pt);
-						processor_sendResult(th_data->processor, *result_pt);
-						free(result_pt);
+						if (result_pt) {
+							processor_processSample(recvSamples[j], result_pt);
+							processor_sendResult(th_data->processor, *result_pt);
+							free(result_pt);
+						}
+
 					}
 
+					burstSampleCnt += j;
 				}
-
-				burstSampleCnt += j;
+				else {
+					msg(2, "PROCESSOR: Could not take all samples.");
+				}
 			}
 			else {
-				msg(2, "PROCESSOR: Could not take all samples.");
+				status = CELIX_BUNDLE_EXCEPTION;
 			}
 		}
 		else {
-			status = CELIX_BUNDLE_EXCEPTION;
-		}
-
-		for (j = 0; j < MAX_BURST_LEN; j++) {
-			free(recvSamples[j]);
+			usleep(2000);
 		}
 
 		clock_gettime(CLOCK_REALTIME, &ts_end);
 		timespec_diff(&ts_diff,&ts_start,&ts_end);
 	}
 
+	for (j = 0; j < MAX_BURST_LEN; j++) {
+		free(recvSamples[j]);
+	}
+
 	pthread_rwlock_wrlock(&th_data->throughputLock);
 	th_data->burst_throughput = burstSampleCnt;
 	pthread_rwlock_unlock(&th_data->throughputLock);
-
 	msg(1, "PROCESSOR:  %d samples in bursts received.", burstSampleCnt);
-
-  usleep(WAIT_TIME_USECONDS);
 
 	return status;
 }
@@ -262,14 +262,19 @@ celix_status_t processor_create(char* name, processor_pt* processor)
 		lclProcessor->utilizationStatsName = calloc(1, strlen(name) + strlen(THROUGHPUT_NAME_POSTFIX) + 1);
 
 		if (lclProcessor->name != NULL && lclProcessor->utilizationStatsName != NULL) {
+			pthread_rwlockattr_t queueLockAttr;
+			pthread_rwlockattr_t dataStoreLockAttr;
 
 			sprintf(lclProcessor->utilizationStatsName, "%s%s", lclProcessor->name, (char*) THROUGHPUT_NAME_POSTFIX);
 
 			lclProcessor->queueServices = hashMap_create(utils_stringHash, NULL, utils_stringEquals, NULL);
 			arrayList_create(&lclProcessor->dataStoreServices);
 
-			pthread_rwlock_init(&lclProcessor->queueLock, NULL);
-			pthread_rwlock_init(&lclProcessor->dataStoreLock, NULL);
+			pthread_rwlockattr_init(&queueLockAttr);
+			pthread_rwlock_init(&lclProcessor->queueLock, &queueLockAttr);
+
+			pthread_rwlockattr_init(&dataStoreLockAttr);
+			pthread_rwlock_init(&lclProcessor->dataStoreLock, &dataStoreLockAttr);
 
 			lclProcessor->running = false;
 
@@ -390,7 +395,7 @@ int processor_getUtilizationStatsName(processor_pt processor, char **name) {
 	celix_status_t status = CELIX_SUCCESS;
 
 	if (processor->utilizationStatsName != NULL) {
-		(*name) = processor->utilizationStatsName;
+		(*name) = strdup(processor->utilizationStatsName);
 	}
 	else {
 		msg(0, "PROCESSOR_STAT: getName denied because service is removed");
@@ -401,7 +406,7 @@ int processor_getUtilizationStatsName(processor_pt processor, char **name) {
 }
 
 int processor_getUtilizationStatsType(processor_pt processor, char **type) {
-	(*type) = (char*) THROUGHPUT_TYPE;
+	(*type) = strdup((char*) THROUGHPUT_TYPE);
 	return (int) CELIX_SUCCESS;
 }
 
@@ -419,7 +424,17 @@ int processor_getUtilizationStatsValue(processor_pt processor, double* statVal) 
 		if (entry != NULL) {
 			processor_thread_data_pt value = (processor_thread_data_pt) hashMapEntry_getValue(entry);
 			if (value != NULL) {
-				total_average += (double) (((double) (value->single_throughput + value->burst_throughput)) / ((double) 2.0f));
+				if (BURST_SAMPLES_PER_SEC > 0) {
+					total_average += (double) value->burst_throughput;
+				}
+
+				if (SINGLE_SAMPLES_PER_SEC > 0) {
+					total_average += (double) value->single_throughput;
+				}
+
+				if ((BURST_SAMPLES_PER_SEC > 0) && (SINGLE_SAMPLES_PER_SEC > 0)) {
+					total_average /= (double) 2.0f;
+				}
 			}
 		}
 	}
@@ -433,6 +448,6 @@ int processor_getUtilizationStatsValue(processor_pt processor, double* statVal) 
 }
 
 int processor_getUtilizationStatsMeasurementUnit(processor_pt processor, char **mUnit) {
-	(*mUnit) = (char*) THROUGHPUT_MEASUREMENT_UNIT;
+	(*mUnit) = strdup((char*) THROUGHPUT_MEASUREMENT_UNIT);
 	return (int) CELIX_SUCCESS;
 }

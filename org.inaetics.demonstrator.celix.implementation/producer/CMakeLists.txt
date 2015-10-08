@@ -12,4 +12,4 @@ bundle(org.inaetics.demonstrator.api.producer.Producer
 	 	private/src/producer_impl.c
 )
 
-target_link_libraries(org.inaetics.demonstrator.api.producer.Producer log ${CELIX_LIBRARIES})
+target_link_libraries(org.inaetics.demonstrator.api.producer.Producer ${CELIX_LIBRARIES})

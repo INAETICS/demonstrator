@@ -12,4 +12,4 @@ bundle(org.inaetics.demonstrator.api.processor.Processor
 	 	private/src/processor_impl
 )
 
-target_link_libraries(org.inaetics.demonstrator.api.processor.Processor log ${CELIX_LIBRARIES})
+target_link_libraries(org.inaetics.demonstrator.api.processor.Processor ${CELIX_LIBRARIES})
