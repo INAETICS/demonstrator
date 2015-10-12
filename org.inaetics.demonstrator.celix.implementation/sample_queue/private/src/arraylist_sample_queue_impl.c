@@ -312,10 +312,12 @@ void *printStatistics(void *handle) {
 	sample_queue_type* sampleQueue = (sample_queue_type*) handle;
 	sampleQueue->statisticsRunning = true;
 	while (sampleQueue->statisticsRunning) {
-		// TODO: add lock
+	    pthread_mutex_lock(&sampleQueue->lock);
 		msg(1, "QUEUE: \tsamples put: %d \tsamples taken: %d \tqueue size: %d", sampleQueue->putCnt, sampleQueue->takeCnt, arrayList_size(sampleQueue->queue));
 		sampleQueue->putCnt = 0;
 		sampleQueue->takeCnt = 0;
+	    pthread_mutex_unlock(&sampleQueue->lock);
+
 		sleep(2);
 	}
 
