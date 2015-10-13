@@ -1,16 +1,22 @@
 sudo: required
-language: bash
+
+language: java
+
+jdk:
+  - oraclejdk8
+
 services:
-- docker
+  - docker
+
 before_install:
-- sudo apt-get update -qq
-- sudo apt-get install -qq default-jdk
-- docker run inaetics/cagent_builder build_script > cagent_builder.sh && chmod +x cagent_builder.sh
+  - docker run inaetics/cagent_builder build_script > cagent_builder.sh && chmod +x cagent_builder.sh
+
 install:
-- ./cagent_builder.sh make_bundles
+  - ./gradlew build
+  - ./cagent_builder.sh make_bundles
+
 deploy:
   provider: bintray
-  file: ${TRAVIS_BUILD_DIR}/deployment.json
-  user: bpetri
-  key:
-    secure: ZC/PXaNt1Iwoh9XyCJDT+GMoZ/g8BrM3DmHDnKsYbCkMDlGGJzQaFOCCspey5r6DnyX75GS9ochUF+GESagQhnFQlRPYy4uZWx3U//CsKruVU5q95c5bNttQBVvVyWrBH1zCXlkfXUkpMKekSgJN72NEjnH7zKuum8F4gIyuQrIBr5fvLw1UupfwMn+XKjaMAWvRuhqL+grFENhuF8UAjM5U6QFxpmibIHsnNkJzsg5KELkeH+7KLUhZKWLawJnlEexRcdquvucdUNXcnqqd24hlkH3oNJD0P4f53/I0j18Qi6/BiuGn3n1QjkNHWn7PaqqUW790eA8EAaITlqv7HnNqeUfRIERXx+M1LMPgxCq0lNcXdQzNxQi2DsvK1fWpOKeyko7783OSBTH/m6tiG2Nw78v+wcPGYnw0ro40oDJD4v+S9ZZomwuhVrjSMbJcpU4hb1frIWPJNmflV95dsRxPfmiH6d21kGAkM8GGEzhEQH8wd+llevXuFiuXvk0IaAFknhF587xW84cWOJp6AsZ6Z/qqFpeLhsCwVSYJAr7oe4DLPXofQ8S81Lc2OUx+lZdM5rQnUJ2+vncEoQNTpuSdoLLDHFmzkh7bbc7J0URow0EJWTfLB3akKl7HPmfFcZ5ji5pY8oganKMHL5OvCxvqGxXBnHHWm+uPhdmQ9K4=
+  file: $TRAVIS_BUILD_DIR/deployment.json
+  user: $BINTRAY_USER
+  key: $BINTRAY_KEY
