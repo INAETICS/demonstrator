@@ -1,0 +1,17 @@
+{
+    "package": {
+        "name": "demonstrator", // Bintray package name
+        "repo": "inaetics", // Bintray repository name
+        "subject": "inaetics" // Bintray subject (user or organization)
+    },
+
+    "version": {
+        "name": "latest"
+    },
+
+    "files":
+        [
+        {"includePattern": "deploy/(.*)", "uploadPattern": "$1"}
+        ],
+    "publish": true
+}
