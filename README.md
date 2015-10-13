@@ -1,7 +1,7 @@
 
-# The INAETICS Demonstator Project [![Build Status](https://travis-ci.org/INAETICS/demonstrator.svg?branch=master)](https://travis-ci.org/INAETICS/demonstrator)
+# The INAETICS Demonstrator Project [![Build Status](https://travis-ci.org/INAETICS/demonstrator.svg?branch=master)](https://travis-ci.org/INAETICS/demonstrator)
 
-The purpose of the demonstator project is to demonstrate the capabilities of an
+The purpose of the demonstrator project is to demonstrate the capabilities of an
 INAETICS system.
 
 ## Java implementation
