@@ -22,5 +22,5 @@ after_success:
   - git clone https://github.com/INAETICS/bundles.git $TRAVIS_BUILD_DIR/bundles && cd $TRAVIS_BUILD_DIR/bundles
   - git config credential.helper "store --file=.git/credentials"
   - echo "https://$GITHUB_TOKEN:@github.com" > .git/credentials
-  - cp $TRAVIS_BUILD_DIR/deploy/*.jar $TRAVIS_BUILD_DIR/org.inaetics.demonstrator.api/generated/*.jar org.inaetics.demonstrator.java_impl/*.jar  $TRAVIS_BUILD_DIR/bundles/default-resources
+  - cp $TRAVIS_BUILD_DIR/deploy/*.jar $TRAVIS_BUILD_DIR/org.inaetics.demonstrator.api/generated/*.jar $TRAVIS_BUILD_DIR/org.inaetics.demonstrator.java_impl/*.jar  $TRAVIS_BUILD_DIR/bundles/default-resources
   - git add default-resources/*.jar && git commit -m "build $TRAVIS_REPO_SLUG $TRAVIS_COMMIT" && git push -f
