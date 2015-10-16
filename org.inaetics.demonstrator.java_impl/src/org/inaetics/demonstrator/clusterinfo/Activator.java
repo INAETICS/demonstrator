@@ -23,7 +23,8 @@ public class Activator extends DependencyActivatorBase{
 	public void init(BundleContext context, DependencyManager manager) throws Exception {
 		String iface = ClusterInfo.class.getName();
 		
-		service = new ClusterInfoImpl();
+		ClusterInfoConfig config = new ClusterInfoConfig();
+		service = new ClusterInfoImpl(config);
 
 		Properties props = new Properties();
 		//props.put(Constants.SERVICE_PID, PID);

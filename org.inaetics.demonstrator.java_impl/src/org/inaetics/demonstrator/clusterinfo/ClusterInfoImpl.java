@@ -23,10 +23,12 @@ public class ClusterInfoImpl implements ClusterInfo {
 	private final Timer timer;
 	private final int m_unitsUpdatePeriod;
 	private final int m_querierUpdatePeriod;
+	private final ClusterInfoConfig m_config;
 
-	public ClusterInfoImpl() {
+	public ClusterInfoImpl(ClusterInfoConfig config) {
+		m_config = config;
 		m_fleetUnits = new CopyOnWriteArraySet<FleetUnitInfo>();
-		m_fleetUnitsQuerier = new FleetUnitsQuerier(m_fleetUnits, DEFAULT_UNITS_UPDATE_PERIOD);
+		m_fleetUnitsQuerier = new FleetUnitsQuerier(m_fleetUnits, DEFAULT_UNITS_UPDATE_PERIOD, config);
 		m_unitsUpdatePeriod = DEFAULT_UNITS_UPDATE_PERIOD;
 		m_querierUpdatePeriod = DEFAULT_QUERIER_UPDATE_PERIOD;
 		timer = new Timer(true);
@@ -45,7 +47,7 @@ public class ClusterInfoImpl implements ClusterInfo {
 		List<FleetUnitInfo> cl_info = new ArrayList<FleetUnitInfo>();
 
 		for (FleetUnitInfo f_info : m_fleetUnits) {
-			DockerInfoUpdater.updateDockerContainerInfo(f_info);
+			DockerInfoUpdater.updateDockerContainerInfo(f_info, m_config);
 			cl_info.add(f_info);
 		}
 

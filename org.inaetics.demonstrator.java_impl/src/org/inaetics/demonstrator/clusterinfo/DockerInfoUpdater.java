@@ -16,11 +16,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class DockerInfoUpdater {
 
-	private final static int CADVISOR_PORT = 4194;
 	private final static String CADVISOR_PATH = "/api/v1.3/docker";
 	private final static double NANOSEC_PER_SEC = 1000000000.0;
 
-	public static void updateDockerContainerInfo(FleetUnitInfo fleetUnitInfo) {
+	public static void updateDockerContainerInfo(FleetUnitInfo fleetUnitInfo, ClusterInfoConfig config) {
 
 		List<DockerContainerInfo> c_list = fleetUnitInfo.getContainerList();
 
@@ -31,7 +30,7 @@ public class DockerInfoUpdater {
 		JsonNode root = null;
 
 		try {
-			root = m.readTree(new URL("http://" + fleetUnitInfo.getIpAddress() + ":" + CADVISOR_PORT + CADVISOR_PATH));
+			root = m.readTree(new URL("http://" + fleetUnitInfo.getIpAddress() + ":" + config.getCadvisorPort() + CADVISOR_PATH));
 		} catch (Exception e) {
 			e.printStackTrace();
 			return;

@@ -19,25 +19,16 @@ public class FleetUnitsQuerier extends TimerTask {
 	private final static String FLEET_ETCD_DIR = "/_coreos.com/fleet/machines";
 	private final static String FLEET_PUBLICIP_KEY = "PublicIP";
 	private final static String FLEET_METADATA_KEY = "Metadata";
-	private final static String FLEET_ROLE_KEY = "role";
-	// private final static String DEFAULT_ETCD_ENDPOINT = "127.0.0.1:2379";
-	private final static String DEFAULT_ETCD_ENDPOINT = "172.17.8.20:2379";
-	private final static String SLAVE_ROLE_TAG = "kubernetes";
 
 	private final String m_etcdEndpoint;
 	private Set<FleetUnitInfo> m_hostList;
 	private final int m_updatePeriod;
 	private final ObjectMapper mapper;
+	private final ClusterInfoConfig m_config;
 
-	public FleetUnitsQuerier(Set<FleetUnitInfo> list, int updatePeriod) {
-		m_etcdEndpoint = "http://" + DEFAULT_ETCD_ENDPOINT;
-		m_hostList = list;
-		m_updatePeriod = updatePeriod;
-		mapper = new ObjectMapper();
-	}
-
-	public FleetUnitsQuerier(String endpoint, Set<FleetUnitInfo> list, int updatePeriod) {
-		m_etcdEndpoint = "http://" + endpoint;
+	public FleetUnitsQuerier(Set<FleetUnitInfo> list, int updatePeriod, ClusterInfoConfig config) {
+		m_config = config;
+		m_etcdEndpoint = "http://" + config.getEtcdEndpoint();
 		m_hostList = list;
 		m_updatePeriod = updatePeriod;
 		mapper = new ObjectMapper();
@@ -68,7 +59,7 @@ public class FleetUnitsQuerier extends TimerTask {
 
 					JsonNode md = mapper.readTree(f_unitInfo.asText()).path(FLEET_METADATA_KEY);
 
-					if (md.path(FLEET_ROLE_KEY).textValue().equals(SLAVE_ROLE_TAG)) {
+					if (md.path(m_config.getFleetSelectionKey()).textValue().equals(m_config.getFleetSelectionValue())) {
 
 						String ip = mapper.readTree(f_unitInfo.asText()).path(FLEET_PUBLICIP_KEY).textValue();
 
