@@ -14,15 +14,14 @@ public class DockerContainerInfo {
 	private final long m_usedMem;
 	private final long m_hotMem;
 
-	
-	private final static double BYTE_PER_MB = (double)(1024*1024);
-	
-	public DockerContainerInfo(String containerName,double cpuUsage,double avgLoad,long usedMem,long hotMem){
-		
+	private final static double BYTE_PER_MB = (double) (1024 * 1024);
+
+	public DockerContainerInfo(String containerName, double cpuUsage, double avgLoad, long usedMem, long hotMem) {
+
 		DecimalFormat df = new DecimalFormat("#.####");
 		df.setRoundingMode(RoundingMode.CEILING);
-		
-		m_containerName=containerName;
+
+		m_containerName = containerName;
 		m_cpuUsage = new Double(df.format(cpuUsage));
 		m_avgLoad = new Double(df.format(avgLoad));
 		m_usedMem = usedMem;
@@ -50,12 +49,12 @@ public class DockerContainerInfo {
 	}
 
 	@Override
-	public String toString(){
+	public String toString() {
 		String s = m_containerName + ": ";
 		s += String.format("%10.5f", m_cpuUsage);
 		s += String.format("%10.5f", m_avgLoad);
-		s += String.format("%10.1f", (double)(((double)m_usedMem)/BYTE_PER_MB));
-		s += String.format("%10.1f", (double)(((double)m_hotMem)/BYTE_PER_MB));
+		s += String.format("%10.1f", (double) (((double) m_usedMem) / BYTE_PER_MB));
+		s += String.format("%10.1f", (double) (((double) m_hotMem) / BYTE_PER_MB));
 
 		return s;
 	}

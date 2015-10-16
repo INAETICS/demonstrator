@@ -16,45 +16,45 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class DockerInfoUpdater {
 
-	private final static int CADVISOR_PORT=4194;
-	private final static String CADVISOR_PATH="/api/v1.3/docker";
-	private final static double NANOSEC_PER_SEC = 1000000000.0; 
+	private final static int CADVISOR_PORT = 4194;
+	private final static String CADVISOR_PATH = "/api/v1.3/docker";
+	private final static double NANOSEC_PER_SEC = 1000000000.0;
 
-	public static void updateDockerContainerInfo(FleetUnitInfo fleetUnitInfo){
+	public static void updateDockerContainerInfo(FleetUnitInfo fleetUnitInfo) {
 
-		List<DockerContainerInfo> c_list = fleetUnitInfo.getContainerList(); 
-		
-		c_list.clear();;
+		List<DockerContainerInfo> c_list = fleetUnitInfo.getContainerList();
+
+		c_list.clear();
+		;
 
 		ObjectMapper m = new ObjectMapper();
 		JsonNode root = null;
 
-		try{
-			root = m.readTree(new URL("http://"+fleetUnitInfo.getIpAddress()+":"+CADVISOR_PORT+CADVISOR_PATH));
-		}
-		catch(Exception e){
+		try {
+			root = m.readTree(new URL("http://" + fleetUnitInfo.getIpAddress() + ":" + CADVISOR_PORT + CADVISOR_PATH));
+		} catch (Exception e) {
 			e.printStackTrace();
 			return;
 		}
 
 		Iterator<JsonNode> iter = root.iterator();
-		while(iter.hasNext()){
+		while (iter.hasNext()) {
 
 			JsonNode c_node = iter.next();
 
 			String c_name = c_node.path("aliases").get(0).textValue();
 
 			// Let's filter out the POD containers, they don't belong to us
-			if(! c_name.contains("POD")){
+			if (!c_name.contains("POD")) {
 
-				JsonNode lastStats = getLast(c_node.path("stats")); 
-				
+				JsonNode lastStats = getLast(c_node.path("stats"));
+
 				double cpuLoad = getContainerCpuUsage(c_node);
 				double avgLoad = getContainerAvgLoad(lastStats);
-				long usedMem   = getContainerUsedMem(lastStats);
-				long hotMem    = getContainerHotMem(lastStats);
-				
-				DockerContainerInfo c_info = new DockerContainerInfo(c_name,cpuLoad,avgLoad,usedMem,hotMem);
+				long usedMem = getContainerUsedMem(lastStats);
+				long hotMem = getContainerHotMem(lastStats);
+
+				DockerContainerInfo c_info = new DockerContainerInfo(c_name, cpuLoad, avgLoad, usedMem, hotMem);
 
 				c_list.add(c_info);
 
@@ -63,36 +63,36 @@ public class DockerInfoUpdater {
 
 	}
 
-	private static double getContainerCpuUsage(JsonNode c_node){
+	private static double getContainerCpuUsage(JsonNode c_node) {
 
 		int size = getSize(c_node.path("stats"));
 
-		JsonNode firstStat=c_node.path("stats").get(0);
-		JsonNode lastStat=c_node.path("stats").get(size - 1);
+		JsonNode firstStat = c_node.path("stats").get(0);
+		JsonNode lastStat = c_node.path("stats").get(size - 1);
 
-		BigInteger firstCpuStat=firstStat.path("cpu").path("usage").path("total").bigIntegerValue();
-		BigInteger lastCpuStat=lastStat.path("cpu").path("usage").path("total").bigIntegerValue();
+		BigInteger firstCpuStat = firstStat.path("cpu").path("usage").path("total").bigIntegerValue();
+		BigInteger lastCpuStat = lastStat.path("cpu").path("usage").path("total").bigIntegerValue();
 
-		return ((lastCpuStat.doubleValue()-firstCpuStat.doubleValue())/(size*NANOSEC_PER_SEC));
+		return ((lastCpuStat.doubleValue() - firstCpuStat.doubleValue()) / (size * NANOSEC_PER_SEC));
 
 	}
 
-	private static double getContainerAvgLoad(JsonNode lastStats){
+	private static double getContainerAvgLoad(JsonNode lastStats) {
 		return lastStats.path("cpu").path("load_average").doubleValue();
 	}
 
-	private static long getContainerUsedMem(JsonNode lastStats){
+	private static long getContainerUsedMem(JsonNode lastStats) {
 		return lastStats.path("memory").path("usage").longValue();
 	}
 
-	private static long getContainerHotMem(JsonNode lastStats){
+	private static long getContainerHotMem(JsonNode lastStats) {
 		return lastStats.path("memory").path("working_set").longValue();
 	}
-	
+
 	private static JsonNode getLast(JsonNode parent) {
 		return parent.get(getSize(parent) - 1);
 	}
-	
+
 	private static int getSize(JsonNode parent) {
 		Iterator<JsonNode> elements = parent.elements();
 		int size = 0;
