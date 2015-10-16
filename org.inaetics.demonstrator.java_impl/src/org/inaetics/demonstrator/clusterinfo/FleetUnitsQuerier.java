@@ -9,7 +9,7 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.TimerTask;
 
-import org.inaetics.demonstrator.api.stats.FleetUnitInfo;
+import org.inaetics.demonstrator.api.clusterinfo.FleetUnitInfo;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

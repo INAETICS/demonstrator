@@ -7,9 +7,7 @@ import java.util.Properties;
 
 import org.apache.felix.dm.DependencyActivatorBase;
 import org.apache.felix.dm.DependencyManager;
-
-import org.inaetics.demonstrator.api.stats.ClusterInfo;
-
+import org.inaetics.demonstrator.api.clusterinfo.ClusterInfo;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.remoteserviceadmin.RemoteConstants;
 

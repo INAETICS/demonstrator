@@ -11,8 +11,8 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-import org.inaetics.demonstrator.api.stats.ClusterInfo;
-import org.inaetics.demonstrator.api.stats.FleetUnitInfo;
+import org.inaetics.demonstrator.api.clusterinfo.ClusterInfo;
+import org.inaetics.demonstrator.api.clusterinfo.FleetUnitInfo;
 
 public class ClusterInfoImpl implements ClusterInfo{
 	
@@ -24,16 +24,6 @@ public class ClusterInfoImpl implements ClusterInfo{
 	private final Timer timer;
 	private final int m_unitsUpdatePeriod;
 	private final int m_querierUpdatePeriod;
-	
-	
-	public ClusterInfoImpl(String endpoint,int unitsUpdatePeriod,int querierUpdatePeriod) {
-		m_fleetUnits = new CopyOnWriteArraySet<FleetUnitInfo>();
-		m_fleetUnitsQuerier = new FleetUnitsQuerier(endpoint, m_fleetUnits, unitsUpdatePeriod);
-		m_unitsUpdatePeriod = unitsUpdatePeriod;
-		m_querierUpdatePeriod = querierUpdatePeriod;
-		timer = new Timer(true);
-	}
-	
 	
 	public ClusterInfoImpl() {
 		m_fleetUnits = new CopyOnWriteArraySet<FleetUnitInfo>();

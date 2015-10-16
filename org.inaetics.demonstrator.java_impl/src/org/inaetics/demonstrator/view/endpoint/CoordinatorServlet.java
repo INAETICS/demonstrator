@@ -24,10 +24,10 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.inaetics.demonstrator.api.clusterinfo.ClusterInfo;
 import org.inaetics.demonstrator.api.coordinator.CoordinatorService;
 import org.inaetics.demonstrator.api.coordinator.CoordinatorService.Type;
 import org.inaetics.demonstrator.api.producer.Producer;
-import org.inaetics.demonstrator.api.stats.ClusterInfo;
 import org.inaetics.demonstrator.api.stats.StatsProvider;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.log.LogService;

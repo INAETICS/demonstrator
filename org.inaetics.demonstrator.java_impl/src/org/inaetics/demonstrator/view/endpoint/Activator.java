@@ -9,9 +9,9 @@ import javax.servlet.Servlet;
 
 import org.apache.felix.dm.DependencyActivatorBase;
 import org.apache.felix.dm.DependencyManager;
+import org.inaetics.demonstrator.api.clusterinfo.ClusterInfo;
 import org.inaetics.demonstrator.api.coordinator.CoordinatorService;
 import org.inaetics.demonstrator.api.producer.Producer;
-import org.inaetics.demonstrator.api.stats.ClusterInfo;
 import org.inaetics.demonstrator.api.stats.StatsProvider;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.log.LogService;
