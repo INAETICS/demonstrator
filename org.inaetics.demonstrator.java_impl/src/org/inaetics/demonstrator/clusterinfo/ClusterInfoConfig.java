@@ -37,20 +37,24 @@ public class ClusterInfoConfig {
 	}
 	
 	private String getStringValue(Dictionary<String, ?> properties, String key, String defaultValue) {
-		Object value = properties.get(key);
-		if (value != null) {
-			return value.toString();
+		if (properties != null) {
+			Object value = properties.get(key);
+			if (value != null) {
+				return value.toString();
+			}
 		}
 		return defaultValue;
 	}
 
 	private int getIntValue(Dictionary<String, ?> properties, String key, int defaultValue) {
-		Object value = properties.get(key);
-		if (value != null) {
-			try {
-				return Integer.parseInt(value.toString());
-			}
-			catch (Exception e) {
+		if (properties != null) {
+			Object value = properties.get(key);
+			if (value != null) {
+				try {
+					return Integer.parseInt(value.toString());
+				}
+				catch (Exception e) {
+				}
 			}
 		}
 		return defaultValue;
