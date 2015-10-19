@@ -3,70 +3,74 @@
  */
 package org.inaetics.demonstrator.clusterinfo;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
+import org.amdatu.kubernetes.Kubernetes;
 import org.inaetics.demonstrator.api.clusterinfo.ClusterInfo;
 import org.inaetics.demonstrator.api.clusterinfo.ClusterNodeInfo;
 import org.osgi.service.log.LogService;
 
 public class ClusterInfoImpl implements ClusterInfo {
 
-	private Set<ClusterNodeInfo> m_clusterNodes;
-	private ClusterNodeQuerier m_clusterNodeQuerier = null;
-	private final Timer timer;
 	private final ClusterInfoConfig m_config;
+	private ClusterNodeQuerier m_clusterNodeQuerier = null;
+	private List<ClusterNodeInfo> m_clusterInfo;
+    private ScheduledExecutorService m_updateExecutor;
 
 	private volatile LogService m_log;
+	private volatile Kubernetes m_kubernetes;
 	
 	public ClusterInfoImpl(ClusterInfoConfig config) {
 		m_config = config;
-		m_clusterNodes = new CopyOnWriteArraySet<ClusterNodeInfo>();
-		m_clusterNodeQuerier = new FleetClusterNodeQuerier(config, this);
-		timer = new Timer(true);
+		m_clusterInfo = new CopyOnWriteArrayList<>();
 	}
 
 	protected void start() {
-		TimerTask task = new TimerTask() {
+		//m_clusterNodeQuerier = new FleetClusterNodeQuerier(m_config, this);
+		m_clusterNodeQuerier = new KubernetesClusterNodeQuerier(m_config, this, m_kubernetes);
+		m_updateExecutor = Executors.newSingleThreadScheduledExecutor();
+		Runnable updateTask = new Runnable() {
 			@Override
 			public void run() {
-				updateClusterNodes();
+				updateClusterInfo();
 			}
 		};
-		timer.scheduleAtFixedRate(task, 0, m_config.getUpdatePeriod() * 1000);
+		m_updateExecutor.scheduleAtFixedRate(updateTask, 0, m_config.getUpdatePeriod(), TimeUnit.SECONDS);
 	}
 
 	protected void stop() {
-		timer.cancel();
+		m_updateExecutor.shutdownNow();
+		m_updateExecutor = null;
 	}
 	
-	synchronized private void updateClusterNodes() {
-		m_clusterNodes = m_clusterNodeQuerier.getClusterNodes();
-	}
-
-	@Override
-	synchronized public List<ClusterNodeInfo> getClusterInfo() {
-		List<ClusterNodeInfo> cl_info = new ArrayList<ClusterNodeInfo>();
-
-		for (ClusterNodeInfo f_info : m_clusterNodes) {
-			DockerInfoUpdater.updateDockerContainerInfo(f_info, m_config);
-			cl_info.add(f_info);
+	private void updateClusterInfo() {
+		m_clusterInfo.clear();
+		
+		Set<ClusterNodeInfo> clusterNodes = m_clusterNodeQuerier.getClusterNodes();
+		for (ClusterNodeInfo clusterNode : clusterNodes) {
+			DockerInfoUpdater.updateDockerContainerInfo(clusterNode, m_config);
+			m_clusterInfo.add(clusterNode);
 		}
 
-		cl_info.sort(null);
-
-		return cl_info;
+		m_clusterInfo.sort(null);
+		
+	}
+	
+	@Override
+	public List<ClusterNodeInfo> getClusterInfo() {
+		return m_clusterInfo;
 	}
 	
 	void log(String msg, Throwable t) {
-		m_log.log(LogService.LOG_DEBUG, msg);
+		m_log.log(LogService.LOG_DEBUG, msg, t);
 	}
 
 	void error(String msg, Throwable t) {
-		m_log.log(LogService.LOG_ERROR, msg);
+		m_log.log(LogService.LOG_ERROR, msg, t);
 	}
 }

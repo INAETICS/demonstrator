@@ -19,9 +19,9 @@ public class DockerInfoUpdater {
 	private final static String CADVISOR_PATH = "/api/v1.3/docker";
 	private final static double NANOSEC_PER_SEC = 1000000000.0;
 
-	public static void updateDockerContainerInfo(ClusterNodeInfo fleetUnitInfo, ClusterInfoConfig config) {
+	public static void updateDockerContainerInfo(ClusterNodeInfo clusterNodeInfo, ClusterInfoConfig config) {
 
-		List<DockerContainerInfo> c_list = fleetUnitInfo.getContainerList();
+		List<DockerContainerInfo> c_list = clusterNodeInfo.getContainerList();
 
 		c_list.clear();
 
@@ -29,7 +29,7 @@ public class DockerInfoUpdater {
 		JsonNode root = null;
 
 		try {
-			root = m.readTree(new URL("http://" + fleetUnitInfo.getIpAddress() + ":" + config.getCadvisorPort() + CADVISOR_PATH));
+			root = m.readTree(new URL("http://" + clusterNodeInfo.getIpAddress() + ":" + config.getCadvisorPort() + CADVISOR_PATH));
 		} catch (Exception e) {
 			e.printStackTrace();
 			return;
@@ -43,7 +43,7 @@ public class DockerInfoUpdater {
 			String c_name = c_node.path("aliases").get(0).textValue();
 
 			// Let's filter out the POD containers, they don't belong to us
-			if (!c_name.contains("POD")) {
+			if (!c_name.contains("POD") && !c_name.contains("kube-")) {
 
 				JsonNode lastStats = getLast(c_node.path("stats"));
 
@@ -96,6 +96,7 @@ public class DockerInfoUpdater {
 		int size = 0;
 		while (elements.hasNext()) {
 			size++;
+			elements.next();
 		}
 		return size;
 	}

@@ -5,6 +5,7 @@ package org.inaetics.demonstrator.clusterinfo;
 
 import java.util.Properties;
 
+import org.amdatu.kubernetes.Kubernetes;
 import org.apache.felix.dm.DependencyActivatorBase;
 import org.apache.felix.dm.DependencyManager;
 import org.inaetics.demonstrator.api.clusterinfo.ClusterInfo;
@@ -35,7 +36,8 @@ public class Activator extends DependencyActivatorBase{
 		manager.add(createComponent()
 				.setInterface(iface, props)
 				.setImplementation(service)
-				.add(createServiceDependency().setService(LogService.class.getName()).setRequired(false))
+				.add(createServiceDependency().setService(Kubernetes.class).setRequired(true))
+				.add(createServiceDependency().setService(LogService.class).setRequired(false))
 				);
 	}
 
