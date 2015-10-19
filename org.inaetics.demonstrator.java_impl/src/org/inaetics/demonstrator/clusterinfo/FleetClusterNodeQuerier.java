@@ -4,16 +4,16 @@
 package org.inaetics.demonstrator.clusterinfo;
 
 import java.net.URL;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
-import java.util.TimerTask;
 
-import org.inaetics.demonstrator.api.clusterinfo.FleetUnitInfo;
+import org.inaetics.demonstrator.api.clusterinfo.ClusterNodeInfo;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class FleetUnitsQuerier extends TimerTask {
+public class FleetClusterNodeQuerier implements ClusterNodeQuerier {
 
 	private final static String BASE_ETCD_DIR = "/v2/keys";
 	private final static String FLEET_ETCD_DIR = "/_coreos.com/fleet/machines";
@@ -21,23 +21,21 @@ public class FleetUnitsQuerier extends TimerTask {
 	private final static String FLEET_METADATA_KEY = "Metadata";
 
 	private final String m_etcdEndpoint;
-	private Set<FleetUnitInfo> m_hostList;
 	private final ObjectMapper m_mapper;
 	private final ClusterInfoConfig m_config;
 	private final ClusterInfoImpl m_clusterinfo;
 
-	public FleetUnitsQuerier(Set<FleetUnitInfo> list, ClusterInfoConfig config, ClusterInfoImpl clusterinfo) {
+	public FleetClusterNodeQuerier(ClusterInfoConfig config, ClusterInfoImpl clusterinfo) {
 		m_config = config;
 		m_etcdEndpoint = "http://" + config.getEtcdEndpoint();
-		m_hostList = list;
 		m_mapper = new ObjectMapper();
 		m_clusterinfo = clusterinfo;
 	}
 
-	@Override
-	public void run() {
+	public Set<ClusterNodeInfo> getClusterNodes() {
 
 		JsonNode root = null;
+		Set<ClusterNodeInfo> clusterNodes = new HashSet<>();
 
 		try {
 			root = m_mapper.readTree(new URL(m_etcdEndpoint + BASE_ETCD_DIR + FLEET_ETCD_DIR)).path("node").path("nodes");
@@ -63,7 +61,7 @@ public class FleetUnitsQuerier extends TimerTask {
 
 						String ip = m_mapper.readTree(f_unitInfo.asText()).path(FLEET_PUBLICIP_KEY).textValue();
 
-						m_hostList.add(new FleetUnitInfo(ip));
+						clusterNodes.add(new ClusterNodeInfo(ip));
 						m_clusterinfo.log("adding host " + ip, null);
 					}
 
@@ -74,6 +72,8 @@ public class FleetUnitsQuerier extends TimerTask {
 			}
 
 		}
+		
+		return clusterNodes;
 	}
 
 }

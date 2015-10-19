@@ -9,7 +9,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.inaetics.demonstrator.api.clusterinfo.DockerContainerInfo;
-import org.inaetics.demonstrator.api.clusterinfo.FleetUnitInfo;
+import org.inaetics.demonstrator.api.clusterinfo.ClusterNodeInfo;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -19,7 +19,7 @@ public class DockerInfoUpdater {
 	private final static String CADVISOR_PATH = "/api/v1.3/docker";
 	private final static double NANOSEC_PER_SEC = 1000000000.0;
 
-	public static void updateDockerContainerInfo(FleetUnitInfo fleetUnitInfo, ClusterInfoConfig config) {
+	public static void updateDockerContainerInfo(ClusterNodeInfo fleetUnitInfo, ClusterInfoConfig config) {
 
 		List<DockerContainerInfo> c_list = fleetUnitInfo.getContainerList();
 

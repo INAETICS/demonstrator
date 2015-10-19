@@ -6,10 +6,15 @@ package org.inaetics.demonstrator.api.clusterinfo;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FleetUnitInfo implements Comparable<FleetUnitInfo> {
+public class ClusterNodeInfo implements Comparable<ClusterNodeInfo> {
 
 	private final String m_ipAddress;
 	private List<DockerContainerInfo> m_containerList;
+
+	public ClusterNodeInfo(String ip) {
+		m_ipAddress = ip;
+		m_containerList = new ArrayList<DockerContainerInfo>();
+	}
 
 	public String getIpAddress() {
 		return m_ipAddress;
@@ -19,18 +24,8 @@ public class FleetUnitInfo implements Comparable<FleetUnitInfo> {
 		return m_containerList;
 	}
 
-	public FleetUnitInfo(String ip) {
-		m_ipAddress = ip;
-		m_containerList = new ArrayList<DockerContainerInfo>();
-	}
-
-	public FleetUnitInfo(String ip, int period) {
-		m_ipAddress = ip;
-		m_containerList = new ArrayList<DockerContainerInfo>();
-	}
-
 	@Override
-	public int compareTo(FleetUnitInfo f) {
+	public int compareTo(ClusterNodeInfo f) {
 		return this.m_ipAddress.compareTo(f.getIpAddress());
 	}
 
@@ -41,9 +36,9 @@ public class FleetUnitInfo implements Comparable<FleetUnitInfo> {
 			return false;
 		if (o == this)
 			return true;
-		if (!(o instanceof FleetUnitInfo))
+		if (!(o instanceof ClusterNodeInfo))
 			return false;
-		FleetUnitInfo f = (FleetUnitInfo) o;
+		ClusterNodeInfo f = (ClusterNodeInfo) o;
 
 		return (this.m_ipAddress.equals(f.getIpAddress()));
 

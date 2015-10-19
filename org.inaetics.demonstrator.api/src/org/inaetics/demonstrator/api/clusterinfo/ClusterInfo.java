@@ -7,6 +7,6 @@ import java.util.List;
 
 public interface ClusterInfo {
 
-	public List<FleetUnitInfo> getClusterInfo();
+	public List<ClusterNodeInfo> getClusterInfo();
 
 }

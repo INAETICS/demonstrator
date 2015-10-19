@@ -11,13 +11,13 @@ import java.util.TimerTask;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 import org.inaetics.demonstrator.api.clusterinfo.ClusterInfo;
-import org.inaetics.demonstrator.api.clusterinfo.FleetUnitInfo;
+import org.inaetics.demonstrator.api.clusterinfo.ClusterNodeInfo;
 import org.osgi.service.log.LogService;
 
 public class ClusterInfoImpl implements ClusterInfo {
 
-	private Set<FleetUnitInfo> m_fleetUnits;
-	private TimerTask m_fleetUnitsQuerier = null;
+	private Set<ClusterNodeInfo> m_clusterNodes;
+	private ClusterNodeQuerier m_clusterNodeQuerier = null;
 	private final Timer timer;
 	private final ClusterInfoConfig m_config;
 
@@ -25,24 +25,34 @@ public class ClusterInfoImpl implements ClusterInfo {
 	
 	public ClusterInfoImpl(ClusterInfoConfig config) {
 		m_config = config;
-		m_fleetUnits = new CopyOnWriteArraySet<FleetUnitInfo>();
-		m_fleetUnitsQuerier = new FleetUnitsQuerier(m_fleetUnits, config, this);
+		m_clusterNodes = new CopyOnWriteArraySet<ClusterNodeInfo>();
+		m_clusterNodeQuerier = new FleetClusterNodeQuerier(config, this);
 		timer = new Timer(true);
 	}
 
 	protected void start() {
-		timer.scheduleAtFixedRate(m_fleetUnitsQuerier, 0, m_config.getUpdatePeriod() * 1000);
+		TimerTask task = new TimerTask() {
+			@Override
+			public void run() {
+				updateClusterNodes();
+			}
+		};
+		timer.scheduleAtFixedRate(task, 0, m_config.getUpdatePeriod() * 1000);
 	}
 
 	protected void stop() {
 		timer.cancel();
 	}
+	
+	synchronized private void updateClusterNodes() {
+		m_clusterNodes = m_clusterNodeQuerier.getClusterNodes();
+	}
 
 	@Override
-	public List<FleetUnitInfo> getClusterInfo() {
-		List<FleetUnitInfo> cl_info = new ArrayList<FleetUnitInfo>();
+	synchronized public List<ClusterNodeInfo> getClusterInfo() {
+		List<ClusterNodeInfo> cl_info = new ArrayList<ClusterNodeInfo>();
 
-		for (FleetUnitInfo f_info : m_fleetUnits) {
+		for (ClusterNodeInfo f_info : m_clusterNodes) {
 			DockerInfoUpdater.updateDockerContainerInfo(f_info, m_config);
 			cl_info.add(f_info);
 		}
