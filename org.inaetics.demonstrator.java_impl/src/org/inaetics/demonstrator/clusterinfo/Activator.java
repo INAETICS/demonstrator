@@ -9,6 +9,7 @@ import org.apache.felix.dm.DependencyActivatorBase;
 import org.apache.felix.dm.DependencyManager;
 import org.inaetics.demonstrator.api.clusterinfo.ClusterInfo;
 import org.osgi.framework.BundleContext;
+import org.osgi.service.log.LogService;
 import org.osgi.service.remoteserviceadmin.RemoteConstants;
 
 public class Activator extends DependencyActivatorBase{
@@ -34,6 +35,7 @@ public class Activator extends DependencyActivatorBase{
 		manager.add(createComponent()
 				.setInterface(iface, props)
 				.setImplementation(service)
+				.add(createServiceDependency().setService(LogService.class.getName()).setRequired(false))
 				);
 	}
 

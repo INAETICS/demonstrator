@@ -22,16 +22,16 @@ public class FleetUnitsQuerier extends TimerTask {
 
 	private final String m_etcdEndpoint;
 	private Set<FleetUnitInfo> m_hostList;
-	private final int m_updatePeriod;
-	private final ObjectMapper mapper;
+	private final ObjectMapper m_mapper;
 	private final ClusterInfoConfig m_config;
+	private final ClusterInfoImpl m_clusterinfo;
 
-	public FleetUnitsQuerier(Set<FleetUnitInfo> list, int updatePeriod, ClusterInfoConfig config) {
+	public FleetUnitsQuerier(Set<FleetUnitInfo> list, ClusterInfoConfig config, ClusterInfoImpl clusterinfo) {
 		m_config = config;
 		m_etcdEndpoint = "http://" + config.getEtcdEndpoint();
 		m_hostList = list;
-		m_updatePeriod = updatePeriod;
-		mapper = new ObjectMapper();
+		m_mapper = new ObjectMapper();
+		m_clusterinfo = clusterinfo;
 	}
 
 	@Override
@@ -40,9 +40,9 @@ public class FleetUnitsQuerier extends TimerTask {
 		JsonNode root = null;
 
 		try {
-			root = mapper.readTree(new URL(m_etcdEndpoint + BASE_ETCD_DIR + FLEET_ETCD_DIR)).path("node").path("nodes");
+			root = m_mapper.readTree(new URL(m_etcdEndpoint + BASE_ETCD_DIR + FLEET_ETCD_DIR)).path("node").path("nodes");
 		} catch (Exception e) {
-			e.printStackTrace();
+			m_clusterinfo.error("error reading fleet informations from etcd", e);
 		}
 
 		if (root != null) {
@@ -54,26 +54,24 @@ public class FleetUnitsQuerier extends TimerTask {
 				JsonNode f_unitInfo = null;
 
 				try {
-					f_unitInfo = mapper.readTree(new URL(m_etcdEndpoint + BASE_ETCD_DIR + f_unitKey + "/object"))
+					f_unitInfo = m_mapper.readTree(new URL(m_etcdEndpoint + BASE_ETCD_DIR + f_unitKey + "/object"))
 							.path("node").path("value");
 
-					JsonNode md = mapper.readTree(f_unitInfo.asText()).path(FLEET_METADATA_KEY);
+					JsonNode md = m_mapper.readTree(f_unitInfo.asText()).path(FLEET_METADATA_KEY);
 
 					if (md.path(m_config.getFleetSelectionKey()).textValue().equals(m_config.getFleetSelectionValue())) {
 
-						String ip = mapper.readTree(f_unitInfo.asText()).path(FLEET_PUBLICIP_KEY).textValue();
+						String ip = m_mapper.readTree(f_unitInfo.asText()).path(FLEET_PUBLICIP_KEY).textValue();
 
-						m_hostList.add(new FleetUnitInfo(ip, m_updatePeriod));
-
+						m_hostList.add(new FleetUnitInfo(ip));
+						m_clusterinfo.log("adding host " + ip, null);
 					}
 
 				} catch (Exception e) {
-					e.printStackTrace();
+					m_clusterinfo.error("error reading fleet informations from etcd", e);
 				}
 
 			}
-
-			// System.out.println(m_hostList);
 
 		}
 	}

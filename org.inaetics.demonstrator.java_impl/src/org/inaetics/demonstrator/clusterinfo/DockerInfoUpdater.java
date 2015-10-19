@@ -24,7 +24,6 @@ public class DockerInfoUpdater {
 		List<DockerContainerInfo> c_list = fleetUnitInfo.getContainerList();
 
 		c_list.clear();
-		;
 
 		ObjectMapper m = new ObjectMapper();
 		JsonNode root = null;

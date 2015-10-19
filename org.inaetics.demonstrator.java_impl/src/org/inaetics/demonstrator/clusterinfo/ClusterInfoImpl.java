@@ -12,33 +12,29 @@ import java.util.concurrent.CopyOnWriteArraySet;
 
 import org.inaetics.demonstrator.api.clusterinfo.ClusterInfo;
 import org.inaetics.demonstrator.api.clusterinfo.FleetUnitInfo;
+import org.osgi.service.log.LogService;
 
 public class ClusterInfoImpl implements ClusterInfo {
-
-	private static final int DEFAULT_UNITS_UPDATE_PERIOD = 30;
-	private static final int DEFAULT_QUERIER_UPDATE_PERIOD = 10;
 
 	private Set<FleetUnitInfo> m_fleetUnits;
 	private TimerTask m_fleetUnitsQuerier = null;
 	private final Timer timer;
-	private final int m_unitsUpdatePeriod;
-	private final int m_querierUpdatePeriod;
 	private final ClusterInfoConfig m_config;
 
+	private volatile LogService m_log;
+	
 	public ClusterInfoImpl(ClusterInfoConfig config) {
 		m_config = config;
 		m_fleetUnits = new CopyOnWriteArraySet<FleetUnitInfo>();
-		m_fleetUnitsQuerier = new FleetUnitsQuerier(m_fleetUnits, DEFAULT_UNITS_UPDATE_PERIOD, config);
-		m_unitsUpdatePeriod = DEFAULT_UNITS_UPDATE_PERIOD;
-		m_querierUpdatePeriod = DEFAULT_QUERIER_UPDATE_PERIOD;
+		m_fleetUnitsQuerier = new FleetUnitsQuerier(m_fleetUnits, config, this);
 		timer = new Timer(true);
 	}
 
-	public void start() {
-		timer.scheduleAtFixedRate(m_fleetUnitsQuerier, 0, m_querierUpdatePeriod * 1000);
+	protected void start() {
+		timer.scheduleAtFixedRate(m_fleetUnitsQuerier, 0, m_config.getUpdatePeriod() * 1000);
 	}
 
-	public void stop() {
+	protected void stop() {
 		timer.cancel();
 	}
 
@@ -55,5 +51,12 @@ public class ClusterInfoImpl implements ClusterInfo {
 
 		return cl_info;
 	}
+	
+	void log(String msg, Throwable t) {
+		m_log.log(LogService.LOG_DEBUG, msg);
+	}
 
+	void error(String msg, Throwable t) {
+		m_log.log(LogService.LOG_ERROR, msg);
+	}
 }
