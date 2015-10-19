@@ -1,5 +1,11 @@
+/**
+ * Licensed under Apache License v2. See LICENSE for more information.
+ */
 package org.inaetics.demonstrator.clusterinfo;
 
+/**
+ * Configuration values for cluster info
+ */
 public class ClusterInfoConfig {
 	
 	private final static int DEFAULT_CADVISOR_PORT = 4194;
