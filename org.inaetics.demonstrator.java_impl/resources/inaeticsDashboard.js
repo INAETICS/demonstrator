@@ -1,7 +1,7 @@
 /*! ineaticsDashboard.js - functions for rendering statistics - Copyright (C) 2015 - INAETICS */
 "use strict";
 
-const interval = 1000 // ms
+var interval = 1000 // ms
 
 function renderUtilisation(utilisation) {
 	document.getElementById('utilisation').textContent = utilisation.name + " = " + utilisation.value + " " + utilisation.unit
