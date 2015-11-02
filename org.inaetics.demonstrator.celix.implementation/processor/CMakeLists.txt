@@ -13,6 +13,7 @@ bundle(org.inaetics.demonstrator.api.processor.Processor
 	FILES
 		${PROJECT_SOURCE_DIR}/org.inaetics.demonstrator.api/include/inaetics_demonstrator_api/org.inaetics.demonstrator.api.queue.SampleQueue.descriptor
 		${PROJECT_SOURCE_DIR}/org.inaetics.demonstrator.api/include/inaetics_demonstrator_api/org.inaetics.demonstrator.api.datastore.DataStore.descriptor
+                ${PROJECT_SOURCE_DIR}/org.inaetics.demonstrator.api/include/inaetics_demonstrator_api/org.inaetics.demonstrator.api.stats.StatsProvider.descriptor
 )
 
 target_link_libraries(org.inaetics.demonstrator.api.processor.Processor rt pthread ${CELIX_LIBRARIES})
