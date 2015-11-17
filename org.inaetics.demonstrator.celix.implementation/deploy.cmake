@@ -3,13 +3,14 @@ deploy("inaetics-demonstrator-all" BUNDLES
         org.inaetics.demonstrator.api.stats.StatisticTracker
         org.inaetics.demonstrator.api.datastore.DataStore
         org.inaetics.demonstrator.api.producer.Producer
+	org.inaetics.demonstrator.api.producer.Producer_endpoint
         org.inaetics.demonstrator.api.processor.Processor
       )
 
   deploy("inaetics-demonstrator-queue" BUNDLES
 		${CELIX_BUNDLES_DIR}/shell.zip
 		${CELIX_BUNDLES_DIR}/shell_tui.zip
-        ${CELIX_BUNDLES_DIR}/discovery_etcd.zip
+		${CELIX_BUNDLES_DIR}/discovery_etcd.zip
 		${CELIX_BUNDLES_DIR}/topology_manager.zip
 		${CELIX_BUNDLES_DIR}/remote_service_admin_dfi.zip
 		org.inaetics.demonstrator.api.queue.SampleQueue

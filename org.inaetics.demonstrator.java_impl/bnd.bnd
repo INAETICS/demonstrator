@@ -18,5 +18,6 @@
 	org.inaetics.demonstrator.api.processor;version=latest,\
 	org.inaetics.demonstrator.api.datastore;version=latest,\
 	org.inaetics.demonstrator.api.queue;version=latest,\
-	org.inaetics.demonstrator.api.stats;version=latest
+	org.inaetics.demonstrator.api.stats;version=latest,\
+	org.inaetics.demonstrator.api.clusterinfo;version=latest
 	

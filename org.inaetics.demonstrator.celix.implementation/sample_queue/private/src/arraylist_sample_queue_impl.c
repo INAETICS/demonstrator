@@ -56,11 +56,9 @@ celix_status_t sampleQueue_create(char *name, sample_queue_type **result) {
 	sampleQueue = calloc(1, sizeof(struct sample_queue));
 	if (sampleQueue != NULL) {
 		sampleQueue->name = strdup(name);
-		sampleQueue->utilizationStatsName = calloc(1, strlen(name) + strlen(UTILIZATION_NAME_POSTFIX) + 1);
-	}
 
-	if (sampleQueue != NULL && sampleQueue->name != NULL && sampleQueue->utilizationStatsName != NULL) {
-		sprintf(sampleQueue->utilizationStatsName, "%s%s", sampleQueue->name, (char*)UTILIZATION_NAME_POSTFIX);
+		/* this needs to be set exaclty to Queue, otherwise the dashboard cannot pick this up */
+		sampleQueue->utilizationStatsName = strdup("Queue");
 
 		pthread_mutex_init(&(sampleQueue->lock), NULL);
 		pthread_cond_init(&sampleQueue->listEmpty, NULL);
@@ -85,7 +83,7 @@ celix_status_t sampleQueue_create(char *name, sample_queue_type **result) {
 celix_status_t sampleQueue_destroy(sample_queue_type* sampleQueue) {
 
 	celix_status_t status = CELIX_SUCCESS;
-	int i = 0;
+	unsigned int i = 0;
 
 	sampleQueue->statisticsRunning = false;
 
@@ -255,7 +253,7 @@ int sampleQueue_take(sample_queue_type *sampleQueue, struct sample **out) {
 int sampleQueue_takeAll(sample_queue_type *sampleQueue, uint32_t min, uint32_t max, struct sample_sequence samples) {
 	celix_status_t status = CELIX_ILLEGAL_STATE;
 	struct timespec ts;
-	int i = 0;
+	unsigned int i = 0;
 	int rc = 0;
 
 	clock_gettime(CLOCK_REALTIME, &ts);
@@ -312,10 +310,12 @@ void *printStatistics(void *handle) {
 	sample_queue_type* sampleQueue = (sample_queue_type*) handle;
 	sampleQueue->statisticsRunning = true;
 	while (sampleQueue->statisticsRunning) {
-		// TODO: add lock
+	    pthread_mutex_lock(&sampleQueue->lock);
 		msg(1, "QUEUE: \tsamples put: %d \tsamples taken: %d \tqueue size: %d", sampleQueue->putCnt, sampleQueue->takeCnt, arrayList_size(sampleQueue->queue));
 		sampleQueue->putCnt = 0;
 		sampleQueue->takeCnt = 0;
+	    pthread_mutex_unlock(&sampleQueue->lock);
+
 		sleep(2);
 	}
 

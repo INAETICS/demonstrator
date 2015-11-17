@@ -1,2 +1,5 @@
-etcd_host: 10.0.1.111:4001
-k8s_host: 10.0.1.111:8080
+etcd_host: 172.17.8.20:2379
+k8s_host: https://172.17.8.20
+k8s_acceptAnyCert=true
+k8s_username=test
+k8s_password=secret

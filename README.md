@@ -1,7 +1,7 @@
 
-# The INAETICS Demonstator Project
+# The INAETICS Demonstrator Project [![Build Status](https://travis-ci.org/INAETICS/demonstrator.svg?branch=master)](https://travis-ci.org/INAETICS/demonstrator)
 
-The purpose of the demonstator project is to demonstrate the capabilities of an
+The purpose of the demonstrator project is to demonstrate the capabilities of an
 INAETICS system.
 
 ## Java implementation
@@ -25,15 +25,15 @@ but should run as well with another discovery mechanism, like Bonjour.
 
 ## Celix Bundles Implementation
 
-This branch contains an implementation of the demonstrator based on Celix bundles architecture. The Sample Queue Service expose services for storing in a queue samples, the Producer is able to track the Sample Queue Service and generate some dummy storing load. The Processor takes the load from the Queue and forwards it to a DataStore (nyi).
+This branch contains an implementation of the demonstrator based on Celix bundles architecture. The Sample Queue Service expose services for storing in a queue samples, the Producer is able to track the Sample Queue Service and generate some dummy storing load. The Processor takes the load from the Queue and forwards it to a DataStore.
 
 ## Building and execution instructions
 
 0.   Be sure to have installed cmake,apr,apr-util,zlib,curl and jansson libraries
-1.   Download, compile and install Celix (sources can be checked out from  https://svn.apache.org/repos/asf/celix/trunk/. Building and configuring instructions are included.) use the following cmake command to ensure that the required Apache Celix bundles are installed: `cmake -DBUILD_SHELL=ON -DBUILD_SHELL_TUI=ON -DBUILD_REMOTE_SERVICE_ADMIN=ON -DBUILD_RSA_DISCOVERY_CONFIGURED=ON -DBUILD_RSA_REMOTE_SERVICE_ADMIN_HTTP=ON -DBUILD_RSA_TOPOLOGY_MANAGER=ON <celix-src-dir>`. 
+1.   Download, compile and install Celix (sources can be checked out via git clone https://github.com/apache/celix.git) use the following cmake command to ensure that the required Apache Celix bundles are installed: `cmake -DBUILD_SHELL=ON -DBUILD_SHELL_TUI=ON -DBUILD_REMOTE_SERVICE_ADMIN=ON -DBUILD_RSA_DISCOVERY_CONFIGURED=ON -DBUILD_RSA_REMOTE_SERVICE_ADMIN_HTTP=ON -DBUILD_RSA_TOPOLOGY_MANAGER=ON -DCMAKE_INSTALL_PREFIX=<celix-install-dir> <celix-src-dir>`
 2.   Checkout the demonstrator source code: git clone https://github.com/INAETICS/demonstrator.git
 3.   Create a build folder mkdir demonstrator/build && cd demonstrator/build
-4.   Start cmake with either: cmake -DCELIX_DIR="celix installation folder"  ..  or: ccmake ..  -DCELIX_DIR="celix installation folder" to configure the project via the interactive menu
+4.   Start cmake with either: `cmake -DCELIX_DIR=<celix-install-dir>`  ..  or: `ccmake  -DCELIX_DIR=<celix-install-dir>` .. to configure the project via the interactive menu
 5.   make all
 6.   make deploy
 7.  cd deploy/inaetics-demonstrator

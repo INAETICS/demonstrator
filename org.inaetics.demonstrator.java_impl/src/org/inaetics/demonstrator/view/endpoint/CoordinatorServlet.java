@@ -1,17 +1,5 @@
-/*
- * Copyright (c) 2015 INAETICS, <www.inaetics.org>
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+/**
+ * Licensed under Apache License v2. See LICENSE for more information.
  */
 package org.inaetics.demonstrator.view.endpoint;
 
@@ -19,11 +7,16 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.servlet.ServletException;
@@ -31,9 +24,9 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.inaetics.demonstrator.api.clusterinfo.ClusterInfo;
 import org.inaetics.demonstrator.api.coordinator.CoordinatorService;
 import org.inaetics.demonstrator.api.coordinator.CoordinatorService.Type;
-import org.inaetics.demonstrator.api.processor.Processor;
 import org.inaetics.demonstrator.api.producer.Producer;
 import org.inaetics.demonstrator.api.stats.StatsProvider;
 import org.osgi.framework.ServiceReference;
@@ -41,15 +34,17 @@ import org.osgi.service.log.LogService;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Provides read-only access to some of the (low-level) system statistics.
  */
 public class CoordinatorServlet extends HttpServlet {
 
-    static class StatsContainer {
+    static class StatsContainer implements Comparable<StatsContainer> {
         final StatsProvider m_provider;
         final TimestampMap<Double> m_stats;
+        String name;
 
         public StatsContainer(StatsProvider provider, TimestampMap<Double> stats) {
             m_provider = provider;
@@ -59,44 +54,61 @@ public class CoordinatorServlet extends HttpServlet {
         public void updateStats(Long time) {
             m_stats.put(time, m_provider.getValue());
         }
+
+		@Override
+		public int compareTo(StatsContainer other) {
+			if (name == null) {
+				return 1;
+			}
+			if (other == null || other.name == null) {
+				return -1;
+			}
+			return name.compareTo(other.name);
+		}
     }
 
     // Injected by Felix DM...
     private volatile LogService m_log;
     private volatile StatsProvider m_aggregator;
     private volatile CoordinatorService m_coordinator;
+    private volatile ClusterInfo m_clusterInfo;
 
     private final ConcurrentMap<ServiceReference<StatsProvider>, StatsContainer> m_providerStats;
     private final List<Producer> m_producers;
     private final AtomicInteger m_processorCount;
+    private final AtomicInteger m_producerCount;
     private final AtomicInteger m_productionRate;
+	private ScheduledExecutorService m_executor;
 
     public CoordinatorServlet() {
         m_providerStats = new ConcurrentHashMap<>();
         m_producers = new CopyOnWriteArrayList<>();
         m_processorCount = new AtomicInteger(0);
+        m_producerCount = new AtomicInteger(0);
         m_productionRate = new AtomicInteger(5);
     }
-
-    /* Called by Felix DM. */
-    public final void addProcessor(Processor p) {
-        m_processorCount.incrementAndGet();
+    
+    // called by Felix DM
+    protected final void start() {
+		m_executor = Executors.newScheduledThreadPool(10);
+    }
+    
+    protected final void stop() throws Exception {
+        m_executor.shutdown();
+        m_executor.awaitTermination(10, TimeUnit.SECONDS);
     }
 
     /* Called by Felix DM. */
     public final void addProducer(Producer p) {
         m_producers.add(p);
         setSampleRate(p, m_productionRate.get());
-    }
-
-    /* Called by Felix DM. */
-    public final void removeProcessor(Processor p) {
-        m_processorCount.decrementAndGet();
+        info("added producer");
     }
 
     /* Called by Felix DM. */
     public final void removeProducer(Producer p) {
         m_producers.remove(p);
+        info("removed producer");
     }
 
     /* Called by Felix DM. */
@@ -104,7 +116,15 @@ public class CoordinatorServlet extends HttpServlet {
         if ("true".equals(serviceRef.getProperty("aggregator"))) {
             m_aggregator = provider;
         }
+        String type = "" + serviceRef.getProperty("type"); 
+        if ("processor".equalsIgnoreCase(type)) {
+            m_processorCount.incrementAndGet();
+        }
+        else if ("producer".equalsIgnoreCase(type)) {
+            m_producerCount.incrementAndGet();
+        }
         m_providerStats.putIfAbsent(serviceRef, new StatsContainer(provider, new TimestampMap<Double>()));
+        info("added statsprovider of type " + type);
     }
 
     /* Called by Felix DM. */
@@ -112,7 +132,15 @@ public class CoordinatorServlet extends HttpServlet {
         if ("true".equals(serviceRef.getProperty("aggregator"))) {
             m_aggregator = null;
         }
+        String type = "" + serviceRef.getProperty("type"); 
+        if ("processor".equalsIgnoreCase(type)) {
+            m_processorCount.decrementAndGet();
+        }
+        else if ("producer".equalsIgnoreCase(type)) {
+            m_producerCount.decrementAndGet();
+        }
         m_providerStats.remove(serviceRef);
+        info("added statsprovider of type " + type);
     }
 
     @Override
@@ -135,39 +163,64 @@ public class CoordinatorServlet extends HttpServlet {
                 resp.setStatus(HttpServletResponse.SC_OK);
 
                 // Return an array with all providers sorted on their name...
-                Map<String, StatsContainer> names = new TreeMap<>();
+                Set<StatsContainer> statsContainers = new TreeSet<>();
+                
+    			// get all stats async with a 1 second timeout
+                // prevents waiting for bigger remote service call timeouts and a hanging UI
+                List<Callable<StatsContainer>> tasks = new ArrayList<>();
+                List<Future<StatsContainer>> results = null;
+
                 for (StatsContainer c : m_providerStats.values()) {
-                	String name = null;
-                	try {
-                		c.updateStats(System.currentTimeMillis());
-                        name = getName(c.m_provider);
-                        if (wantedNames.isEmpty() || wantedNames.contains(name)) {
-                            names.put(name, c);
-                        }
-                	}
-                	catch (Exception e) {
-                        warn("Failed to process provider %s: %s", name == null ? "unknown provider" : name, e.getMessage());
-                        continue;
-                	}
-                }
-
-                generator.writeStartArray();
-
-                for (Map.Entry<String, StatsContainer> entry: names.entrySet()) {
-                	StatsContainer container = entry.getValue();
-                    try {
-                        StatsProvider provider = container.m_provider;
-                        TimestampMap<Double> stats = container.m_stats;
-
-                        if (provider != null) {
-                            writeAsJSON(generator, provider, stats, entry.getKey());
-                        }
-                    } catch (Exception e) {
-                        warn("Failed to write provider %s to JSON: %s", container.m_provider, e.getMessage());
-                    }
-                }
-
-                generator.writeEndArray();
+        			tasks.add(new Callable<StatsContainer>(){
+        				@Override
+        				public StatsContainer call() throws Exception {
+        					c.updateStats(System.currentTimeMillis());
+        					c.name = getName(c.m_provider);
+        					return c;
+        				}
+        			});
+            	}
+				
+                try {
+					results = m_executor.invokeAll(tasks, 1, TimeUnit.SECONDS);
+				} catch (InterruptedException e1) {
+					// what can we do...?
+				}
+            	
+				if (results != null) {
+					for (Future<StatsContainer> result : results) {
+						try {
+							StatsContainer c = result.get();
+							String name = c.name;
+							if (name != null && (wantedNames.isEmpty() || wantedNames.contains(name))) {
+								statsContainers.add(c);
+							}
+						}
+						catch (Exception e) {
+							// just skip this one
+							warn("Failed to process provider %s", e.getMessage());
+							continue;
+						}
+					}
+					
+					generator.writeStartArray();
+					
+					for (StatsContainer container: statsContainers) {
+						try {
+							StatsProvider provider = container.m_provider;
+							TimestampMap<Double> stats = container.m_stats;
+							String name = container.name;
+							
+							if (provider != null && stats != null && name != null) {
+								writeAsJSON(generator, provider, stats, name);
+							}
+						} catch (Exception e) {
+							warn("Failed to write provider to JSON: %s", e.getMessage());
+						}
+					}
+					
+					generator.writeEndArray();
+				}
             } else if ("/systemStats".equals(pathInfo)) {
                 resp.setStatus(HttpServletResponse.SC_OK);
 
@@ -177,7 +230,7 @@ public class CoordinatorServlet extends HttpServlet {
                 generator.writeStartObject();
                 generator.writeNumberField("productionRate", m_productionRate.get());
                 generator.writeStringField("processors", m_processorCount.get() + " / " + currentProcessorReplicaCount);
-                generator.writeStringField("producers", m_producers.size() + " / " + currentProducerReplicaCount);
+                generator.writeStringField("producers", m_producerCount.get() + " / " + currentProducerReplicaCount);
                 generator.writeEndObject();
             } else if ("/utilisation".equals(pathInfo)) {
                 resp.setStatus(HttpServletResponse.SC_OK);
@@ -188,7 +241,14 @@ public class CoordinatorServlet extends HttpServlet {
                 generator.writeStringField("unit", m_aggregator.getMeasurementUnit());
                 generator.writeNumberField("value", m_aggregator.getValue());
                 generator.writeEndObject();
-            } else {
+            }
+            else if ("/clusterInfo".equals(pathInfo)) {
+                resp.setStatus(HttpServletResponse.SC_OK);
+                
+                new ObjectMapper().writeValue(generator, m_clusterInfo.getClusterInfo());;
+                
+                
+            }else {
                 resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
 
                 generator.writeStartObject();

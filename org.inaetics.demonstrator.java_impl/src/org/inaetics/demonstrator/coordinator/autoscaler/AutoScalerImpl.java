@@ -1,17 +1,5 @@
-/*
- * Copyright (c) 2015 INAETICS, <www.inaetics.org>
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+/**
+ * Licensed under Apache License v2. See LICENSE for more information.
  */
 package org.inaetics.demonstrator.coordinator.autoscaler;
 
@@ -157,15 +145,21 @@ public class AutoScalerImpl implements ManagedService {
             }
         });
 
-        // TODO
-        m_coordinator.setReplicaCount(Type.PRODUCER, 1);
-        m_coordinator.setReplicaCount(Type.PROCESSOR, 1);
+        try {
+        	m_coordinator.setReplicaCount(Type.PRODUCER, 1);
+        	m_coordinator.setReplicaCount(Type.PROCESSOR, 1);
+        }
+        catch (Exception e) {
+        	// TODO how to handle this
+            m_log.log(LogService.LOG_ERROR, "Could not set initial replica count!", e);
+        }
     }
 
     /**
      * Called by Felix DM when this component is stopped.
      */
     protected final void stop(Component comp) throws Exception {
+    	info("stopping autoscaler");
         try {
             if (m_pollFuture != null) {
                 m_pollFuture.cancel(true);
