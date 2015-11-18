@@ -71,6 +71,80 @@ function getAndRenderSystemStats() {
 	getJSON('/coordinator/systemStats', renderSystemStats, interval)
 }
 
+function renderClusterInfo(stats) {
+	var clusterInfo = document.getElementById('clusterInfo')
+	
+	while (clusterInfo.firstChild) {
+		clusterInfo.removeChild(clusterInfo.firstChild);
+	}
+	
+	if (stats.length === 0) {
+		clusterInfo.innerText = 'no info available';
+		return;
+	}
+
+	var table = document.createElement('table');
+	table.className = 'table table-condensed';
+
+	var headerRow = document.createElement('tr');
+
+	var headers = ['Name', 'CPU', 'Memory'];
+	for (var i = 0; i < headers.length; i++ ) {
+		var header = document.createElement('th');
+		header.textContent = headers[i];
+		headerRow.appendChild(header);
+	}
+
+	table.appendChild(headerRow);
+
+	for (var i = 0; i < stats.length; i++) {
+		var host = stats[i];
+		
+		var hostRow = document.createElement('tr');
+		hostRow.className = 'info';
+		
+		var hostName = document.createElement('td');
+		hostName.textContent = host['ipAddress'];
+		hostRow.appendChild(hostName);
+
+		table.appendChild(hostRow);
+		
+		var containers = host['containerList'];
+		for (var j = 0; j < containers.length; j++) {
+			var container = containers[j];
+
+			var name = '\u00a0\u00a0\u00a0\u00a0\u00a0' + container['name'].substring(0, container['name'].indexOf('.'));
+			var cpu = container['cpuUsage'];
+			var memory = parseInt(container['usedMem'] / 1000000) + "MB";
+
+			var data  = [name, cpu, memory];
+			
+			var row = document.createElement('tr');
+			for (var k = 0; k < data.length; k++) {
+				var td = document.createElement('td');
+				td.textContent = data[k]; 
+				row.appendChild(td);
+			}
+			table.appendChild(row);
+
+		}
+
+		var row = document.createElement('tr');
+		var td = document.createElement('td');
+		td.textContent = '\u00a0';
+		row.appendChild(td);
+		table.appendChild(row);
+
+	}
+
+	clusterInfo.appendChild(table);
+
+}
+
+function getAndRenderClusterInfo() {
+	getJSON('/coordinator/clusterInfo', renderClusterInfo, interval)
+}
+
 function postAndUpdateUtilisation(val) {
 	document.getElementById('slider-val').value = val
 	postJSON('/coordinator/utilisation', 'value=' + val)
@@ -84,4 +158,5 @@ function scaleProducer(el, val) {
 window.onload = function() {
 	setTimeout(getAndRenderUtilisation, interval)
 	setTimeout(getAndRenderSystemStats, interval)
+	setTimeout(getAndRenderClusterInfo, interval)
 }
