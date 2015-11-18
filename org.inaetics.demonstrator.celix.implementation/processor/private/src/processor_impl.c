@@ -63,7 +63,7 @@ static void msg(int lvl, char *fmsg, ...) {
 	}
 }
 
-static void processor_sendResult(processor_pt processor, struct result result) {
+static void processor_sendResult(processor_pt processor, struct result *result) {
 
 	unsigned int i = 0;
 
@@ -157,8 +157,6 @@ celix_status_t processor_receiveSamples(processor_thread_data_pt th_data, int sa
 
 	msg(1, "PROCESSOR: %d single samples received.", singleSampleCnt);
 
-	usleep(WAIT_TIME_USECONDS);
-
 	return status;
 }
 
@@ -176,8 +174,10 @@ celix_status_t processor_receiveBursts(processor_thread_data_pt th_data, int sam
 
 	for (ts_end = ts_start; ts_diff.tv_sec <= 0;) {
 		int j;
+		struct sample_sequence *samples = NULL;
 
 		if (burstSampleCnt < samplesPerSec) {
+
 			msg(3, "PROCESSOR: TakeAll (min: %d, max: %d)", MIN_BURST_LEN, MAX_BURST_LEN);
 
 			if (queueService != NULL) {
