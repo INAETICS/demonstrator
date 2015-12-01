@@ -1,0 +1,15 @@
+:header
+type=interface
+name=DataStore
+version=1.0.0
+:annotations
+classname=org.inaetics.demonstrator.api.datastore.DataStore
+note=using.result2.results.in.corruptedmem.should.not
+:types
+sample={jDD sampleTime value1 value2}
+result2={jDlsample; processingTime result1 sample}
+result={jD{jDD sampleTime value1 value2} processingTime result1 sample}
+:methods
+store(Lorg/inaetics/demonstrator/api/data/Result;)V=store(#am=handle;PLresult;)N
+storeAll(Ljava/util/Collection;)V=storeAll(#am=handle;P[lresult;)N
+findResultsBetween(JJ)Ljava/util/Collection;=findResultsBetween(#am=handle;jj#am=out;**[lresult;)N

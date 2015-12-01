@@ -19,14 +19,41 @@ import org.osgi.service.log.LogService;
 
 public class SimpleSampleQueue implements SampleQueue, StatsProvider, ManagedService {
     private static final int MAX_QUEUE_SIZE = 10 * 1000;
+    private static final int SLEEP_IN_MS = 5000;
 
     private final BlockingQueue<Sample> m_queue;
+    private final Thread m_printThread;
 
     // Injected by Felix DM...
     private volatile LogService m_log;
 
     public SimpleSampleQueue() {
         m_queue = new LinkedBlockingQueue<>(MAX_QUEUE_SIZE);
+        m_printThread = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				while (!Thread.interrupted()) {
+					try {
+						printStatus();
+						Thread.sleep(SLEEP_IN_MS);
+					} catch (InterruptedException e) {
+						Thread.currentThread().interrupt();
+					}
+				}
+			}
+        }, "queue-print");
+    }
+    
+    public void start() {
+    	m_printThread.start();
+    }
+    
+    public void stop() {
+    	m_printThread.interrupt();
+    }
+    
+    private void printStatus() {
+    	m_log.log(LogService.LOG_INFO, "Queue size : " + m_queue.size());
     }
 
     @Override

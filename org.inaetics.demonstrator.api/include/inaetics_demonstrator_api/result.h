@@ -20,8 +20,8 @@
 #include "inaetics_demonstrator_api/sample.h"
 
 struct result {
-	uint64_t time; //milliseconds since unix epoch
-	double value1;
+	uint64_t processingTime; //milliseconds since unix epoch
+	double result1;
 	struct sample sample;
 };
 

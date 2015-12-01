@@ -114,15 +114,15 @@ celix_status_t producer_sendSamples(producer_thread_data_pt th_data, int samples
 		producer_fillSample(&smpl);
 
 		if (queueService != NULL) {
-			queueService->put(queueService->sampleQueue, smpl, &ret);
+			int rc = queueService->put(queueService->sampleQueue, &smpl, &ret);
+			if (rc != 0) {
+				msg(1, "PRODUCER: Error invoking put");
+			}
 
 			if (ret == true) {
 				msg(3, "PRODUCER: Sample {Time:%llu | V1=%f | V2=%f} stored.", smpl.time, smpl.value1,
 						smpl.value2);
 				singleSampleCnt++;
-			}
-			else {
-				msg(2, "PRODUCER: Could not store sample.");
 			}
 		}
 		else {
@@ -180,7 +180,14 @@ celix_status_t producer_sendBursts(producer_thread_data_pt th_data, int samplesP
 		if (queueService != NULL) {
 			clock_gettime(CLOCK_REALTIME, &ts_before);
 
-			queueService->putAll(queueService->sampleQueue, burst, burst_len, &burst_samples_stored);
+			struct sample_sequence samples;
+            samples.cap = burst_len;
+            samples.len = burst_len;
+            samples.buf = burst;
+			int rc = queueService->putAll(queueService->sampleQueue, samples, &burst_samples_stored);
+			if (rc != 0) {
+				msg(1, "PRODUCER: Error invoking putAll");
+			}
 			clock_gettime(CLOCK_REALTIME, &ts_after);
 		}
 		else {

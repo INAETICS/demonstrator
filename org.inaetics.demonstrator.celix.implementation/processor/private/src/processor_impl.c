@@ -63,18 +63,18 @@ static void msg(int lvl, char *fmsg, ...) {
 	}
 }
 
-static void processor_sendResult(processor_pt processor, struct result result) {
+static void processor_sendResult(processor_pt processor, struct result *result) {
 
 	unsigned int i = 0;
 
 	pthread_rwlock_rdlock(&processor->dataStoreLock);
 
 	for (; i < arrayList_size(processor->dataStoreServices); i++) {
-		bool resultStored = false;
 		struct data_store_service* dsService = arrayList_get(processor->dataStoreServices, i);
 
-		if ((dsService->store(dsService->dataStore, result, &resultStored) != 0) || resultStored == false) {
-			msg(2, "PROCESSOR: Could not store single sample.");
+		int rc = dsService->store(dsService->dataStore, result);
+		if (rc != 0) {
+			msg(2, "PROCESSOR: Error storing sample in sample store got error nr %i", rc);
 		}
 	}
 
@@ -83,9 +83,9 @@ static void processor_sendResult(processor_pt processor, struct result result) {
 
 static void processor_processSample(struct sample* sample, struct result* result) {
 
-	result->time = sample->time;
-	result->value1 = sample->value1 + sample->value2;
-
+	result->processingTime = (long)time(NULL);
+	result->result1 = sample->value1 + sample->value2;
+	
 	memcpy(&(result->sample), sample, sizeof(struct sample));
 
 }
@@ -115,50 +115,47 @@ celix_status_t processor_receiveSamples(processor_thread_data_pt th_data, int sa
 	clock_gettime(CLOCK_REALTIME, &ts_start);
 	timespec_diff(&ts_diff,&ts_start,&ts_start);
 
-	struct sample *recvSample = calloc(1, sizeof(struct sample));
+	for (ts_end = ts_start; ts_diff.tv_sec<=0;) {
+		struct sample *recvSample = NULL;
+		if (singleSampleCnt < samplesPerSec) {
+			if (queueService != NULL) {
+				status = queueService->take(queueService->sampleQueue, &recvSample);
+				if (status == CELIX_SUCCESS) {
+					if (recvSample != NULL) {
+						struct result *result = calloc(1, sizeof(*result));
 
-	if (!recvSample) {
-		status = CELIX_BUNDLE_EXCEPTION;
-	}
-	else {
-		for (ts_end = ts_start; ts_diff.tv_sec<=0;) {
-
-			if (singleSampleCnt < samplesPerSec) {
-				if (queueService != NULL) {
-					if (queueService->take(queueService->sampleQueue, recvSample) == 0) {
-						struct result* result_pt = calloc(1, sizeof(*result_pt));
-
-						msg(3, "\tPROCESSOR: Received and Processing Sample {Time:%llu | V1=%f | V2=%f}", recvSample->time, recvSample->value1, recvSample->value2);
-						processor_processSample(recvSample, result_pt);
-						processor_sendResult(th_data->processor, *result_pt);
+						msg(3, "\tPROCESSOR: Received and Processing Sample {Time:%llu | V1=%f | V2=%f}",
+							recvSample->time, recvSample->value1, recvSample->value2);
+						processor_processSample(recvSample, result);
+						processor_sendResult(th_data->processor, result);
 
 						singleSampleCnt++;
 					}
 					else {
-						msg(2, "PROCESSOR: Could not take a single sample.");
+						//msg(2, "PROCESSOR: Could not take a single sample.");
 					}
-				}
-				else {
-					status = CELIX_BUNDLE_EXCEPTION;
 				}
 			}
 			else {
-				usleep(2000);
+				status = CELIX_BUNDLE_EXCEPTION;
 			}
-
-			clock_gettime(CLOCK_REALTIME, &ts_end);
-			timespec_diff(&ts_diff,&ts_start,&ts_end);
 		}
+		else {
+			usleep(2000);
+		}
+
 		free(recvSample);
 
-		/* Update the statistic */
-		pthread_rwlock_wrlock(&th_data->throughputLock);
-		th_data->single_throughput = singleSampleCnt;
-		pthread_rwlock_unlock(&th_data->throughputLock);
-
-		msg(1, "PROCESSOR: %d single samples received.", singleSampleCnt);
+		clock_gettime(CLOCK_REALTIME, &ts_end);
+		timespec_diff(&ts_diff,&ts_start,&ts_end);
 	}
 
+	/* Update the statistic */
+	pthread_rwlock_wrlock(&th_data->throughputLock);
+	th_data->single_throughput = singleSampleCnt;
+	pthread_rwlock_unlock(&th_data->throughputLock);
+
+	msg(1, "PROCESSOR: %d single samples received.", singleSampleCnt);
 
 	return status;
 }
@@ -167,37 +164,35 @@ celix_status_t processor_receiveSamples(processor_thread_data_pt th_data, int sa
 celix_status_t processor_receiveBursts(processor_thread_data_pt th_data, int samplesPerSec) {
 	celix_status_t status = CELIX_SUCCESS;
 	struct sample_queue_service* queueService = th_data->service;
-	struct sample *recvSamples[MAX_BURST_LEN];
 	struct timespec ts_start;
 	struct timespec ts_end;
 	struct timespec ts_diff;
-	uint32_t j, numOfRecvSamples;
 	int burstSampleCnt = 0;
 
 	clock_gettime(CLOCK_REALTIME, &ts_start);
 	timespec_diff(&ts_diff,&ts_start,&ts_start);
 
-	for (j = 0; j < MAX_BURST_LEN; j++) {
-		recvSamples[j] = calloc(1, sizeof(struct sample));
-	}
-
-	for (ts_end = ts_start; (ts_diff.tv_sec<=0);) {
+	for (ts_end = ts_start; ts_diff.tv_sec <= 0;) {
+		int j;
+		struct sample_sequence *samples = NULL;
 
 		if (burstSampleCnt < samplesPerSec) {
+
 			msg(3, "PROCESSOR: TakeAll (min: %d, max: %d)", MIN_BURST_LEN, MAX_BURST_LEN);
 
 			if (queueService != NULL) {
-				if (queueService->takeAll(queueService->sampleQueue, MIN_BURST_LEN, MAX_BURST_LEN, &recvSamples[0], &numOfRecvSamples) == 0) {
-					msg(3, "PROCESSOR:  %u samples received", numOfRecvSamples);
+				if (queueService->takeAll(queueService->sampleQueue, MIN_BURST_LEN, MAX_BURST_LEN, &samples) == 0) {
+					uint32_t numOfRecvSamples = samples == NULL ? 0 : samples->len;
+					msg(2, "PROCESSOR:  %u samples received", numOfRecvSamples);
 
 					for (j = 0; j < numOfRecvSamples; j++) {
-						msg(3, "\tPROCESSOR: Processing Sample (%d/%d)  {Time:%llu | V1=%f | V2=%f}", j, numOfRecvSamples, recvSamples[j]->time, recvSamples[j]->value1, recvSamples[j]->value2);
-						struct result* result_pt = calloc(1, sizeof(*result_pt));
+						msg(3, "\tPROCESSOR: Processing Sample (%d/%d)  {Time:%llu | V1=%f | V2=%f}", j, numOfRecvSamples, samples->buf[j].time, samples->buf[j].value1, samples->buf[j].value2);
+						struct result* result = calloc(1, sizeof(*result));
 
-						if (result_pt) {
-							processor_processSample(recvSamples[j], result_pt);
-							processor_sendResult(th_data->processor, *result_pt);
-							free(result_pt);
+						if (result) {
+							processor_processSample(&samples->buf[j], result);
+							processor_sendResult(th_data->processor, result);
+							free(result);
 						}
 
 					}
@@ -216,17 +211,19 @@ celix_status_t processor_receiveBursts(processor_thread_data_pt th_data, int sam
 			usleep(2000);
 		}
 
+		if (samples != NULL) {
+			free(samples->buf);
+			free(samples);
+		}
+
 		clock_gettime(CLOCK_REALTIME, &ts_end);
 		timespec_diff(&ts_diff,&ts_start,&ts_end);
-	}
-
-	for (j = 0; j < MAX_BURST_LEN; j++) {
-		free(recvSamples[j]);
 	}
 
 	pthread_rwlock_wrlock(&th_data->throughputLock);
 	th_data->burst_throughput = burstSampleCnt;
 	pthread_rwlock_unlock(&th_data->throughputLock);
+
 	msg(1, "PROCESSOR:  %d samples in bursts received.", burstSampleCnt);
 
 	return status;

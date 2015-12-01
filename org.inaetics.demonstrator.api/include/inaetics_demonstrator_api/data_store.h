@@ -22,14 +22,20 @@
 
 #define INAETICS_DEMONSTRATOR_API__DATA_STORE_SERVICE_NAME "org.inaetics.demonstrator.api.datastore.DataStore"
 
+struct result_seq {
+	uint32_t cap;
+	uint32_t len;
+	struct result *buf;
+};
+
 struct data_store_service {
 	void *dataStore;
 
-	int (*store)(void *dataStore, struct result result, bool *resultStored);
+	int (*store)(void *dataStore, struct result *result);
 
-	int (*storeAll)(void *dataStore, struct result *results, uint32_t size, uint32_t *storedResult);
+	int (*storeAll)(void *dataStore, struct result_seq sequence);
 
-	int (*findResultsBetween)(void *dataStore, uint64_t begin, uint64_t end, struct result **results, uint32_t *resultSize);
+	int (*findResultsBetween)(void *dataStore, uint64_t begin, uint64_t end, struct result_seq **sequence);
 
 };
 

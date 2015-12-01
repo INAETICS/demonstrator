@@ -16,8 +16,8 @@ typedef struct data_store data_store_type;
 celix_status_t dataStore_create(char* name, data_store_type** dataStore);
 celix_status_t dataStore_destroy(data_store_type* dataStore);
 
-int dataStore_store(data_store_type *dataStore, struct result result, bool *resultStored);
-int dataStore_storeAll(data_store_type *dataStore, struct result *results, uint32_t size, uint32_t *storedResult);
+int dataStore_store(data_store_type *dataStore, struct result *result);
+int dataStore_storeAll(data_store_type *dataStore, struct result_seq sequence);
 
 int dataStore_getUtilizationStatsName(data_store_type *dataStore, char **name);
 int dataStore_getUtilizationStatsType(data_store_type *dataStore, char **type);

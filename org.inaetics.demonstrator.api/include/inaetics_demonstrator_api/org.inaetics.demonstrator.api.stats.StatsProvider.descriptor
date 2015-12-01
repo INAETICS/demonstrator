@@ -1,0 +1,12 @@
+:header
+type=interface
+name=StatsProvider
+version=1.0.0
+:annotations
+classname=org.inaetics.demonstrator.api.stats.StatsProvider
+:types
+:methods
+getName()Ljava/lang/String;=getName(#am=handle;P#am=out;*t)N
+getType()Ljava/lang/String;=getType(#am=handle;P#am=out;*t)N
+getMeasurementUnit()Ljava/lang/String;=getMeasurementUnit(#am=handle;P#am=out;*t)N
+getValue()D=getValue(#am=handle;P#am=pre;*D)N
