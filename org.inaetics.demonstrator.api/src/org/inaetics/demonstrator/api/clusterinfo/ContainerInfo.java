@@ -6,8 +6,7 @@ package org.inaetics.demonstrator.api.clusterinfo;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 
-public class DockerContainerInfo {
-
+public class ContainerInfo {
 	private final String m_containerName;
 	private final double m_cpuUsage;
 	private final double m_avgLoad;
@@ -16,8 +15,7 @@ public class DockerContainerInfo {
 
 	private final static double BYTE_PER_MB = (double) (1024 * 1024);
 
-	public DockerContainerInfo(String containerName, double cpuUsage, double avgLoad, long usedMem, long hotMem) {
-
+	public ContainerInfo(String containerName, double cpuUsage, double avgLoad, long usedMem, long hotMem) {
 		DecimalFormat df = new DecimalFormat("#.####");
 		df.setRoundingMode(RoundingMode.CEILING);
 
@@ -58,5 +56,4 @@ public class DockerContainerInfo {
 
 		return s;
 	}
-
 }

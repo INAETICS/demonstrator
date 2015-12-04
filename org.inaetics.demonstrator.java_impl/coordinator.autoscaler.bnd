@@ -3,4 +3,5 @@ Bundle-Activator: \
 	
 Private-Package: \
 	org.inaetics.demonstrator.coordinator.autoscaler,\
-	org.inaetics.demonstrator.coordinator.util
+	org.inaetics.demonstrator.coordinator.util,\
+	org.inaetics.demonstrator.util.config	

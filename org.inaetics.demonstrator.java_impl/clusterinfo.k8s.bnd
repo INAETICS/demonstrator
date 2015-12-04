@@ -1,0 +1,5 @@
+Bundle-Activator: \
+	org.inaetics.demonstrator.clusterinfo.k8s.Activator
+Private-Package:  \
+	org.inaetics.demonstrator.clusterinfo.k8s,\
+	org.inaetics.demonstrator.util.config

@@ -3,7 +3,7 @@
  */
 package org.inaetics.demonstrator.coordinator.autoscaler;
 
-import static org.inaetics.demonstrator.coordinator.util.ConfigUtils.*;
+import static org.inaetics.demonstrator.util.config.ConfigUtils.*;
 
 import java.util.Dictionary;
 
@@ -34,23 +34,23 @@ public class AutoScalerConfig {
     }
 
     public AutoScalerConfig(Dictionary<String, ?> properties) throws ConfigurationException {
-        m_pollInterval = getConfigIntValue(properties, KEY_POLL_INTERVAL);
+        m_pollInterval = getIntValue(properties, KEY_POLL_INTERVAL);
         if (m_pollInterval < 1) {
             throw new ConfigurationException(KEY_POLL_INTERVAL, "invalid value!");
         }
-        m_queueLowBarrier = getConfigIntValue(properties, KEY_QUEUE_LOW_BARRIER);
+        m_queueLowBarrier = getIntValue(properties, KEY_QUEUE_LOW_BARRIER);
         if (m_queueLowBarrier < 1 || m_queueLowBarrier > 100) {
             throw new ConfigurationException(KEY_QUEUE_LOW_BARRIER, "invalid value!");
         }
-        m_queueHighBarrier = getConfigIntValue(properties, KEY_QUEUE_HIGH_BARRIER);
+        m_queueHighBarrier = getIntValue(properties, KEY_QUEUE_HIGH_BARRIER);
         if (m_queueHighBarrier < 1 || m_queueHighBarrier > 100 || m_queueHighBarrier <= m_queueLowBarrier) {
             throw new ConfigurationException(KEY_QUEUE_HIGH_BARRIER, "invalid value!");
         }
-        m_slope1 = getConfigIntValue(properties, KEY_QUEUE_SLOPE1);
+        m_slope1 = getIntValue(properties, KEY_QUEUE_SLOPE1);
         if (getSlope1() < 0 || getSlope1() > 100) {
             throw new ConfigurationException(KEY_QUEUE_SLOPE1, "invalid value!");
         }
-        m_slope2 = getConfigIntValue(properties, KEY_QUEUE_SLOPE2);
+        m_slope2 = getIntValue(properties, KEY_QUEUE_SLOPE2);
         if (m_slope2 < 0 || m_slope2 > 100 || m_slope2 <= getSlope1()) {
             throw new ConfigurationException(KEY_QUEUE_SLOPE2, "invalid value!");
         }

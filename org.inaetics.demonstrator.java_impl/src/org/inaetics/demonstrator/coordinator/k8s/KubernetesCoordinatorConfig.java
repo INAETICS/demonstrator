@@ -3,7 +3,7 @@
  */
 package org.inaetics.demonstrator.coordinator.k8s;
 
-import static org.inaetics.demonstrator.coordinator.util.ConfigUtils.*;
+import static org.inaetics.demonstrator.util.config.ConfigUtils.*;
 
 import java.util.Dictionary;
 
@@ -31,9 +31,9 @@ public class KubernetesCoordinatorConfig extends CoordinatorConfig {
 
     public KubernetesCoordinatorConfig(Dictionary<String, ?> properties) throws ConfigurationException {
         super(properties);
-    	m_processorNames = getConfigStringArrayValue(properties, KEY_PROCESSOR_NAMES);
-        m_producerNames = getConfigStringArrayValue(properties, KEY_PRODUCER_NAMES);
-        m_k8sNamespace = getConfigStringValue(properties, KEY_K8S_NAMESPACE);
+    	m_processorNames = getStringArrayValue(properties, KEY_PROCESSOR_NAMES);
+        m_producerNames = getStringArrayValue(properties, KEY_PRODUCER_NAMES);
+        m_k8sNamespace = getStringValue(properties, KEY_K8S_NAMESPACE);
     }
 
     public String getKubernetesNamespace() {

@@ -24,7 +24,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.inaetics.demonstrator.api.clusterinfo.ClusterInfo;
+import org.inaetics.demonstrator.api.clusterinfo.ClusterInfoProvider;
 import org.inaetics.demonstrator.api.coordinator.CoordinatorService;
 import org.inaetics.demonstrator.api.coordinator.CoordinatorService.Type;
 import org.inaetics.demonstrator.api.producer.Producer;
@@ -71,7 +71,7 @@ public class CoordinatorServlet extends HttpServlet {
     private volatile LogService m_log;
     private volatile StatsProvider m_aggregator;
     private volatile CoordinatorService m_coordinator;
-    private volatile ClusterInfo m_clusterInfo;
+    private volatile ClusterInfoProvider m_clusterInfo;
 
     private final ConcurrentMap<ServiceReference<StatsProvider>, StatsContainer> m_providerStats;
     private final List<Producer> m_producers;

@@ -3,7 +3,7 @@
  */
 package org.inaetics.demonstrator.coordinator.util;
 
-import static org.inaetics.demonstrator.coordinator.util.ConfigUtils.*;
+import static org.inaetics.demonstrator.util.config.ConfigUtils.*;
 
 import java.util.Dictionary;
 
@@ -25,8 +25,8 @@ public class CoordinatorConfig {
     }
 
     public CoordinatorConfig(Dictionary<String, ?> properties) throws ConfigurationException {
-        m_maxNrProcessors = getConfigIntValue(properties, KEY_MAX_NR_PROCESSORS);
-        m_maxNrProducers = getConfigIntValue(properties, KEY_MAX_NR_PRODUCERS);
+        m_maxNrProcessors = getIntValue(properties, KEY_MAX_NR_PROCESSORS);
+        m_maxNrProducers = getIntValue(properties, KEY_MAX_NR_PRODUCERS);
     }
 
     public int getMaxNrProcessors() {

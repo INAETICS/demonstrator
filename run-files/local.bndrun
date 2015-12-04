@@ -28,6 +28,7 @@
 	com.fasterxml.jackson.core.jackson-annotations;version='[2.3,2.4)',\
 	com.fasterxml.jackson.core.jackson-core;version='[2.3,2.4)',\
 	com.fasterxml.jackson.core.jackson-databind;version='[2.3,2.4)',\
+	org.inaetics.demonstrator.api.clusterinfo;version=latest,\
 	org.inaetics.demonstrator.api.coordinator;version=latest,\
 	org.inaetics.demonstrator.api.data;version=latest,\
 	org.inaetics.demonstrator.api.datastore;version=latest,\
@@ -36,6 +37,7 @@
 	org.inaetics.demonstrator.api.queue;version=latest,\
 	org.inaetics.demonstrator.api.stats;version=latest,\
 	org.inaetics.demonstrator.java_impl.logsender;version=latest,\
+	org.inaetics.demonstrator.java_impl.clusterinfo.stub;version=latest,\
 	org.inaetics.demonstrator.java_impl.coordinator.autoscaler;version=latest,\
 	org.inaetics.demonstrator.java_impl.coordinator.stub;version=latest,\
 	org.inaetics.demonstrator.java_impl.datastore;version=latest,\

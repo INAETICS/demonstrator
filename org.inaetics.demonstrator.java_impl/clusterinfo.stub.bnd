@@ -1,0 +1,4 @@
+Bundle-Activator: \
+	org.inaetics.demonstrator.clusterinfo.stub.Activator
+Private-Package:  \
+	org.inaetics.demonstrator.clusterinfo.stub
