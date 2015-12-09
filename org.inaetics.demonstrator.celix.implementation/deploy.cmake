@@ -11,7 +11,6 @@ deploy("inaetics-demonstrator-all" BUNDLES
 		${CELIX_BUNDLES_DIR}/shell_tui.zip
 		${CELIX_BUNDLES_DIR}/discovery_etcd.zip
 		${CELIX_BUNDLES_DIR}/topology_manager.zip
-		${CELIX_BUNDLES_DIR}/remote_service_admin_dfi.zip
 		org.inaetics.demonstrator.api.queue.SampleQueue
         PROPERTIES
             DISCOVERY_CFG_POLL_INTERVAL=1
@@ -26,7 +25,6 @@ deploy("inaetics-demonstrator-all" BUNDLES
 		${CELIX_BUNDLES_DIR}/shell_tui.zip
 		${CELIX_BUNDLES_DIR}/topology_manager.zip
         ${CELIX_BUNDLES_DIR}/discovery_etcd.zip
-		${CELIX_BUNDLES_DIR}/remote_service_admin_dfi.zip
         org.inaetics.demonstrator.api.stats.StatisticTracker
         PROPERTIES
           DISCOVERY_CFG_POLL_INTERVAL=1
@@ -41,7 +39,6 @@ deploy("inaetics-demonstrator-all" BUNDLES
 		${CELIX_BUNDLES_DIR}/shell_tui.zip
 		${CELIX_BUNDLES_DIR}/topology_manager.zip
         ${CELIX_BUNDLES_DIR}/discovery_etcd.zip
-		${CELIX_BUNDLES_DIR}/remote_service_admin_dfi.zip
         org.inaetics.demonstrator.api.producer.Producer
         PROPERTIES
             DISCOVERY_CFG_POLL_INTERVAL=1
@@ -55,7 +52,6 @@ deploy("inaetics-demonstrator-all" BUNDLES
 		${CELIX_BUNDLES_DIR}/shell_tui.zip
 		${CELIX_BUNDLES_DIR}/topology_manager.zip
         ${CELIX_BUNDLES_DIR}/discovery_etcd.zip
-        ${CELIX_BUNDLES_DIR}/remote_service_admin_dfi.zip
         org.inaetics.demonstrator.api.processor.Processor
         PROPERTIES
             DISCOVERY_CFG_POLL_INTERVAL=1
@@ -69,7 +65,6 @@ deploy("inaetics-demonstrator-all" BUNDLES
         ${CELIX_BUNDLES_DIR}/shell_tui.zip
         ${CELIX_BUNDLES_DIR}/discovery_etcd.zip
         ${CELIX_BUNDLES_DIR}/topology_manager.zip
-        ${CELIX_BUNDLES_DIR}/remote_service_admin_dfi.zip
         org.inaetics.demonstrator.api.datastore.DataStore
         PROPERTIES
             DISCOVERY_CFG_POLL_INTERVAL=1
