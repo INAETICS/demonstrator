@@ -258,7 +258,7 @@ celix_status_t producer_create(char* name, producer_pt* producer)
 			pthread_rwlockattr_setkind_np(&queueLockAttr, PTHREAD_RWLOCK_PREFER_WRITER_NONRECURSIVE_NP);
 			pthread_rwlock_init(&lclProducer->queueLock, &queueLockAttr);
 
-			lclProducer->queueServices = hashMap_create(utils_stringHash, NULL, utils_stringEquals, NULL);
+			lclProducer->queueServices = hashMap_create(NULL, NULL, NULL, NULL);
 
 			(*producer) = lclProducer;
 		}

@@ -266,7 +266,7 @@ celix_status_t processor_create(char* name, processor_pt* processor)
 
 			sprintf(lclProcessor->utilizationStatsName, "%s%s", lclProcessor->name, (char*) THROUGHPUT_NAME_POSTFIX);
 
-			lclProcessor->queueServices = hashMap_create(utils_stringHash, NULL, utils_stringEquals, NULL);
+			lclProcessor->queueServices = hashMap_create(NULL, NULL, NULL, NULL);
 			arrayList_create(&lclProcessor->dataStoreServices);
 
 			pthread_rwlockattr_init(&queueLockAttr);
